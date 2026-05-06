@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
 import {
   BookOpen,
+  Building2,
   Calendar,
   ChartLine,
   CreditCard,
@@ -30,6 +31,7 @@ const NAV = [
   { href: '/revisao', icon: Repeat2, label: 'Revisão' },
   { href: '/plano', icon: Calendar, label: 'Plano' },
   { href: '/mentor', icon: MessageSquare, label: 'Mentor' },
+  { href: '/org', icon: Building2, label: 'Organização' },
   { href: '/conta', icon: CreditCard, label: 'Conta' },
 ] as const
 

@@ -1,6 +1,6 @@
 import { prisma } from '@residencia-med/db'
 import { stripe } from './stripe'
-import { precoIdEnv, type PlanoCodigo } from './plans'
+import { precoIdEnv, precoIdEnvOrg, type PlanoCodigo, type PlanoOrgCodigo } from './plans'
 
 export type CriarCheckoutInput = {
   userId: string
@@ -72,6 +72,97 @@ export async function criarSessaoPortal(
   })
   if (!assinatura?.stripeCustomerId) {
     throw new Error('Usuario sem cliente Stripe — assine primeiro')
+  }
+  const portal = await stripe().billingPortal.sessions.create({
+    customer: assinatura.stripeCustomerId,
+    return_url: returnUrl,
+  })
+  return { url: portal.url }
+}
+
+// ==================== B2B ====================
+
+export type CriarCheckoutOrgInput = {
+  organizationId: string
+  emailFaturamento: string
+  plano: Exclude<PlanoOrgCodigo, 'ENTERPRISE'>
+  seats: number
+  successUrl: string
+  cancelUrl: string
+}
+
+export async function criarSessaoCheckoutOrg(
+  input: CriarCheckoutOrgInput,
+): Promise<{ url: string }> {
+  const priceId = precoIdEnvOrg(input.plano)
+  if (!priceId) {
+    throw new Error(`Price ID Stripe não configurado para org ${input.plano}`)
+  }
+
+  let assinatura = await prisma.assinaturaOrg.findUnique({
+    where: { organizationId: input.organizationId },
+  })
+
+  let stripeCustomerId = assinatura?.stripeCustomerId
+  if (!stripeCustomerId) {
+    const customer = await stripe().customers.create({
+      email: input.emailFaturamento,
+      metadata: { organizationId: input.organizationId, tipo: 'org' },
+    })
+    stripeCustomerId = customer.id
+    if (!assinatura) {
+      assinatura = await prisma.assinaturaOrg.create({
+        data: {
+          organizationId: input.organizationId,
+          stripeCustomerId,
+          plano: 'STARTER',
+          status: 'TRIAL',
+          seatsContratadas: input.seats,
+        },
+      })
+    } else {
+      await prisma.assinaturaOrg.update({
+        where: { organizationId: input.organizationId },
+        data: { stripeCustomerId },
+      })
+    }
+  }
+
+  const session = await stripe().checkout.sessions.create({
+    mode: 'subscription',
+    customer: stripeCustomerId,
+    line_items: [{ price: priceId, quantity: input.seats }],
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+    allow_promotion_codes: true,
+    subscription_data: {
+      metadata: {
+        organizationId: input.organizationId,
+        plano: input.plano,
+        tipo: 'org',
+      },
+      trial_period_days: 14,
+    },
+    metadata: {
+      organizationId: input.organizationId,
+      plano: input.plano,
+      tipo: 'org',
+    },
+  })
+
+  if (!session.url) throw new Error('Stripe não retornou URL de checkout')
+  return { url: session.url }
+}
+
+export async function criarSessaoPortalOrg(
+  organizationId: string,
+  returnUrl: string,
+): Promise<{ url: string }> {
+  const assinatura = await prisma.assinaturaOrg.findUnique({
+    where: { organizationId },
+  })
+  if (!assinatura?.stripeCustomerId) {
+    throw new Error('Organização sem cliente Stripe — assine primeiro')
   }
   const portal = await stripe().billingPortal.sessions.create({
     customer: assinatura.stripeCustomerId,

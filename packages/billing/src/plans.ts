@@ -152,3 +152,21 @@ export function precoIdEnv(plano: PlanoCodigo, ciclo: 'monthly' | 'annual'): str
   }
   return map[`${plano}:${ciclo}`]
 }
+
+export function precoIdEnvOrg(plano: PlanoOrgCodigo): string | undefined {
+  const map: Record<PlanoOrgCodigo, string | undefined> = {
+    STARTER: process.env.STRIPE_PRICE_ORG_STARTER,
+    GROWTH: process.env.STRIPE_PRICE_ORG_GROWTH,
+    ENTERPRISE: undefined, // sob consulta
+  }
+  return map[plano]
+}
+
+/**
+ * Plano B2B → equivalente B2C que cada membro herda.
+ * STARTER → PRO, GROWTH → PREMIUM, ENTERPRISE → PREMIUM.
+ */
+export function planoB2CEquivalente(plano: PlanoOrgCodigo): PlanoCodigo {
+  if (plano === 'STARTER') return 'PRO'
+  return 'PREMIUM'
+}

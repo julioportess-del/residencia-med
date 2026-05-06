@@ -23,6 +23,11 @@ export function temAcesso(plano: PlanoCodigo, recurso: keyof LimitesPlano): bool
 }
 
 export async function obterPlanoUsuario(userId: string): Promise<PlanoCodigo> {
+  // 1) Plano herdado da organização tem prioridade
+  const orgPlano = await planoHerdadoDaOrg(userId)
+  if (orgPlano) return orgPlano
+
+  // 2) Caso contrário, assinatura individual
   const ass = await prisma.assinatura.findUnique({
     where: { userId },
     select: { plano: true, status: true, validaAte: true },
@@ -34,6 +39,35 @@ export async function obterPlanoUsuario(userId: string): Promise<PlanoCodigo> {
     return ass.plano as PlanoCodigo
   }
   return 'FREE'
+}
+
+/**
+ * Se o usuário pertence a uma org com assinatura ativa/trial, retorna o plano B2C
+ * equivalente que ele herda. STARTER → PRO; GROWTH/ENTERPRISE → PREMIUM.
+ */
+async function planoHerdadoDaOrg(userId: string): Promise<PlanoCodigo | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      organization: {
+        select: {
+          plano: true,
+          assinatura: {
+            select: { status: true, validaAte: true },
+          },
+        },
+      },
+    },
+  })
+  const org = user?.organization
+  if (!org) return null
+  const ass = org.assinatura
+  if (ass) {
+    const ativa = ass.status === 'ATIVA' || ass.status === 'TRIAL'
+    const valida = !ass.validaAte || ass.validaAte > new Date()
+    if (!(ativa && valida)) return null
+  }
+  return org.plano === 'STARTER' ? 'PRO' : 'PREMIUM'
 }
 
 export async function checarLimiteQuestoes(userId: string): Promise<ResultadoLimite> {

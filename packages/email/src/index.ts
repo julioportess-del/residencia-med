@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { templateBemVindo } from './templates/bem-vindo'
 import { templateMudancaPlano } from './templates/mudanca-plano'
 import { templateLembreteRevisao } from './templates/lembrete-revisao'
+import { templateConviteOrg } from './templates/convite-org'
 
 const FROM_PADRAO = process.env.EMAIL_FROM ?? 'Residência Med <ola@residencia-med.com>'
 
@@ -72,6 +73,24 @@ export async function emailMudancaPlano(
     assunto: `Sua assinatura ${plano} foi ${status}`,
     html,
     texto: `Olá${nome ? `, ${nome}` : ''}! Sua assinatura ${plano} foi ${status}.`,
+  })
+}
+
+export async function emailConviteOrg(
+  para: string,
+  args: {
+    nomeOrg: string
+    papel: 'ADMIN' | 'MEMBRO'
+    conviteUrl: string
+    convidadoPorNome: string | null
+  },
+) {
+  const html = templateConviteOrg(args)
+  return enviarEmail({
+    para,
+    assunto: `Convite para ${args.nomeOrg} no Residência Med`,
+    html,
+    texto: `Você foi convidado a se juntar à equipe ${args.nomeOrg} no Residência Med. Aceite em: ${args.conviteUrl}`,
   })
 }
 

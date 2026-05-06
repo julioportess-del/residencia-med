@@ -30,6 +30,8 @@ const ehRotaProtegidaDemo = createRouteMatcher([
   '/conta(.*)',
   '/admin(.*)',
   '/mentor(.*)',
+  '/org(.*)',
+  '/convite(.*)',
 ])
 
 const middlewareDemo = (req: NextRequest) => {
