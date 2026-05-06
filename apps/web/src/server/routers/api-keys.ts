@@ -93,4 +93,64 @@ export const apiKeysRouter = router({
         take: 50,
       })
     }),
+
+  estatisticas: procedureAdminOrg.query(async ({ ctx }) => {
+    const inicio = new Date(Date.now() - 7 * 86_400_000)
+
+    const [total, porDia, porRota, porStatus] = await Promise.all([
+      ctx.prisma.apiKeyUso.count({
+        where: {
+          apiKey: { organizationId: ctx.organizationId },
+          createdAt: { gte: inicio },
+        },
+      }),
+      ctx.prisma.$queryRawUnsafe<Array<{ dia: string; total: bigint; latencia_p50: number }>>(
+        `SELECT to_char(date_trunc('day', u."createdAt"), 'YYYY-MM-DD') as dia,
+                count(*)::bigint as total,
+                percentile_cont(0.5) within group (order by u."latenciaMs") as latencia_p50
+         FROM "ApiKeyUso" u
+         JOIN "ApiKey" k ON k.id = u."apiKeyId"
+         WHERE k."organizationId" = $1 AND u."createdAt" >= $2
+         GROUP BY 1
+         ORDER BY 1`,
+        ctx.organizationId,
+        inicio,
+      ),
+      ctx.prisma.apiKeyUso.groupBy({
+        by: ['rota'],
+        where: {
+          apiKey: { organizationId: ctx.organizationId },
+          createdAt: { gte: inicio },
+        },
+        _count: { _all: true },
+        _avg: { latenciaMs: true },
+        orderBy: { _count: { rota: 'desc' } },
+        take: 10,
+      }),
+      ctx.prisma.apiKeyUso.groupBy({
+        by: ['status'],
+        where: {
+          apiKey: { organizationId: ctx.organizationId },
+          createdAt: { gte: inicio },
+        },
+        _count: { _all: true },
+      }),
+    ])
+
+    return {
+      janela: '7d',
+      totalChamadas: total,
+      porDia: porDia.map((d) => ({
+        dia: d.dia,
+        total: Number(d.total),
+        latenciaP50: Math.round(d.latencia_p50 ?? 0),
+      })),
+      porRota: porRota.map((r) => ({
+        rota: r.rota,
+        total: r._count._all,
+        latenciaMedia: Math.round(r._avg.latenciaMs ?? 0),
+      })),
+      porStatus: porStatus.map((s) => ({ status: s.status, total: s._count._all })),
+    }
+  }),
 })

@@ -35,6 +35,7 @@ const ehRotaProtegidaDemo = createRouteMatcher([
   '/org(.*)',
   '/convite(.*)',
   '/contribuir(.*)',
+  '/live(.*)',
 ])
 
 const middlewareDemo = (req: NextRequest) => {

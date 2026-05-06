@@ -12,14 +12,60 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://residencia-med.vercel.app'
+
 export const metadata: Metadata = {
   title: {
-    default: 'Residencia Med',
-    template: '%s | Residencia Med',
+    default: 'Residência Med — Aprovação em residência médica acelerada por dados',
+    template: '%s | Residência Med',
   },
   description:
-    'Plataforma de estudo para residencia medica baseada em analise de bancas, repeticao espacada e IA.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+    'Plataforma de estudo para residência médica com análise de 10 anos das principais bancas (AMRIGS, ENARE, USP, UNIFESP, UNICAMP), plano adaptativo, repetição espaçada e cada erro explicado com guideline citado.',
+  keywords: [
+    'residência médica',
+    'AMRIGS',
+    'ENARE',
+    'USP residência',
+    'UNIFESP residência',
+    'simulado residência',
+    'questões residência médica',
+    'banco de questões médicas',
+    'plano de estudos residência',
+    'IA medicina',
+  ],
+  metadataBase: new URL(APP_URL),
+  alternates: { canonical: '/' },
+  authors: [{ name: 'Residência Med' }],
+  category: 'education',
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: APP_URL,
+    siteName: 'Residência Med',
+    title: 'Residência Med — Aprovação em residência médica acelerada por dados',
+    description:
+      'Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e cada erro explicado com guideline. Fim do estudo às cegas.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Residência Med',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Residência Med',
+    description:
+      'Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e IA.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' },
+  },
 }
 
 export const viewport: Viewport = {

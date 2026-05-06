@@ -135,6 +135,7 @@ model User {
   llmCalls            LLMCall[]
   conversasMentor     ConversaMentor[]
   submissoes          SubmissaoQuestao[]
+  participacoesLive   ParticipanteLive[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -155,6 +156,7 @@ model Organization {
   assinatura    AssinaturaOrg?
   convites      ConviteOrg[]
   apiKeys       ApiKey[]
+  simuladosLive SimuladoLive[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -264,6 +266,7 @@ model Banca {
   questoes    Questao[]
   analises    AnaliseIncidencia[]
   submissoes  SubmissaoQuestao[]
+  simuladosLive SimuladoLive[]
   createdAt   DateTime            @default(now())
 
   @@index([codigo])
@@ -659,4 +662,53 @@ model MensagemMentor {
   createdAt    DateTime       @default(now())
 
   @@index([conversaId, createdAt])
+}
+
+
+// ==================== SIMULADO LIVE ====================
+
+enum StatusSimuladoLive {
+  AGUARDANDO
+  EM_ANDAMENTO
+  ENCERRADO
+}
+
+model SimuladoLive {
+  id              String              @id @default(cuid())
+  codigo          String              @unique // 6 chars maiusculos para sala
+  titulo          String
+  bancaId         String?
+  banca           Banca?              @relation(fields: [bancaId], references: [id], onDelete: SetNull)
+  organizationId  String?
+  organization    Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  criadoPor       String // userId
+  numeroQuestoes  Int                 @default(20)
+  tempoMinutos    Int                 @default(40)
+  questaoIds      String[]            @default([])
+  status          StatusSimuladoLive  @default(AGUARDANDO)
+  iniciaEm        DateTime?
+  encerraEm       DateTime?
+  participantes   ParticipanteLive[]
+  createdAt       DateTime            @default(now())
+
+  @@index([codigo])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model ParticipanteLive {
+  id             String       @id @default(cuid())
+  simuladoLiveId String
+  simulado       SimuladoLive @relation(fields: [simuladoLiveId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime     @default(now())
+  finalizadoEm   DateTime?
+  acertos        Int          @default(0)
+  erros          Int          @default(0)
+  tempoTotal     Int          @default(0)
+  respostasJson  Json?        // [{questaoId, alternativaLetra, correta, tempo}]
+
+  @@unique([simuladoLiveId, userId])
+  @@index([simuladoLiveId])
 }

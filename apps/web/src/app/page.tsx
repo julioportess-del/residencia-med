@@ -2,9 +2,50 @@ import Link from 'next/link'
 import { ArrowRight, Brain, ChartLine, Sparkles, Target } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://residencia-med.vercel.app'
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${APP_URL}/#organization`,
+      name: 'Residência Med',
+      url: APP_URL,
+      logo: `${APP_URL}/og-image.png`,
+      description:
+        'Plataforma brasileira de estudo para residência médica baseada em análise de bancas, repetição espaçada e IA.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${APP_URL}/#website`,
+      url: APP_URL,
+      name: 'Residência Med',
+      inLanguage: 'pt-BR',
+      publisher: { '@id': `${APP_URL}/#organization` },
+    },
+    {
+      '@type': 'Product',
+      name: 'Residência Med',
+      description:
+        'Plataforma de estudo para residência médica com plano adaptativo, repetição espaçada e IA.',
+      brand: { '@type': 'Brand', name: 'Residência Med' },
+      offers: [
+        { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'BRL', url: `${APP_URL}/precos` },
+        { '@type': 'Offer', name: 'Pro', price: '19.00', priceCurrency: 'BRL', url: `${APP_URL}/precos` },
+        { '@type': 'Offer', name: 'Premium', price: '39.00', priceCurrency: 'BRL', url: `${APP_URL}/precos` },
+      ],
+    },
+  ],
+}
+
 export default function HomePage() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
       <section className="relative overflow-hidden border-b">
         <div className="container mx-auto max-w-6xl px-6 pt-24 pb-32">
           <div className="max-w-3xl">

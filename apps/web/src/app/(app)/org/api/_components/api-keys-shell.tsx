@@ -2,7 +2,16 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Copy, Key, Plus, Trash2 } from 'lucide-react'
+import { Activity, Copy, Key, Plus, Trash2 } from 'lucide-react'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -47,6 +56,7 @@ export function ApiKeysShell() {
 
   return (
     <div className="mt-6 space-y-6">
+      <UsoApi />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -183,6 +193,82 @@ export function ApiKeysShell() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function UsoApi() {
+  const stats = trpc.apiKeys.estatisticas.useQuery()
+  if (stats.isLoading) return <Skeleton className="h-40" />
+  if (!stats.data || stats.data.totalChamadas === 0) return null
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="size-4" />
+          Uso da API (últimos 7 dias)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Stat label="Total chamadas" valor={stats.data.totalChamadas.toLocaleString()} />
+          <Stat
+            label="Sucessos (2xx)"
+            valor={stats.data.porStatus
+              .filter((s) => s.status >= 200 && s.status < 300)
+              .reduce((sum, s) => sum + s.total, 0)
+              .toLocaleString()}
+          />
+          <Stat
+            label="Erros (4xx/5xx)"
+            valor={stats.data.porStatus
+              .filter((s) => s.status >= 400)
+              .reduce((sum, s) => sum + s.total, 0)
+              .toLocaleString()}
+          />
+        </div>
+
+        {stats.data.porDia.length > 0 && (
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={stats.data.porDia}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis dataKey="dia" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="total" fill="#1d4ed8" name="Chamadas" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+
+        {stats.data.porRota.length > 0 && (
+          <div>
+            <div className="text-xs font-medium uppercase text-muted-foreground mb-2">
+              Top endpoints
+            </div>
+            <ul className="divide-y">
+              {stats.data.porRota.map((r) => (
+                <li key={r.rota} className="flex items-center justify-between py-1.5 text-sm">
+                  <code className="text-xs">{r.rota}</code>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground tabular-nums">
+                    <span>{r.total} chamadas</span>
+                    <span>~{r.latenciaMedia}ms</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function Stat({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div className="rounded-md border p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-xl font-bold tabular-nums">{valor}</div>
     </div>
   )
 }

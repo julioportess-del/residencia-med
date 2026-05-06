@@ -139,6 +139,20 @@ export function ContaCliente() {
           </div>
           <div className="flex items-center justify-between gap-4 border-t pt-3">
             <div className="text-sm">
+              <div className="font-medium">Exportar para Anki</div>
+              <p className="text-muted-foreground text-xs">
+                Baixe seus itens de revisão como CSV pronto para importar no Anki.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/api/conta/exportar-anki" download>
+                <Download className="size-4" />
+                Exportar CSV
+              </a>
+            </Button>
+          </div>
+          <div className="flex items-center justify-between gap-4 border-t pt-3">
+            <div className="text-sm">
               <div className="font-medium text-rose-600">Excluir minha conta</div>
               <p className="text-muted-foreground text-xs">
                 Irreversível. Cancela assinatura ativa e remove todos os dados.
