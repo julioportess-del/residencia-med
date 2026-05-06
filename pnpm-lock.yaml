@@ -23,6 +23,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.32.1
+        version: 0.32.1
       '@clerk/nextjs':
         specifier: ^6.9.6
         version: 6.39.3(next@15.5.15(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -77,6 +80,9 @@ importers:
       '@trpc/server':
         specifier: ^11.0.0-rc.660
         version: 11.17.0(typescript@5.9.3)
+      bullmq:
+        specifier: ^5.34.0
+        version: 5.76.5
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -86,6 +92,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      ioredis:
+        specifier: ^5.4.1
+        version: 5.10.1
       lucide-react:
         specifier: ^0.460.0
         version: 0.460.0(react@19.2.5)

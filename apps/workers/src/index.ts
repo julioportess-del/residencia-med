@@ -1,4 +1,5 @@
 import { logger } from './logger'
+import { warmupIncidencia } from './warmup'
 import { iniciarWorkerRevisao } from './workers/revisao'
 import { iniciarWorkerIncidencia } from './workers/incidencia'
 import { iniciarWorkerPlano } from './workers/plano'
@@ -9,6 +10,8 @@ async function main() {
   iniciarWorkerRevisao()
   iniciarWorkerIncidencia()
   iniciarWorkerPlano()
+
+  await warmupIncidencia()
 
   logger.info('Workers prontos')
 }

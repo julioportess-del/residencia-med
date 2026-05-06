@@ -1,5 +1,6 @@
 import { OnboardingInput } from '@residencia-med/types'
 import { router, procedureProtegida } from '../trpc'
+import { enqueueGerarPlano, enqueueRecomputarIncidencia } from '@/lib/queues'
 
 export const onboardingRouter = router({
   status: procedureProtegida.query(async ({ ctx }) => {
@@ -40,7 +41,12 @@ export const onboardingRouter = router({
       },
     })
 
-    // Turno 3: enfileirar job de gerar plano
+    // Garantir analise de incidencia das bancas selecionadas (idempotente).
+    for (const banca of bancas) {
+      await enqueueRecomputarIncidencia({ bancaId: banca.id })
+    }
+
+    await enqueueGerarPlano({ userId: ctx.userId, motivo: 'onboarding' })
 
     return { ok: true }
   }),

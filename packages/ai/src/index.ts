@@ -1,4 +1,5 @@
-export { explicarErro } from './funcoes/explicar-erro'
+export { explicarErro, explicarErroStream } from './funcoes/explicar-erro'
+export { calcularCusto, registrarLLMCall } from './llm-call'
 export { gerarQuestaoSimilar } from './funcoes/gerar-questao'
 export { classificarTema } from './funcoes/classificar-tema'
 export { gerarEmbedding, gerarEmbeddings } from './funcoes/embedding'

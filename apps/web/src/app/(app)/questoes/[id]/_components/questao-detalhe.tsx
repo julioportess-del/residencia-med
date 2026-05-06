@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ExplicarComIA } from '@/components/explicar-ia-dialog'
 import { trpc } from '@/lib/trpc/client'
 import { cn } from '@/lib/cn'
 
@@ -202,7 +203,10 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
             </Card>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            {escolha && (
+              <ExplicarComIA questaoId={q.id} alternativaEscolhida={escolha} />
+            )}
             <Button variant="outline" asChild>
               <Link href="/questoes">Voltar ao banco</Link>
             </Button>

@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
 import { router, procedureProtegida } from '../trpc'
+import { enqueueAtualizarRevisao } from '@/lib/queues'
 
 export const questaoRouter = router({
   listar: procedureProtegida.input(FiltroQuestoesInput).query(async ({ ctx, input }) => {
@@ -117,8 +118,11 @@ export const questaoRouter = router({
       })
     }
 
-    // Turno 3: enfileirar job de revisao SM-2 aqui
-    void resposta
+    await enqueueAtualizarRevisao({
+      userId: ctx.userId,
+      questaoId: questao.id,
+      respostaId: resposta.id,
+    })
 
     return {
       respostaId: resposta.id,
