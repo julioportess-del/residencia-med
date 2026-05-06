@@ -1,0 +1,532 @@
+// Schema Prisma - Plataforma Residencia Med
+// Doc: docs/DATA-MODEL.md
+// ADR multi-tenant: docs/adr/0004-multi-tenant-strategy.md
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ==================== ENUMS ====================
+
+enum TipoProva {
+  R1
+  R3
+  ACESSO_DIRETO
+  REVALIDACAO
+}
+
+enum Dificuldade {
+  FACIL
+  MEDIO
+  DIFICIL
+  MUITO_DIFICIL
+}
+
+enum FonteGuideline {
+  SBP // Soc Bras Pediatria
+  SBC // Soc Bras Cardiologia
+  SBI // Soc Bras Infectologia
+  SBR // Soc Bras Reumatologia
+  SBOT // Soc Bras Ortopedia
+  FEBRASGO
+  SBN // Nefrologia
+  SBPT // Pneumologia
+  SBED // Endocrinologia
+  MS // Ministerio da Saude
+  ANVISA
+  NICE
+  WHO
+  UPTODATE
+  HARRISON
+  CECIL
+  NELSON
+  OUTRO
+}
+
+enum Confianca {
+  CHUTE
+  INCERTO
+  CONFIANTE
+}
+
+enum TipoSessao {
+  ESTUDO
+  SIMULADO
+  REVISAO
+  LIVRE
+}
+
+enum TipoBloco {
+  TEORIA
+  QUESTOES
+  REVISAO
+  SIMULADO
+}
+
+enum StatusBloco {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDO
+  PULADO
+}
+
+enum PlanoUsuario {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum PlanoOrg {
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+enum StatusAssinatura {
+  ATIVA
+  TRIAL
+  CANCELADA
+  INADIMPLENTE
+  EXPIRADA
+}
+
+enum PapelOrg {
+  ADMIN
+  MEMBRO
+}
+
+// ==================== USUARIO ====================
+
+model User {
+  id                  String        @id @default(cuid())
+  clerkId             String        @unique
+  email               String        @unique
+  name                String?
+  avatarUrl           String?
+
+  // Metas
+  metaResidencia      String? // codigo da banca alvo
+  bancasAlvo          String[]      @default([]) // multi-banca
+  dataProva           DateTime?
+  cargaHorariaSemanal Int? // horas por semana
+
+  // Multi-tenant
+  organizationId      String?
+  papelOrg            PapelOrg?
+  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  // Quotas IA
+  creditosUsadosMes   Int           @default(0)
+  creditosResetEm     DateTime?
+
+  // Relacoes
+  respostas           Resposta[]
+  sessoes             Sessao[]
+  planoEstudo         PlanoEstudo?
+  itensRevisao        ItemRevisao[]
+  assinatura          Assinatura?
+  llmCalls            LLMCall[]
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([clerkId])
+  @@index([organizationId])
+  @@index([email])
+}
+
+model Organization {
+  id            String          @id @default(cuid())
+  name          String
+  slug          String          @unique
+  clerkOrgId    String?         @unique
+  plano         PlanoOrg        @default(STARTER)
+  seats         Int             @default(1)
+  users         User[]
+  assinatura    AssinaturaOrg?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+// ==================== CONTEUDO ====================
+
+model Banca {
+  id          String              @id @default(cuid())
+  codigo      String              @unique // "AMRIGS", "ENARE"
+  nome        String
+  estado      String?
+  descricao   String?
+  url         String?
+  cor         String? // brand color
+  prioridade  Int                 @default(0) // ordenacao na UI
+  provas      Prova[]
+  questoes    Questao[]
+  analises    AnaliseIncidencia[]
+  createdAt   DateTime            @default(now())
+
+  @@index([codigo])
+}
+
+model Especialidade {
+  id        String  @id @default(cuid())
+  codigo    String  @unique
+  nome      String
+  cor       String?
+  icone     String? // nome do icone Lucide
+  ordem     Int     @default(0)
+  temas     Tema[]
+}
+
+model Tema {
+  id              String              @id @default(cuid())
+  codigo          String              @unique
+  nome            String
+  especialidadeId String
+  especialidade   Especialidade       @relation(fields: [especialidadeId], references: [id], onDelete: Cascade)
+
+  // Hierarquia
+  parentId        String?
+  parent          Tema?               @relation("TemaHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  filhos          Tema[]              @relation("TemaHierarchy")
+  profundidade    Int                 @default(0) // 0 = root, max 3
+
+  questoes        QuestaoTema[]
+  guidelines      GuidelineTema[]
+  blocosEstudo   BlocoEstudo[]
+  analises        AnaliseIncidencia[]
+
+  @@unique([nome, especialidadeId, parentId])
+  @@index([especialidadeId])
+  @@index([parentId])
+}
+
+model Prova {
+  id        String    @id @default(cuid())
+  bancaId   String
+  banca     Banca     @relation(fields: [bancaId], references: [id], onDelete: Cascade)
+  ano       Int
+  tipo      TipoProva @default(R1)
+  titulo    String?
+  fonte     String? // url do PDF original
+  questoes  Questao[]
+  importadaEm DateTime @default(now())
+
+  @@unique([bancaId, ano, tipo])
+  @@index([ano])
+}
+
+model Questao {
+  id                String              @id @default(cuid())
+  bancaId           String
+  banca             Banca               @relation(fields: [bancaId], references: [id], onDelete: Restrict)
+  provaId           String?
+  prova             Prova?              @relation(fields: [provaId], references: [id], onDelete: SetNull)
+
+  // Conteudo
+  enunciado         String              @db.Text
+  enunciadoVignette String?             @db.Text // caso clinico (opcional)
+  alternativas      Alternativa[]
+  gabaritoLetra     String // 'A','B','C','D','E'
+  explicacao        String              @db.Text
+  explicacaoMd      String              @db.Text
+  dificuldade       Dificuldade         @default(MEDIO)
+
+  // Metadata
+  ano               Int
+  numeroOriginal    Int?
+  fonte             String?
+  hash              String              @unique // sha256 do enunciado normalizado
+
+  // IA
+  embedding         Unsupported("vector(1536)")?
+  geradaPorIA       Boolean             @default(false)
+  questaoOriginalId String?
+  questaoOriginal   Questao?            @relation("VariacoesIA", fields: [questaoOriginalId], references: [id], onDelete: SetNull)
+  variacoes         Questao[]           @relation("VariacoesIA")
+
+  // Estado
+  publicada         Boolean             @default(true)
+  reportes          Int                 @default(0) // contagem de erros reportados
+
+  // Relacoes
+  temas             QuestaoTema[]
+  guidelines        QuestaoGuideline[]
+  respostas         Resposta[]
+  itensRevisao      ItemRevisao[]
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([bancaId, ano])
+  @@index([dificuldade])
+  @@index([publicada])
+  @@index([provaId])
+}
+
+model Alternativa {
+  id              String  @id @default(cuid())
+  questaoId       String
+  questao         Questao @relation(fields: [questaoId], references: [id], onDelete: Cascade)
+  letra           String // 'A','B','C','D','E'
+  texto           String  @db.Text
+  correta         Boolean @default(false)
+  explicacaoErro  String? @db.Text // por que essa alternativa esta errada
+  ordem           Int     @default(0)
+
+  respostas       Resposta[]
+
+  @@unique([questaoId, letra])
+  @@index([questaoId])
+}
+
+model QuestaoTema {
+  questaoId String
+  temaId    String
+  peso      Float   @default(1.0) // primary = 1.0, secondary = 0.3-0.5
+  primario  Boolean @default(false)
+  questao   Questao @relation(fields: [questaoId], references: [id], onDelete: Cascade)
+  tema      Tema    @relation(fields: [temaId], references: [id], onDelete: Cascade)
+
+  @@id([questaoId, temaId])
+  @@index([temaId])
+  @@index([questaoId])
+}
+
+model Guideline {
+  id           String                       @id @default(cuid())
+  fonte        FonteGuideline
+  titulo       String
+  ano          Int
+  url          String?
+  resumo       String                       @db.Text
+  conteudo     String?                      @db.Text
+  embedding    Unsupported("vector(1536)")?
+
+  temas        GuidelineTema[]
+  questoes     QuestaoGuideline[]
+
+  createdAt    DateTime                     @default(now())
+
+  @@index([fonte, ano])
+}
+
+model GuidelineTema {
+  guidelineId String
+  temaId      String
+  guideline   Guideline @relation(fields: [guidelineId], references: [id], onDelete: Cascade)
+  tema        Tema      @relation(fields: [temaId], references: [id], onDelete: Cascade)
+
+  @@id([guidelineId, temaId])
+}
+
+model QuestaoGuideline {
+  questaoId   String
+  guidelineId String
+  trecho      String?   @db.Text
+  questao     Questao   @relation(fields: [questaoId], references: [id], onDelete: Cascade)
+  guideline   Guideline @relation(fields: [guidelineId], references: [id], onDelete: Cascade)
+
+  @@id([questaoId, guidelineId])
+}
+
+// ==================== ATIVIDADE ====================
+
+model Resposta {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questaoId        String
+  questao          Questao      @relation(fields: [questaoId], references: [id], onDelete: Restrict)
+  alternativaId    String?
+  alternativa      Alternativa? @relation(fields: [alternativaId], references: [id], onDelete: SetNull)
+  alternativaLetra String? // backup
+  correta          Boolean
+  tempoSegundos    Int
+  confianca        Confianca?
+  modoRevisao      Boolean      @default(false)
+
+  sessaoId         String?
+  sessao           Sessao?      @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
+
+  createdAt        DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, questaoId])
+  @@index([questaoId])
+  @@index([sessaoId])
+}
+
+model Sessao {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipo         TipoSessao
+  bancaId      String?
+  configuracao Json // filtros, n. questoes, tempo, etc.
+  iniciadaEm   DateTime   @default(now())
+  finalizadaEm DateTime?
+  acertos      Int        @default(0)
+  erros        Int        @default(0)
+  pulos        Int        @default(0)
+  tempoTotal   Int        @default(0)
+  respostas    Resposta[]
+
+  @@index([userId, iniciadaEm])
+  @@index([tipo])
+}
+
+model PlanoEstudo {
+  id                  String        @id @default(cuid())
+  userId              String        @unique
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bancaAlvo           String
+  dataProva           DateTime
+  cargaHorariaSemanal Int
+  geradoEm            DateTime      @default(now())
+  ultimaRevisaoEm     DateTime?
+  narrativa           String?       @db.Text
+  blocos              BlocoEstudo[]
+}
+
+model BlocoEstudo {
+  id          String      @id @default(cuid())
+  planoId     String
+  plano       PlanoEstudo @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  semana      Int
+  diaSemana   Int // 0 = domingo, 6 = sabado
+  ordem       Int         @default(0)
+  duracaoMin  Int
+  tipo        TipoBloco
+  temaId      String?
+  tema        Tema?       @relation(fields: [temaId], references: [id], onDelete: SetNull)
+  titulo      String
+  descricao   String?     @db.Text
+  status      StatusBloco @default(PENDENTE)
+  concluidoEm DateTime?
+
+  @@index([planoId, semana, diaSemana])
+}
+
+model ItemRevisao {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questaoId       String
+  questao         Questao  @relation(fields: [questaoId], references: [id], onDelete: Cascade)
+
+  // Estado SM-2 modificado
+  intervalo       Int      @default(1) // dias
+  repeticoes      Int      @default(0)
+  fatorFacilidade Float    @default(2.5)
+  qualidade       Int? // 0-5 ultima revisao
+
+  ultimaRevisao   DateTime?
+  proximaRevisao  DateTime
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, questaoId])
+  @@index([userId, proximaRevisao])
+}
+
+// ==================== COMPUTADO ====================
+
+model AnaliseIncidencia {
+  id            String   @id @default(cuid())
+  bancaId       String
+  banca         Banca    @relation(fields: [bancaId], references: [id], onDelete: Cascade)
+  temaId        String
+  tema          Tema     @relation(fields: [temaId], references: [id], onDelete: Cascade)
+  janelaAnos    Int // 5, 10
+  totalQuestoes Int
+  porcentagem   Float
+  tendencia     Float    @default(0) // delta vs janela anterior
+  computadoEm   DateTime @default(now())
+
+  @@unique([bancaId, temaId, janelaAnos])
+  @@index([bancaId, porcentagem])
+  @@index([bancaId, janelaAnos])
+}
+
+model LLMCall {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  funcao      String // 'explicarErro', 'gerarQuestao', etc
+  modelo      String // 'claude-sonnet-4-6', 'gpt-4o'
+  versaoPrompt String
+  cacheKey    String   @unique
+  cacheHit    Boolean  @default(false)
+
+  inputTokens   Int
+  outputTokens  Int
+  latenciaMs    Int
+  custoUsd      Float
+  status        String // 'sucesso', 'erro_provider', 'erro_validacao'
+  erro          String?  @db.Text
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([funcao, createdAt])
+  @@index([cacheKey])
+}
+
+// ==================== SAAS ====================
+
+model Assinatura {
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String           @unique
+  stripeSubscriptionId String?          @unique
+  stripePriceId        String?
+  plano                PlanoUsuario     @default(FREE)
+  status               StatusAssinatura @default(TRIAL)
+  iniciadaEm           DateTime?
+  validaAte            DateTime?
+  trialAte             DateTime?
+  canceladaEm          DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([stripeCustomerId])
+  @@index([status])
+}
+
+model AssinaturaOrg {
+  id                   String           @id @default(cuid())
+  organizationId       String           @unique
+  organization         Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String           @unique
+  stripeSubscriptionId String?          @unique
+  stripePriceId        String?
+  plano                PlanoOrg         @default(STARTER)
+  status               StatusAssinatura @default(TRIAL)
+  seatsContratadas     Int              @default(1)
+  iniciadaEm           DateTime?
+  validaAte            DateTime?
+  canceladaEm          DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+model EventoStripe {
+  id          String   @id @default(cuid())
+  stripeEventId String @unique
+  tipo        String
+  payload     Json
+  processadoEm DateTime?
+  erro        String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([processadoEm])
+}

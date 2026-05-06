@@ -1,0 +1,30 @@
+{
+  "name": "@residencia-med/ai",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./prompts": "./src/prompts/index.ts",
+    "./cache": "./src/cache.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@residencia-med/db": "workspace:*",
+    "@residencia-med/types": "workspace:*",
+    "ioredis": "^5.4.1",
+    "openai": "^4.73.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@residencia-med/config": "workspace:*",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

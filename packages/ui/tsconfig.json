@@ -1,0 +1,8 @@
+{
+  "extends": "@residencia-med/config/tsconfig.next.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

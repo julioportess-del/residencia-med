@@ -1,0 +1,23 @@
+{
+  "name": "@residencia-med/config",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.js",
+  "files": ["tsconfig.base.json", "tsconfig.next.json", "tsconfig.node.json", "eslint.cjs"],
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.next.json": "./tsconfig.next.json",
+    "./tsconfig.node.json": "./tsconfig.node.json",
+    "./eslint": "./eslint.cjs"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "eslint": "^9.14.0",
+    "eslint-config-next": "^15.0.3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "typescript": "^5.6.3"
+  }
+}

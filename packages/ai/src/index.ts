@@ -1,0 +1,7 @@
+export { explicarErro } from './funcoes/explicar-erro'
+export { gerarQuestaoSimilar } from './funcoes/gerar-questao'
+export { classificarTema } from './funcoes/classificar-tema'
+export { gerarEmbedding, gerarEmbeddings } from './funcoes/embedding'
+export { buscarGuidelinePorTexto } from './funcoes/buscar-guideline'
+export type { ExplicarErroInput, ExplicarErroOutput } from './funcoes/explicar-erro'
+export type { GerarQuestaoInput, QuestaoGerada } from './funcoes/gerar-questao'

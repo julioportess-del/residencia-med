@@ -1,0 +1,41 @@
+{
+  "name": "@residencia-med/web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@residencia-med/ai": "workspace:*",
+    "@residencia-med/core": "workspace:*",
+    "@residencia-med/db": "workspace:*",
+    "@residencia-med/types": "workspace:*",
+    "@residencia-med/ui": "workspace:*",
+    "@tanstack/react-query": "^5.62.7",
+    "@trpc/client": "^11.0.0-rc.660",
+    "@trpc/react-query": "^11.0.0-rc.660",
+    "@trpc/server": "^11.0.0-rc.660",
+    "next": "^15.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "superjson": "^2.2.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@residencia-med/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.0.0-beta.5",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.0.0-beta.5",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}
