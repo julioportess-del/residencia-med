@@ -136,6 +136,8 @@ model User {
   conversasMentor     ConversaMentor[]
   submissoes          SubmissaoQuestao[]
   participacoesLive   ParticipanteLive[]
+  proficiencia        Proficiencia?
+  notificacoes        Notificacao[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -711,4 +713,49 @@ model ParticipanteLive {
 
   @@unique([simuladoLiveId, userId])
   @@index([simuladoLiveId])
+}
+
+// ==================== PROFICIENCIA ====================
+
+model Proficiencia {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scoreGlobal         Float    @default(0) // 0-100
+  porEspecialidadeJson Json    @default("[]")
+  totalRespostas      Int      @default(0)
+  atualizadoEm        DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ==================== NOTIFICACOES IN-APP ====================
+
+enum TipoNotificacao {
+  REVISAO_VENCENDO
+  PLANO_ATIVADO
+  PLANO_CANCELADO
+  PLANO_INADIMPLENTE
+  CONVITE_ORG
+  SIMULADO_LIVE_CONVITE
+  CONTRIBUICAO_APROVADA
+  CONTRIBUICAO_REJEITADA
+  CONTRIBUICAO_VALIDADA_IA
+  PROFICIENCIA_MARCO
+  SISTEMA
+}
+
+model Notificacao {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipo      TipoNotificacao
+  titulo    String
+  conteudo  String?         @db.Text
+  link      String?
+  lidaEm    DateTime?
+  createdAt DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, lidaEm])
 }

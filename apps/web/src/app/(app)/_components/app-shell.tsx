@@ -18,6 +18,8 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { NotificacoesSino } from '@/components/notificacoes-sino'
 
 type Props = {
   user: { nome: string; email: string }
@@ -70,12 +72,18 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
           })}
         </nav>
 
-        <div className="flex items-center gap-3 border-t px-4 py-3">
-          <UserButton afterSignOutUrl="/" />
-          <div className="text-xs">
-            <div className="font-medium leading-tight">{user.nome}</div>
-            <div className="truncate text-muted-foreground">{user.email}</div>
+        <div className="border-t px-3 py-3 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <UserButton afterSignOutUrl="/" />
+              <div className="text-xs min-w-0">
+                <div className="font-medium leading-tight truncate">{user.nome}</div>
+                <div className="truncate text-muted-foreground">{user.email}</div>
+              </div>
+            </div>
+            <NotificacoesSino />
           </div>
+          <ThemeToggle compacto />
         </div>
       </aside>
 

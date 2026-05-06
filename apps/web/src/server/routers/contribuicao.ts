@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { validarSubmissao } from '@residencia-med/ai'
 import { obterPlanoUsuario, temAcesso } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
+import { criarNotificacao } from '../notificacoes'
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '')
   .split(',')
@@ -146,6 +147,16 @@ export const contribuicaoRouter = router({
                 : ''),
             },
           })
+          await criarNotificacao({
+            userId: ctx.userId,
+            tipo: 'CONTRIBUICAO_VALIDADA_IA',
+            titulo:
+              novoStatus === 'REJEITADA_IA'
+                ? 'IA reprovou sua submissão'
+                : 'Submissão aguardando revisão humana',
+            conteudo: `Score IA: ${Math.round(resultado.score * 100)}/100. ${resultado.motivo.slice(0, 200)}`,
+            link: '/contribuir',
+          })
         })
         .catch(async (e) => {
           // Falha de IA — manda para revisão humana sem rejeitar
@@ -272,6 +283,14 @@ export const contribuicaoRouter = router({
         },
       })
 
+      await criarNotificacao({
+        userId: s.userId,
+        tipo: 'CONTRIBUICAO_APROVADA',
+        titulo: 'Sua questão foi aprovada e publicada!',
+        conteudo: `Sua submissão para a banca ${s.banca.codigo} foi aprovada e está no banco público.`,
+        link: `/questoes/${questao.id}`,
+      })
+
       return { ok: true, questaoId: questao.id }
     }),
 
@@ -289,6 +308,15 @@ export const contribuicaoRouter = router({
           motivoRejeicao: input.motivo,
         },
       })
+
+      await criarNotificacao({
+        userId: s.userId,
+        tipo: 'CONTRIBUICAO_REJEITADA',
+        titulo: 'Sua submissão foi rejeitada',
+        conteudo: input.motivo,
+        link: '/contribuir',
+      })
+
       return { ok: true }
     }),
 })

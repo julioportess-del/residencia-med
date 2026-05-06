@@ -4,6 +4,7 @@ import { addDays, subDays } from 'date-fns'
 import { z } from 'zod'
 import { criarSessaoCheckoutOrg, criarSessaoPortalOrg } from '@residencia-med/billing'
 import { emailConviteOrg } from '@residencia-med/email'
+import { criarNotificacao } from '../notificacoes'
 import { router, procedureProtegida } from '../trpc'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -287,6 +288,21 @@ export const orgRouter = router({
         conviteUrl: `${APP_URL}/convite/${token}`,
         convidadoPorNome: ctx.user.name,
       }).catch(() => {})
+
+      // Notificação in-app se já é usuário
+      const userExistente = await ctx.prisma.user.findUnique({
+        where: { email: input.email },
+        select: { id: true },
+      })
+      if (userExistente) {
+        await criarNotificacao({
+          userId: userExistente.id,
+          tipo: 'CONVITE_ORG',
+          titulo: `Convite para ${org.name}`,
+          conteudo: `${ctx.user.name ?? ctx.user.email} te convidou como ${input.papel}.`,
+          link: `/convite/${token}`,
+        })
+      }
 
       return { conviteId: convite.id, token }
     }),

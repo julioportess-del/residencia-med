@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Brain, ChartLine, Sparkles, Target } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://residencia-med.vercel.app'
 
@@ -139,9 +140,17 @@ export default function HomePage() {
       </section>
 
       <footer className="container mx-auto max-w-6xl px-6 py-12 text-sm text-muted-foreground">
-        <div className="flex justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <span>© 2026 Residência Med</span>
-          <span>Plataforma em fase inicial</span>
+          <div className="flex items-center gap-3">
+            <Link href="/docs/api" className="hover:text-foreground">
+              API
+            </Link>
+            <Link href="/precos" className="hover:text-foreground">
+              Planos
+            </Link>
+            <ThemeToggle compacto />
+          </div>
         </div>
       </footer>
     </main>

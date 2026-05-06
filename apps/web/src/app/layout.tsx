@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'sonner'
 import { TRPCProvider } from '@/lib/trpc/provider'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 const inter = Inter({
@@ -45,21 +46,13 @@ export const metadata: Metadata = {
     title: 'Residência Med — Aprovação em residência médica acelerada por dados',
     description:
       'Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e cada erro explicado com guideline. Fim do estudo às cegas.',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Residência Med',
-      },
-    ],
+    // imagem é gerada dinamicamente em /opengraph-image (next/og convention)
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Residência Med',
     description:
       'Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e IA.',
-    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -83,10 +76,12 @@ const CLERK_HABILITADO = Boolean(
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const conteudo = (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <body className="bg-background text-foreground font-sans antialiased min-h-screen">
-        <TRPCProvider>{children}</TRPCProvider>
-        <Toaster position="top-center" richColors />
+        <ThemeProvider>
+          <TRPCProvider>{children}</TRPCProvider>
+          <Toaster position="top-center" richColors />
+        </ThemeProvider>
       </body>
     </html>
   )
