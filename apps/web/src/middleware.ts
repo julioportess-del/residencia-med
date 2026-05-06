@@ -10,10 +10,12 @@ const ehRotaPublica = createRouteMatcher([
   '/',
   '/precos',
   '/setup',
+  '/docs/api',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)',
   '/api/health',
+  '/api/v1(.*)',
   '/api/trpc/banca.listar',
   '/api/trpc/planos.listar',
 ])
@@ -32,6 +34,7 @@ const ehRotaProtegidaDemo = createRouteMatcher([
   '/mentor(.*)',
   '/org(.*)',
   '/convite(.*)',
+  '/contribuir(.*)',
 ])
 
 const middlewareDemo = (req: NextRequest) => {

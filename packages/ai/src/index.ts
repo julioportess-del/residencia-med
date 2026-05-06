@@ -1,5 +1,7 @@
 export { explicarErro, explicarErroStream } from './funcoes/explicar-erro'
 export { mentorStream } from './funcoes/mentor'
+export { validarSubmissao } from './funcoes/validar-submissao'
+export type { SubmissaoInput, ResultadoValidacao, AlternativaSubmissao } from './funcoes/validar-submissao'
 export { calcularCusto, registrarLLMCall } from './llm-call'
 export { gerarQuestaoSimilar } from './funcoes/gerar-questao'
 export { classificarTema } from './funcoes/classificar-tema'

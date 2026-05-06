@@ -134,6 +134,7 @@ model User {
   assinatura          Assinatura?
   llmCalls            LLMCall[]
   conversasMentor     ConversaMentor[]
+  submissoes          SubmissaoQuestao[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -153,6 +154,7 @@ model Organization {
   users         User[]
   assinatura    AssinaturaOrg?
   convites      ConviteOrg[]
+  apiKeys       ApiKey[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -175,6 +177,78 @@ model ConviteOrg {
   @@index([email])
 }
 
+// ==================== API B2B ====================
+
+model ApiKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  nome           String
+  hash           String       @unique // sha256 da chave (nunca armazenar plaintext)
+  prefixo        String // primeiros 8 chars, mostrados na listagem
+  scopes         String[]     @default(["read"])
+  ultimoUsoEm    DateTime?
+  expiraEm       DateTime?
+  revogadaEm     DateTime?
+  criadoPor      String // userId
+  usos           ApiKeyUso[]
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([hash])
+}
+
+model ApiKeyUso {
+  id        String   @id @default(cuid())
+  apiKeyId  String
+  apiKey    ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  rota      String
+  status    Int
+  latenciaMs Int
+  createdAt DateTime @default(now())
+
+  @@index([apiKeyId, createdAt])
+}
+
+// ==================== CONTRIBUICAO COLABORATIVA ====================
+
+enum StatusSubmissao {
+  PENDENTE_IA
+  REJEITADA_IA
+  PENDENTE_REVISAO
+  APROVADA
+  REJEITADA
+}
+
+model SubmissaoQuestao {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bancaId           String
+  banca             Banca           @relation(fields: [bancaId], references: [id], onDelete: Restrict)
+  ano               Int
+  enunciado         String          @db.Text
+  enunciadoVignette String?         @db.Text
+  alternativasJson  Json // [{letra, texto, correta, explicacao?}]
+  gabaritoLetra     String
+  fonteUrl          String?
+  comentario        String?         @db.Text
+
+  status            StatusSubmissao @default(PENDENTE_IA)
+  scoreIA           Float?
+  motivoIA          String?         @db.Text
+  questaoCriadaId   String?         @unique
+  revisadaPor       String?
+  revisadaEm        DateTime?
+  motivoRejeicao    String?         @db.Text
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
 // ==================== CONTEUDO ====================
 
 model Banca {
@@ -189,6 +263,7 @@ model Banca {
   provas      Prova[]
   questoes    Questao[]
   analises    AnaliseIncidencia[]
+  submissoes  SubmissaoQuestao[]
   createdAt   DateTime            @default(now())
 
   @@index([codigo])

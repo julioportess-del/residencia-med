@@ -11,6 +11,8 @@ import { adminRouter } from './admin'
 import { contaRouter } from './conta'
 import { mentorRouter } from './mentor'
 import { orgRouter } from './org'
+import { apiKeysRouter } from './api-keys'
+import { contribuicaoRouter } from './contribuicao'
 
 export const appRouter = router({
   banca: bancaRouter,
@@ -26,6 +28,8 @@ export const appRouter = router({
   conta: contaRouter,
   mentor: mentorRouter,
   org: orgRouter,
+  apiKeys: apiKeysRouter,
+  contribuicao: contribuicaoRouter,
 })
 
 export type AppRouter = typeof appRouter

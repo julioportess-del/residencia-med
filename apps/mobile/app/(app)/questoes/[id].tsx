@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { BotaoOuvir } from '@/components/botao-ouvir'
 import { trpc } from '@/lib/trpc'
 import { enfileirarResposta } from '@/lib/sync'
 import { cores, espacamento, fontes, layout, radii } from '@/lib/theme'
@@ -95,6 +96,12 @@ export default function QuestaoScreen() {
       <View style={styles.cabecalho}>
         <Badge bg={q.banca.cor ?? cores.primary}>{q.banca.codigo}</Badge>
         <Text style={styles.metaTexto}>{q.ano}</Text>
+        <View style={{ flex: 1 }} />
+        <BotaoOuvir
+          vignette={q.enunciadoVignette}
+          enunciado={q.enunciado}
+          alternativas={q.alternativas.map((a) => ({ letra: a.letra, texto: a.texto }))}
+        />
       </View>
 
       {q.enunciadoVignette && (
