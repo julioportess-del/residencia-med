@@ -9,6 +9,7 @@ import { revisaoRouter } from './revisao'
 import { billingRouter, planosPublicosRouter } from './billing'
 import { adminRouter } from './admin'
 import { contaRouter } from './conta'
+import { mentorRouter } from './mentor'
 
 export const appRouter = router({
   banca: bancaRouter,
@@ -22,6 +23,7 @@ export const appRouter = router({
   planos: planosPublicosRouter,
   admin: adminRouter,
   conta: contaRouter,
+  mentor: mentorRouter,
 })
 
 export type AppRouter = typeof appRouter

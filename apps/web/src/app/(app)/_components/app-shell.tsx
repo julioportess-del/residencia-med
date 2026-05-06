@@ -8,6 +8,7 @@ import {
   Calendar,
   ChartLine,
   CreditCard,
+  MessageSquare,
   Repeat2,
   Stethoscope,
   Target,
@@ -28,6 +29,7 @@ const NAV = [
   { href: '/simulado', icon: Target, label: 'Simulado' },
   { href: '/revisao', icon: Repeat2, label: 'Revisão' },
   { href: '/plano', icon: Calendar, label: 'Plano' },
+  { href: '/mentor', icon: MessageSquare, label: 'Mentor' },
   { href: '/conta', icon: CreditCard, label: 'Conta' },
 ] as const
 

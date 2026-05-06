@@ -133,6 +133,7 @@ model User {
   itensRevisao        ItemRevisao[]
   assinatura          Assinatura?
   llmCalls            LLMCall[]
+  conversasMentor     ConversaMentor[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -529,4 +530,39 @@ model EventoStripe {
   createdAt   DateTime @default(now())
 
   @@index([processadoEm])
+}
+
+// ==================== MENTOR IA ====================
+
+enum PapelMensagem {
+  USUARIO
+  ASSISTENTE
+  SISTEMA
+}
+
+model ConversaMentor {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo      String
+  contextoJson Json? // snapshot do contexto do usuario no inicio
+  mensagens   MensagemMentor[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model MensagemMentor {
+  id           String         @id @default(cuid())
+  conversaId   String
+  conversa     ConversaMentor @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  papel        PapelMensagem
+  conteudo     String         @db.Text
+  inputTokens  Int            @default(0)
+  outputTokens Int            @default(0)
+  custoUsd     Float          @default(0)
+  createdAt    DateTime       @default(now())
+
+  @@index([conversaId, createdAt])
 }

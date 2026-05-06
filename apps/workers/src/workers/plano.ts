@@ -3,11 +3,18 @@ import { prisma } from '@residencia-med/db'
 import { gerarPlano, priorizarTemas } from '@residencia-med/core'
 import { logger } from '../logger'
 import { connection, FILA_PLANO, type JobGerarPlano } from '../queues'
+import { expandirCronPlano } from '../cron'
 
 export function iniciarWorkerPlano() {
   const worker = new Worker<JobGerarPlano>(
     FILA_PLANO,
     async (job) => {
+      // Marker: cron semanal expande para todos os usuários ativos
+      if (job.data.userId === 'TODOS') {
+        await expandirCronPlano()
+        return
+      }
+
       const { userId, motivo } = job.data
       const log = logger.child({ job: 'plano', userId, motivo })
 

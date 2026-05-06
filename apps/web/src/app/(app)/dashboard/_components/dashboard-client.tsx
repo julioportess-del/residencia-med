@@ -1,6 +1,6 @@
 'use client'
 
-import { Activity, Flame, ListChecks, Target } from 'lucide-react'
+import { Activity, Flame, ListChecks, Target, Users } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -23,6 +23,7 @@ export function DashboardClient() {
   const { data: resumo, isLoading: r1 } = trpc.dashboard.resumo.useQuery()
   const { data: porEsp, isLoading: r2 } = trpc.dashboard.porEspecialidade.useQuery()
   const { data: pf, isLoading: r3 } = trpc.dashboard.pontosFortesEFracos.useQuery()
+  const { data: pares, isLoading: r4 } = trpc.dashboard.comparacaoPares.useQuery()
 
   return (
     <div className="mt-6 space-y-6">
@@ -128,6 +129,119 @@ export function DashboardClient() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="size-4" />
+            Como você está vs outros candidatos da sua banca
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ComparacaoPares dados={pares as DadosPares | null | undefined} loading={r4} />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+type DadosPares = {
+  bancaAlvo: string
+  totalPares: number
+  minhaTaxa: number | null
+  mediaPares: number | null
+  percentil: number | null
+  quartis: { p10: number; p25: number; p50: number; p75: number; p90: number } | null
+}
+
+function ComparacaoPares({
+  dados,
+  loading,
+}: {
+  dados: DadosPares | null | undefined
+  loading: boolean
+}) {
+  if (loading) return <Skeleton className="h-32" />
+  if (!dados) {
+    return (
+      <EstadoVazio>
+        Defina sua banca-alvo no onboarding para comparar com outros candidatos.
+      </EstadoVazio>
+    )
+  }
+  const d = dados
+  if (d.totalPares < 5) {
+    return (
+      <EstadoVazio>
+        Ainda não há candidatos suficientes da {d.bancaAlvo} para uma comparação anônima
+        (precisamos de pelo menos 5).
+      </EstadoVazio>
+    )
+  }
+  if (
+    d.minhaTaxa === null ||
+    d.percentil === null ||
+    d.mediaPares === null ||
+    d.quartis === null
+  ) {
+    return (
+      <EstadoVazio>
+        Responda pelo menos 10 questões para se comparar aos {d.totalPares} colegas da{' '}
+        {d.bancaAlvo}.
+      </EstadoVazio>
+    )
+  }
+
+  const minhaPct = Math.round(d.minhaTaxa * 100)
+  const mediaPct = Math.round(d.mediaPares * 100)
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Sua taxa" valor={`${minhaPct}%`} destaque />
+        <Stat label={`Média ${d.bancaAlvo}`} valor={`${mediaPct}%`} />
+        <Stat label="Seu percentil" valor={`p${d.percentil}`} />
+      </div>
+      <div className="space-y-1.5">
+        <div className="text-xs text-muted-foreground">
+          Distribuição entre {d.totalPares} candidatos com mesma banca-alvo
+        </div>
+        <div className="relative h-2 w-full rounded-full bg-secondary">
+          <div
+            className="absolute top-0 h-2 rounded-full bg-primary/30"
+            style={{
+              left: `${d.quartis.p25 * 100}%`,
+              width: `${(d.quartis.p75 - d.quartis.p25) * 100}%`,
+            }}
+          />
+          <div
+            className="absolute top-0 h-2 w-0.5 bg-foreground"
+            style={{ left: `${d.quartis.p50 * 100}%` }}
+            title="Mediana"
+          />
+          <div
+            className="absolute -top-1 size-4 rounded-full border-2 border-primary bg-background"
+            style={{ left: `calc(${minhaPct}% - 8px)` }}
+            title="Você"
+          />
+        </div>
+        <div className="flex justify-between text-[10px] text-muted-foreground">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Comparação anônima — apenas distribuição agregada da sua banca, sem identificar ninguém.
+      </p>
+    </div>
+  )
+}
+
+function Stat({ label, valor, destaque }: { label: string; valor: string; destaque?: boolean }) {
+  return (
+    <div className={destaque ? 'rounded-lg border-2 border-primary bg-primary/5 p-3' : 'rounded-lg border p-3'}>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-xl font-bold tabular-nums">{valor}</div>
     </div>
   )
 }

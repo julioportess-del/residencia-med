@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ExplicarComIA } from '@/components/explicar-ia-dialog'
+import { GerarSimilarDialog } from '@/components/gerar-similar-dialog'
 import { trpc } from '@/lib/trpc/client'
 import { cn } from '@/lib/cn'
 
@@ -207,6 +208,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
             {escolha && (
               <ExplicarComIA questaoId={q.id} alternativaEscolhida={escolha} />
             )}
+            <GerarSimilarDialog questaoId={q.id} />
             <Button variant="outline" asChild>
               <Link href="/questoes">Voltar ao banco</Link>
             </Button>

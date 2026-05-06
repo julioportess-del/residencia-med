@@ -26,6 +26,7 @@
     "@residencia-med/billing": "workspace:*",
     "@residencia-med/core": "workspace:*",
     "@residencia-med/db": "workspace:*",
+    "@residencia-med/email": "workspace:*",
     "@residencia-med/types": "workspace:*",
     "@residencia-med/ui": "workspace:*",
     "stripe": "^17.4.0",

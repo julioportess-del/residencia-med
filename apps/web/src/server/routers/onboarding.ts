@@ -1,4 +1,5 @@
 import { OnboardingInput } from '@residencia-med/types'
+import { emailBemVindo } from '@residencia-med/email'
 import { router, procedureProtegida } from '../trpc'
 import { enqueueGerarPlano, enqueueRecomputarIncidencia } from '../../lib/queues'
 
@@ -47,6 +48,13 @@ export const onboardingRouter = router({
     }
 
     await enqueueGerarPlano({ userId: ctx.userId, motivo: 'onboarding' })
+
+    // Email de boas-vindas (best-effort, não bloqueia)
+    void emailBemVindo(ctx.user.email, ctx.user.name).catch((e) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[email] falha envio bem-vindo', e)
+      }
+    })
 
     return { ok: true }
   }),

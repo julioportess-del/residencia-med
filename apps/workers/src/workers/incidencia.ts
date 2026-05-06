@@ -3,6 +3,7 @@ import { prisma } from '@residencia-med/db'
 import { calcularIncidencia, calcularTendencia } from '@residencia-med/core'
 import { logger } from '../logger'
 import { connection, FILA_INCIDENCIA, type JobRecomputarIncidencia } from '../queues'
+import { expandirCronIncidencia } from '../cron'
 
 const JANELAS_DEFAULT = [5, 10]
 
@@ -10,6 +11,12 @@ export function iniciarWorkerIncidencia() {
   const worker = new Worker<JobRecomputarIncidencia>(
     FILA_INCIDENCIA,
     async (job) => {
+      // Marker: cron diário expande para todas as bancas
+      if (job.data.bancaId === 'TODAS') {
+        await expandirCronIncidencia()
+        return
+      }
+
       const { bancaId, janelas = JANELAS_DEFAULT } = job.data
       const log = logger.child({ job: 'incidencia', bancaId })
 

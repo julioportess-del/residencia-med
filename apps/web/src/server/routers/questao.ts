@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { gerarQuestaoSimilar } from '@residencia-med/ai'
 import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
-import { checarLimiteQuestoes } from '@residencia-med/billing'
+import { checarLimiteQuestoes, obterPlanoUsuario, temAcesso } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
 import { enqueueAtualizarRevisao } from '../../lib/queues'
 
@@ -142,4 +143,65 @@ export const questaoRouter = router({
       ),
     }
   }),
+
+  gerarSimilar: procedureProtegida
+    .input(z.object({ questaoId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const plano = await obterPlanoUsuario(ctx.userId)
+      if (!temAcesso(plano, 'gerarQuestoesIA')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Geração de questões parecidas é exclusiva do plano Premium.',
+        })
+      }
+
+      const original = await ctx.prisma.questao.findUnique({
+        where: { id: input.questaoId, publicada: true },
+        include: {
+          alternativas: { orderBy: { ordem: 'asc' } },
+          banca: true,
+          temas: {
+            where: { primario: true },
+            include: { tema: true },
+            take: 1,
+          },
+        },
+      })
+      if (!original) throw new TRPCError({ code: 'NOT_FOUND' })
+
+      const tema = original.temas[0]?.tema?.nome ?? 'tema clínico'
+
+      const exemplos = await ctx.prisma.questao.findMany({
+        where: {
+          bancaId: original.bancaId,
+          publicada: true,
+          id: { not: original.id },
+        },
+        take: 2,
+        include: { alternativas: { orderBy: { ordem: 'asc' } } },
+        orderBy: { ano: 'desc' },
+      })
+
+      try {
+        const gerada = await gerarQuestaoSimilar({
+          bancaCodigo: original.banca.codigo,
+          bancaNome: original.banca.nome,
+          tema,
+          exemplosBanca: [original, ...exemplos].map((q) => ({
+            enunciado: q.enunciado,
+            alternativas: q.alternativas.map((a) => ({
+              letra: a.letra,
+              texto: a.texto,
+              correta: a.correta,
+            })),
+          })),
+        })
+        return gerada
+      } catch (e) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Falha ao gerar variação: ${(e as Error).message}`,
+        })
+      }
+    }),
 })

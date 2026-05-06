@@ -1,5 +1,6 @@
 import { logger } from './logger'
 import { warmupIncidencia } from './warmup'
+import { configurarCronJobs } from './cron'
 import { iniciarWorkerRevisao } from './workers/revisao'
 import { iniciarWorkerIncidencia } from './workers/incidencia'
 import { iniciarWorkerPlano } from './workers/plano'
@@ -12,8 +13,9 @@ async function main() {
   iniciarWorkerPlano()
 
   await warmupIncidencia()
+  await configurarCronJobs()
 
-  logger.info('Workers prontos')
+  logger.info('Workers prontos com cron jobs configurados')
 }
 
 main().catch((err) => {

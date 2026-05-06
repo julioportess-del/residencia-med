@@ -1,6 +1,17 @@
 import { differenceInDays, startOfDay, subDays } from 'date-fns'
 import { router, procedureProtegida } from '../trpc'
 
+export type ComparacaoParesOutput =
+  | null
+  | {
+      bancaAlvo: string
+      totalPares: number
+      minhaTaxa: number | null
+      mediaPares: number | null
+      percentil: number | null
+      quartis: { p10: number; p25: number; p50: number; p75: number; p90: number } | null
+    }
+
 export const dashboardRouter = router({
   resumo: procedureProtegida.query(async ({ ctx }) => {
     const userId = ctx.userId
@@ -137,6 +148,98 @@ export const dashboardRouter = router({
     const fracos = [...lista].sort((a, b) => a.taxa - b.taxa).slice(0, 5)
 
     return { fortes, fracos }
+  }),
+
+  /**
+   * Compara o usuário atual com os demais que estudam a mesma banca-alvo.
+   * Retorna percentil + anonimato (apenas distribuição, nenhum email).
+   * Mínimo de 5 outros usuários para preservar privacidade.
+   */
+  comparacaoPares: procedureProtegida.query(async ({ ctx }): Promise<ComparacaoParesOutput> => {
+    const userId = ctx.userId
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: userId },
+      select: { metaResidencia: true, dataProva: true },
+    })
+    if (!user?.metaResidencia) return null
+
+    // Busca usuários com mesma banca alvo
+    const pares = await ctx.prisma.user.findMany({
+      where: {
+        metaResidencia: user.metaResidencia,
+        id: { not: userId },
+      },
+      select: {
+        id: true,
+        respostas: {
+          select: { correta: true },
+          take: 500,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    })
+
+    const taxas = pares
+      .map((p) => {
+        const total = p.respostas.length
+        if (total < 20) return null
+        const ac = p.respostas.filter((r) => r.correta).length
+        return ac / total
+      })
+      .filter((t): t is number => t !== null)
+
+    if (taxas.length < 5) {
+      return {
+        bancaAlvo: user.metaResidencia,
+        totalPares: taxas.length,
+        minhaTaxa: null,
+        mediaPares: null,
+        percentil: null,
+        quartis: null,
+      }
+    }
+
+    // Taxa do usuário atual
+    const minhasRespostas = await ctx.prisma.resposta.findMany({
+      where: { userId },
+      select: { correta: true },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    })
+    if (minhasRespostas.length < 10) {
+      return {
+        bancaAlvo: user.metaResidencia,
+        totalPares: taxas.length,
+        minhaTaxa: null,
+        mediaPares: null,
+        percentil: null,
+        quartis: null,
+      }
+    }
+    const minhaTaxa =
+      minhasRespostas.filter((r) => r.correta).length / minhasRespostas.length
+
+    const ordenadas = [...taxas].sort((a, b) => a - b)
+    const piores = ordenadas.filter((t) => t < minhaTaxa).length
+    const percentil = Math.round((piores / ordenadas.length) * 100)
+
+    const q = (p: number) =>
+      ordenadas[Math.min(ordenadas.length - 1, Math.floor((p / 100) * ordenadas.length))] ?? 0
+
+    return {
+      bancaAlvo: user.metaResidencia,
+      totalPares: ordenadas.length,
+      minhaTaxa,
+      mediaPares: ordenadas.reduce((a, b) => a + b, 0) / ordenadas.length,
+      percentil,
+      quartis: {
+        p10: q(10),
+        p25: q(25),
+        p50: q(50),
+        p75: q(75),
+        p90: q(90),
+      },
+    }
   }),
 })
 
