@@ -1,0 +1,135 @@
+import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
+import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
+import { router, procedureProtegida } from '../trpc'
+
+export const questaoRouter = router({
+  listar: procedureProtegida.input(FiltroQuestoesInput).query(async ({ ctx, input }) => {
+    const where = {
+      publicada: true,
+      ...(input.bancaIds?.length ? { bancaId: { in: input.bancaIds } } : {}),
+      ...(input.dificuldades?.length ? { dificuldade: { in: input.dificuldades } } : {}),
+      ...(input.anos?.length ? { ano: { in: input.anos } } : {}),
+      ...(input.temaIds?.length
+        ? { temas: { some: { temaId: { in: input.temaIds } } } }
+        : {}),
+    }
+
+    const questoes = await ctx.prisma.questao.findMany({
+      where,
+      take: input.limit + 1,
+      ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+      orderBy: [{ ano: 'desc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        ano: true,
+        dificuldade: true,
+        enunciado: true,
+        banca: { select: { codigo: true, nome: true, cor: true } },
+        temas: {
+          where: { primario: true },
+          select: { tema: { select: { id: true, nome: true, codigo: true } } },
+          take: 1,
+        },
+        _count: { select: { respostas: { where: { userId: ctx.userId } } } },
+      },
+    })
+
+    let proxCursor: string | undefined
+    if (questoes.length > input.limit) {
+      const ultimo = questoes.pop()
+      proxCursor = ultimo?.id
+    }
+
+    return {
+      itens: questoes.map((q) => ({
+        id: q.id,
+        ano: q.ano,
+        dificuldade: q.dificuldade,
+        resumo: q.enunciado.slice(0, 180),
+        banca: q.banca,
+        temaPrincipal: q.temas[0]?.tema ?? null,
+        jaRespondida: q._count.respostas > 0,
+      })),
+      proxCursor,
+    }
+  }),
+
+  detalhe: procedureProtegida.input(z.object({ id: z.string().cuid() })).query(async ({ ctx, input }) => {
+    const questao = await ctx.prisma.questao.findUnique({
+      where: { id: input.id, publicada: true },
+      include: {
+        alternativas: { orderBy: { ordem: 'asc' } },
+        banca: { select: { codigo: true, nome: true, cor: true } },
+        prova: { select: { ano: true, tipo: true } },
+        temas: {
+          select: {
+            primario: true,
+            tema: { select: { id: true, nome: true, codigo: true } },
+          },
+        },
+        guidelines: {
+          select: {
+            trecho: true,
+            guideline: { select: { titulo: true, fonte: true, url: true, resumo: true } },
+          },
+        },
+      },
+    })
+    if (!questao) throw new TRPCError({ code: 'NOT_FOUND' })
+    return questao
+  }),
+
+  responder: procedureProtegida.input(ResponderQuestaoInput).mutation(async ({ ctx, input }) => {
+    const questao = await ctx.prisma.questao.findUnique({
+      where: { id: input.questaoId, publicada: true },
+      include: { alternativas: true },
+    })
+    if (!questao) throw new TRPCError({ code: 'NOT_FOUND' })
+
+    const escolhida = questao.alternativas.find((a) => a.letra === input.alternativaLetra)
+    if (!escolhida) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Alternativa invalida' })
+
+    const correta = escolhida.correta
+
+    const resposta = await ctx.prisma.resposta.create({
+      data: {
+        userId: ctx.userId,
+        questaoId: questao.id,
+        alternativaId: escolhida.id,
+        alternativaLetra: escolhida.letra,
+        correta,
+        tempoSegundos: input.tempoSegundos,
+        confianca: input.confianca,
+        sessaoId: input.sessaoId,
+        modoRevisao: input.modoRevisao,
+      },
+    })
+
+    if (input.sessaoId) {
+      await ctx.prisma.sessao.update({
+        where: { id: input.sessaoId },
+        data: {
+          acertos: { increment: correta ? 1 : 0 },
+          erros: { increment: correta ? 0 : 1 },
+          tempoTotal: { increment: input.tempoSegundos },
+        },
+      })
+    }
+
+    // Turno 3: enfileirar job de revisao SM-2 aqui
+    void resposta
+
+    return {
+      respostaId: resposta.id,
+      correta,
+      gabaritoLetra: questao.gabaritoLetra,
+      explicacaoMd: questao.explicacaoMd,
+      alternativasErrosMd: Object.fromEntries(
+        questao.alternativas
+          .filter((a) => !a.correta && a.explicacaoErro)
+          .map((a) => [a.letra, a.explicacaoErro ?? '']),
+      ),
+    }
+  }),
+})

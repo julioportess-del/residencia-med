@@ -37,12 +37,11 @@ export async function explicarErro(input: ExplicarErroInput): Promise<ExplicarEr
 
   const { system, user } = promptExplicarErro(input)
 
+  // TODO Turno 3: ativar prompt caching via beta header
   const response = await anthropic.messages.create({
     model: MODELO_ANTHROPIC,
     max_tokens: 1024,
-    system: [
-      { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
-    ],
+    system,
     messages: [{ role: 'user', content: user }],
   })
 

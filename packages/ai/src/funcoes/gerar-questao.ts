@@ -54,10 +54,11 @@ export async function gerarQuestaoSimilar(input: GerarQuestaoInput): Promise<Que
 
   const { system, user } = promptGerarQuestao(input)
 
+  // TODO Turno 3: ativar prompt caching via beta header
   const response = await anthropic.messages.create({
     model: MODELO_ANTHROPIC,
     max_tokens: 2048,
-    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+    system,
     messages: [{ role: 'user', content: user }],
   })
 
