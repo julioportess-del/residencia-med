@@ -25,9 +25,9 @@ export default function HomePage() {
                   Comecar gratis <ArrowRight className="size-4" />
                 </Button>
               </Link>
-              <Link href="#como-funciona">
+              <Link href="/precos">
                 <Button size="lg" variant="outline">
-                  Como funciona
+                  Ver planos
                 </Button>
               </Link>
             </div>

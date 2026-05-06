@@ -2,10 +2,13 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
 const ehRotaPublica = createRouteMatcher([
   '/',
+  '/precos',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)',
   '/api/health',
+  '/api/trpc/banca.listar',
+  '/api/trpc/planos.listar',
 ])
 
 export default clerkMiddleware(async (auth, req) => {

@@ -1,10 +1,18 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { CriarSessaoInput } from '@residencia-med/types'
+import { checarLimiteSimulados } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
 
 export const sessaoRouter = router({
   criar: procedureProtegida.input(CriarSessaoInput).mutation(async ({ ctx, input }) => {
+    if (input.tipo === 'SIMULADO') {
+      const limite = await checarLimiteSimulados(ctx.userId)
+      if (!limite.permitido) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: limite.motivo ?? 'Limite atingido' })
+      }
+    }
+
     const where = {
       publicada: true,
       ...(input.filtros.bancaIds?.length ? { bancaId: { in: input.filtros.bancaIds } } : {}),

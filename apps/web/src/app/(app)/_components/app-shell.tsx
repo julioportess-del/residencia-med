@@ -7,6 +7,7 @@ import {
   BookOpen,
   Calendar,
   ChartLine,
+  CreditCard,
   Repeat2,
   Stethoscope,
   Target,
@@ -27,6 +28,7 @@ const NAV = [
   { href: '/simulado', icon: Target, label: 'Simulado' },
   { href: '/revisao', icon: Repeat2, label: 'Revisao' },
   { href: '/plano', icon: Calendar, label: 'Plano' },
+  { href: '/conta', icon: CreditCard, label: 'Conta' },
 ] as const
 
 export function AppShell({ user, onboardingCompleto, children }: Props) {

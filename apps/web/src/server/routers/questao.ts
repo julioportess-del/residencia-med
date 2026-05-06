@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
+import { checarLimiteQuestoes } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
 import { enqueueAtualizarRevisao } from '@/lib/queues'
 
@@ -82,6 +83,11 @@ export const questaoRouter = router({
   }),
 
   responder: procedureProtegida.input(ResponderQuestaoInput).mutation(async ({ ctx, input }) => {
+    const limite = await checarLimiteQuestoes(ctx.userId)
+    if (!limite.permitido) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: limite.motivo ?? 'Limite atingido' })
+    }
+
     const questao = await ctx.prisma.questao.findUnique({
       where: { id: input.questaoId, publicada: true },
       include: { alternativas: true },

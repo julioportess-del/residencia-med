@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { explicarErroStream } from '@residencia-med/ai'
+import { checarLimiteIA } from '@residencia-med/billing'
 import { prisma } from '@residencia-med/db'
 import { garantirUser } from '@/server/trpc'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +25,16 @@ export async function POST(req: Request) {
   }
 
   const user = await garantirUser(clerkId)
+
+  const limite = await checarLimiteIA(user.id)
+  if (!limite.permitido) {
+    return NextResponse.json({ error: limite.motivo ?? 'Limite IA atingido' }, { status: 403 })
+  }
+
+  const rl = await rateLimit({ chave: `ia-explicar:${user.id}`, limite: 10, janelaSegundos: 60 })
+  if (!rl.permitido) {
+    return NextResponse.json({ error: 'Muitas requisicoes, aguarde um momento.' }, { status: 429 })
+  }
 
   const questao = await prisma.questao.findUnique({
     where: { id: parsed.data.questaoId, publicada: true },
