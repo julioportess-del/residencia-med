@@ -1,6 +1,6 @@
 import { prisma } from '@residencia-med/db'
 import { logger } from './logger'
-import { filaIncidencia, filaPlano } from './queues'
+import { filaIncidencia, filaLembrete, filaPlano } from './queues'
 
 /**
  * Cron jobs configurados via BullMQ repeatable jobs (idempotente — sobrescreve se já existir).
@@ -31,7 +31,17 @@ export async function configurarCronJobs(): Promise<void> {
     },
   )
 
-  logger.info('Cron jobs configurados (incidência diária + plano semanal)')
+  // Lembrete diário às 18:00 UTC (15:00 BRT em horário padrão)
+  await filaLembrete.add(
+    'cron-lembrete-diario',
+    { ts: Date.now() },
+    {
+      repeat: { pattern: '0 18 * * *', tz: 'UTC' },
+      jobId: 'cron-lembrete-diario',
+    },
+  )
+
+  logger.info('Cron jobs configurados (incidência + plano + lembrete)')
 }
 
 /**

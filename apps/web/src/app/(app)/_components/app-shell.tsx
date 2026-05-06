@@ -20,6 +20,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { NotificacoesSino } from '@/components/notificacoes-sino'
+import { RegistrarSW } from '@/components/registrar-sw'
 
 type Props = {
   user: { nome: string; email: string }
@@ -43,8 +44,12 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
   const pathname = usePathname()
   const naoEhOnboarding = !pathname.startsWith('/onboarding')
 
+  // Registra SW pra PWA + push (no-op se já registrado)
+  void user
+
   return (
     <div className="flex min-h-screen">
+      <RegistrarSW />
       <aside className="hidden w-60 shrink-0 border-r md:flex md:flex-col">
         <Link href="/dashboard" className="flex items-center gap-2 px-6 py-5 border-b">
           <Stethoscope className="size-5 text-primary" />

@@ -4,6 +4,7 @@ import { configurarCronJobs } from './cron'
 import { iniciarWorkerRevisao } from './workers/revisao'
 import { iniciarWorkerIncidencia } from './workers/incidencia'
 import { iniciarWorkerPlano } from './workers/plano'
+import { iniciarWorkerLembrete } from './workers/lembrete'
 
 async function main() {
   logger.info('Iniciando workers Residencia Med')
@@ -11,6 +12,7 @@ async function main() {
   iniciarWorkerRevisao()
   iniciarWorkerIncidencia()
   iniciarWorkerPlano()
+  iniciarWorkerLembrete()
 
   await warmupIncidencia()
   await configurarCronJobs()

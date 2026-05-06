@@ -16,6 +16,7 @@
     "@residencia-med/ai": "workspace:*",
     "@residencia-med/core": "workspace:*",
     "@residencia-med/db": "workspace:*",
+    "@residencia-med/email": "workspace:*",
     "@residencia-med/types": "workspace:*",
     "bullmq": "^5.34.0",
     "ioredis": "^5.4.1",

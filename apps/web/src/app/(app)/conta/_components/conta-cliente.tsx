@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PushOptIn } from '@/components/push-opt-in'
 import { trpc } from '@/lib/trpc/client'
 
 const COR_PLANO: Record<string, string> = {
@@ -115,6 +116,24 @@ export function ContaCliente() {
             usado={uso.data?.iaMes ?? 0}
             limite={plano === 'FREE' ? 0 : plano === 'PRO' ? 50 : -1}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Notificações push</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-sm">
+              <div className="font-medium">Receber alertas no navegador</div>
+              <p className="text-muted-foreground text-xs">
+                Item de revisão vencendo, convites e atualizações de plano. Funciona mesmo com a
+                aba fechada.
+              </p>
+            </div>
+            <PushOptIn />
+          </div>
         </CardContent>
       </Card>
 

@@ -5,7 +5,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./push": "./src/push.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -13,10 +14,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "resend": "^4.0.1"
+    "resend": "^4.0.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@residencia-med/config": "workspace:*",
+    "@types/web-push": "^3.6.4",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }

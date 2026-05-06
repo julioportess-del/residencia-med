@@ -51,6 +51,7 @@
     "sonner": "^1.7.1",
     "superjson": "^2.2.2",
     "tailwind-merge": "^2.5.4",
+    "web-push": "^3.6.7",
     "zod": "^3.23.8"
   },
   "devDependencies": {

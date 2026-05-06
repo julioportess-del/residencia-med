@@ -138,6 +138,7 @@ model User {
   participacoesLive   ParticipanteLive[]
   proficiencia        Proficiencia?
   notificacoes        Notificacao[]
+  pushSubscriptions   PushSubscription[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -758,4 +759,19 @@ model Notificacao {
 
   @@index([userId, createdAt])
   @@index([userId, lidaEm])
+}
+
+// ==================== WEB PUSH ====================
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
