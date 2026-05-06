@@ -26,7 +26,7 @@ export default function ContaScreen() {
   const [pendentes, setPendentes] = useState<number | null>(null)
   const [sincronizando, setSincronizando] = useState(false)
 
-  // sincronizacao manual da fila
+  // sincronização manual da fila
   const sincronizar = async () => {
     setSincronizando(true)
     try {
@@ -48,7 +48,7 @@ export default function ContaScreen() {
         }
       })
       setPendentes(r.pendentes)
-      Alert.alert('Sincronizacao', `${r.enviadas} enviada(s), ${r.pendentes} pendente(s).`)
+      Alert.alert('Sincronização', `${r.enviadas} enviada(s), ${r.pendentes} pendente(s).`)
       await utils.dashboard.invalidate()
     } finally {
       setSincronizando(false)
@@ -64,7 +64,7 @@ export default function ContaScreen() {
     <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
       <Card>
         <CardTitle>{user?.primaryEmailAddress?.emailAddress ?? 'Conta'}</CardTitle>
-        <CardDescription>Plano, sincronizacao e logout.</CardDescription>
+        <CardDescription>Plano, sincronização e logout.</CardDescription>
 
         <View style={layout.rowBetween}>
           <Text style={styles.label}>Plano</Text>
@@ -73,15 +73,15 @@ export default function ContaScreen() {
 
         {uso.data && (
           <View style={{ gap: espacamento.xs }}>
-            <UsoLinha label="Questoes/mes" valor={uso.data.questoesMes} />
+            <UsoLinha label="Questões/mês" valor={uso.data.questoesMes} />
             <UsoLinha label="Simulados/semana" valor={uso.data.simuladosSemana} />
-            <UsoLinha label="IA/mes" valor={uso.data.iaMes} />
+            <UsoLinha label="IA/mês" valor={uso.data.iaMes} />
           </View>
         )}
       </Card>
 
       <Card>
-        <CardTitle>Sincronizacao offline</CardTitle>
+        <CardTitle>Sincronização offline</CardTitle>
         <CardDescription>
           Respostas feitas sem internet ficam em fila local. Sincronize manualmente a qualquer momento.
         </CardDescription>

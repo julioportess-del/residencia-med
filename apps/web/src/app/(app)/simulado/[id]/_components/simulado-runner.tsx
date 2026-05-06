@@ -65,7 +65,7 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
           sessaoId,
         })
       } catch {
-        // ja submetidas serao detectadas duplicadas ou ignoradas
+        // já submetidas serão detectadas duplicadas ou ignoradas
       }
     }
     finalizarM.mutate({ id: sessaoId })
@@ -94,7 +94,7 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
     }
   }
 
-  if (!idAtual) return <div>Sessao invalida.</div>
+  if (!idAtual) return <div>Sessão inválida.</div>
 
   const min = Math.floor(restanteSec / 60)
   const seg = restanteSec % 60
@@ -104,7 +104,7 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
     <div className="container mx-auto max-w-3xl px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Questao {idx + 1} de {questaoIds.length}
+          Questão {idx + 1} de {questaoIds.length}
         </div>
         <div
           className={cn(
@@ -165,7 +165,7 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
               Anterior
             </Button>
             <Button onClick={proxima} loading={responderM.isPending || finalizarM.isPending}>
-              {idx === questaoIds.length - 1 ? 'Finalizar' : 'Proxima'}
+              {idx === questaoIds.length - 1 ? 'Finalizar' : 'Próxima'}
             </Button>
           </div>
         </>

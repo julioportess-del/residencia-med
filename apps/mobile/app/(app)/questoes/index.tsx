@@ -59,7 +59,7 @@ export default function QuestoesScreen() {
       )}
       ListEmptyComponent={
         <Text style={{ textAlign: 'center', color: cores.mutedForeground }}>
-          Nenhuma questao encontrada.
+          Nenhuma questão encontrada.
         </Text>
       }
     />

@@ -61,7 +61,7 @@ export function SimuladoConfig() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="n">Numero de questoes</Label>
+            <Label htmlFor="n">Número de questões</Label>
             <Input
               id="n"
               type="number"

@@ -10,19 +10,19 @@ export default function HomePage() {
           <div className="max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
               <Sparkles className="size-3" />
-              Em desenvolvimento — Turno 1 concluido
+              Plataforma em fase inicial
             </div>
             <h1 className="text-balance font-bold tracking-tight text-5xl md:text-7xl">
-              Aprovacao em residencia, <span className="text-primary">acelerada por dados</span>.
+              Aprovação em residência, <span className="text-primary">acelerada por dados</span>.
             </h1>
             <p className="mt-6 text-lg text-muted-foreground md:text-xl max-w-2xl">
-              Analise de 10 anos da sua banca, plano adaptativo, repeticao espacada e cada erro
-              explicado com guideline. Fim do estudo as cegas.
+              Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e cada erro
+              explicado com guideline. Fim do estudo às cegas.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link href="/sign-up">
                 <Button size="lg">
-                  Comecar gratis <ArrowRight className="size-4" />
+                  Começar grátis <ArrowRight className="size-4" />
                 </Button>
               </Link>
               <Link href="/precos">
@@ -42,22 +42,22 @@ export default function HomePage() {
             <Feature
               icon={<Target className="size-5" />}
               titulo="Banca-alvo definida"
-              desc="Voce escolhe a banca; analisamos as ultimas 10 provas e ranqueamos temas."
+              desc="Você escolhe a banca; analisamos as últimas 10 provas e ranqueamos os temas."
             />
             <Feature
               icon={<ChartLine className="size-5" />}
               titulo="Plano adaptativo"
-              desc="Distribuicao da carga horaria nos temas que mais caem e onde voce esta pior."
+              desc="Distribuição da carga horária nos temas que mais caem e onde você está pior."
             />
             <Feature
               icon={<Brain className="size-5" />}
-              titulo="Repeticao espacada"
-              desc="SM-2 modificado: erros voltam em intervalos calculados ate o dia da prova."
+              titulo="Repetição espaçada"
+              desc="SM-2 modificado: os erros voltam em intervalos calculados até o dia da prova."
             />
             <Feature
               icon={<Sparkles className="size-5" />}
               titulo="Erro explicado"
-              desc="Cada questao errada vem com guideline citado e por que cada alternativa e errada."
+              desc="Cada questão errada vem com guideline citado e o motivo de cada alternativa estar incorreta."
             />
           </div>
         </div>
@@ -67,7 +67,7 @@ export default function HomePage() {
         <div className="container mx-auto max-w-6xl px-6 py-24">
           <h2 className="text-3xl font-bold tracking-tight">Bancas cobertas</h2>
           <p className="mt-2 text-muted-foreground">
-            Analise completa para as principais provas brasileiras.
+            Análise completa das principais provas brasileiras.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {[
@@ -99,8 +99,8 @@ export default function HomePage() {
 
       <footer className="container mx-auto max-w-6xl px-6 py-12 text-sm text-muted-foreground">
         <div className="flex justify-between">
-          <span>© 2026 Residencia Med</span>
-          <span>Em desenvolvimento</span>
+          <span>© 2026 Residência Med</span>
+          <span>Plataforma em fase inicial</span>
         </div>
       </footer>
     </main>

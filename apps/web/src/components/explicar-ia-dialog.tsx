@@ -25,7 +25,7 @@ export function ExplicarComIA({ questaoId, alternativaEscolhida, disabled }: Pro
 
   const iniciar = async () => {
     setAberto(true)
-    if (texto) return // ja tem
+    if (texto) return // já tem
     setGerando(true)
     setTexto('')
     try {
@@ -46,7 +46,7 @@ export function ExplicarComIA({ questaoId, alternativaEscolhida, disabled }: Pro
         setTexto((t) => t + decoder.decode(value, { stream: true }))
       }
     } catch (e) {
-      toast.error('Falha ao gerar explicacao com IA. Tente novamente.')
+      toast.error('Falha ao gerar explicação com IA. Tente novamente.')
       void e
     } finally {
       setGerando(false)
@@ -65,7 +65,7 @@ export function ExplicarComIA({ questaoId, alternativaEscolhida, disabled }: Pro
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
-              Explicacao adicional
+              Explicação adicional
             </DialogTitle>
             <DialogDescription>
               Gerada por Claude com base no enunciado, alternativas e guidelines vinculados.

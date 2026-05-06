@@ -7,7 +7,7 @@ import {
   PrecosUpgradeButtonDemo,
 } from './_components/upgrade-button'
 
-export const metadata = { title: 'Precos' }
+export const metadata = { title: 'Preços' }
 
 export default function PrecosPage() {
   const ordem: Array<keyof typeof PLANOS_B2C> = ['FREE', 'PRO', 'PREMIUM']
@@ -21,11 +21,11 @@ export default function PrecosPage() {
             Planos
           </div>
           <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">
-            Escolha o ritmo da sua aprovacao
+            Escolha o ritmo da sua aprovação
           </h1>
           <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
-            Comece gratis. Suba para Pro quando precisar de IA e simulados ilimitados. Premium libera
-            geracao de questoes parecidas e prioridade na fila.
+            Comece grátis. Suba para Pro quando precisar de IA e simulados ilimitados. O Premium
+            libera geração de questões parecidas e prioridade na fila.
           </p>
         </div>
       </header>
@@ -54,7 +54,7 @@ export default function PrecosPage() {
                 <div className="mt-6">
                   <span className="text-4xl font-bold">{precoFormatado(p.precoMensalCentavos)}</span>
                   {p.precoMensalCentavos > 0 && (
-                    <span className="text-muted-foreground"> /mes</span>
+                    <span className="text-muted-foreground"> /mês</span>
                   )}
                 </div>
                 {p.precoAnualCentavos > 0 && (
@@ -78,7 +78,7 @@ export default function PrecosPage() {
                       href="/sign-up"
                       className="inline-flex h-10 w-full items-center justify-center rounded-md border bg-background text-sm font-medium hover:bg-accent"
                     >
-                      Comecar gratis
+                      Começar grátis
                     </Link>
                   ) : (
                     <Botao plano={codigo} destaque={destaque} />
@@ -90,8 +90,8 @@ export default function PrecosPage() {
         </div>
 
         <div className="mt-12 rounded-lg border bg-secondary/50 p-6 text-sm">
-          <strong>Para cursinhos e equipes:</strong> temos planos B2B com painel de admin, seats por
-          aluno e relatorios agregados.{' '}
+          <strong>Para cursinhos e equipes:</strong> temos planos B2B com painel de administração,
+          assentos por aluno e relatórios agregados.{' '}
           <Link href="mailto:contato@residencia-med.com" className="text-primary underline">
             Fale com vendas
           </Link>

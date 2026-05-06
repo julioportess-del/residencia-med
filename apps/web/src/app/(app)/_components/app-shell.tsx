@@ -23,10 +23,10 @@ type Props = {
 }
 
 const NAV = [
-  { href: '/dashboard', icon: ChartLine, label: 'Dashboard' },
-  { href: '/questoes', icon: BookOpen, label: 'Questoes' },
+  { href: '/dashboard', icon: ChartLine, label: 'Painel' },
+  { href: '/questoes', icon: BookOpen, label: 'Questões' },
   { href: '/simulado', icon: Target, label: 'Simulado' },
-  { href: '/revisao', icon: Repeat2, label: 'Revisao' },
+  { href: '/revisao', icon: Repeat2, label: 'Revisão' },
   { href: '/plano', icon: Calendar, label: 'Plano' },
   { href: '/conta', icon: CreditCard, label: 'Conta' },
 ] as const
@@ -40,7 +40,7 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
       <aside className="hidden w-60 shrink-0 border-r md:flex md:flex-col">
         <Link href="/dashboard" className="flex items-center gap-2 px-6 py-5 border-b">
           <Stethoscope className="size-5 text-primary" />
-          <span className="font-bold">Residencia Med</span>
+          <span className="font-bold">Residência Med</span>
         </Link>
 
         <nav className="flex-1 px-3 py-4">
@@ -77,7 +77,7 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
         {!onboardingCompleto && naoEhOnboarding ? (
           <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 text-sm text-amber-900 flex items-center gap-2">
             <Sparkles className="size-4" />
-            Complete seu onboarding para gerar o plano personalizado.{' '}
+            Complete o onboarding para gerar seu plano personalizado.{' '}
             <Link href="/onboarding" className="underline font-medium">
               Continuar
             </Link>

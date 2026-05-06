@@ -54,7 +54,7 @@ export default function QuestaoScreen() {
         })
         Alert.alert(
           'Salvo offline',
-          'Sua resposta sera enviada automaticamente quando voltar online.',
+          'Sua resposta será enviada automaticamente quando voltar online.',
         )
       } else {
         Alert.alert('Erro', e.message ?? 'Falha ao registrar resposta')
@@ -73,7 +73,7 @@ export default function QuestaoScreen() {
     })
   }
 
-  // limpar resultado quando id muda (navegacao)
+  // limpar resultado quando id muda (navegação)
   useEffect(() => {
     setResultado(null)
     setEscolha(null)
@@ -129,7 +129,7 @@ export default function QuestaoScreen() {
 
       {!resultado && (
         <Card>
-          <Text style={styles.confiancaLabel}>Voce esta...</Text>
+          <Text style={styles.confiancaLabel}>Você está...</Text>
           <View style={styles.confiancaRow}>
             {(['CHUTE', 'INCERTO', 'CONFIANTE'] as const).map((c) => (
               <Button

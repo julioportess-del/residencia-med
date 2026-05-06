@@ -26,14 +26,14 @@ export function RevisaoLista() {
       <Card className="mt-6">
         <CardContent className="pt-6 text-center text-muted-foreground">
           <Repeat2 className="size-8 mx-auto mb-2 text-muted-foreground/50" />
-          <p>Nenhum item de revisao vencido.</p>
+          <p>Nenhum item de revisão vencido.</p>
           {contagem.data && contagem.data.total > 0 ? (
             <p className="text-xs mt-1">
-              Voce tem {contagem.data.total} itens em revisao espacada — proximos vao aparecer aqui no
+              Você tem {contagem.data.total} itens em revisão espaçada — próximos vão aparecer aqui no
               dia.
             </p>
           ) : (
-            <p className="text-xs mt-1">Responda algumas questoes para alimentar a revisao.</p>
+            <p className="text-xs mt-1">Responda algumas questões para alimentar a revisão.</p>
           )}
         </CardContent>
       </Card>
@@ -63,7 +63,7 @@ export function RevisaoLista() {
                       </>
                     )}
                     <span>·</span>
-                    <span>repeticao {i.repeticoes}</span>
+                    <span>repetição {i.repeticoes}</span>
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm">{i.questao.resumo}…</p>
                 </div>

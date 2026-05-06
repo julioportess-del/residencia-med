@@ -34,7 +34,7 @@ export const PLANOS_B2C: Record<PlanoCodigo, DefinicaoPlano> = {
   FREE: {
     codigo: 'FREE',
     nome: 'Free',
-    descricao: 'Para quem esta comecando a explorar a plataforma',
+    descricao: 'Para quem está começando a explorar a plataforma',
     precoMensalCentavos: 0,
     precoAnualCentavos: 0,
     limites: {
@@ -46,16 +46,16 @@ export const PLANOS_B2C: Record<PlanoCodigo, DefinicaoPlano> = {
       exportRelatorios: false,
     },
     destaques: [
-      '100 questoes por mes',
+      '100 questões por mês',
       '1 simulado por semana',
-      'Explicacoes pre-escritas',
-      'Plano de estudo basico',
+      'Explicações pré-escritas',
+      'Plano de estudo básico',
     ],
   },
   PRO: {
     codigo: 'PRO',
     nome: 'Pro',
-    descricao: 'Para quem ja tem rotina e quer ritmo de aprovacao',
+    descricao: 'Para quem já tem rotina e quer ritmo de aprovação',
     precoMensalCentavos: 1900,
     precoAnualCentavos: 18900,
     trialDias: 7,
@@ -68,11 +68,11 @@ export const PLANOS_B2C: Record<PlanoCodigo, DefinicaoPlano> = {
       exportRelatorios: true,
     },
     destaques: [
-      'Questoes ilimitadas',
+      'Questões ilimitadas',
       'Simulados ilimitados',
-      'Plano adaptativo + repeticao espacada',
-      '50 explicacoes com IA por mes',
-      'Exportar relatorios de desempenho',
+      'Plano adaptativo com repetição espaçada',
+      '50 explicações com IA por mês',
+      'Exportação de relatórios de desempenho',
     ],
   },
   PREMIUM: {
@@ -93,9 +93,9 @@ export const PLANOS_B2C: Record<PlanoCodigo, DefinicaoPlano> = {
     destaques: [
       'Tudo do Pro',
       'IA ilimitada',
-      'Geracao de questoes parecidas',
-      'Prioridade em filas',
-      'Suporte prioritario',
+      'Geração de questões parecidas',
+      'Prioridade nas filas de processamento',
+      'Suporte prioritário',
     ],
   },
 }
@@ -113,7 +113,7 @@ export const PLANOS_B2B: Record<PlanoOrgCodigo, DefinicaoPlanoOrg> = {
   STARTER: {
     codigo: 'STARTER',
     nome: 'Starter',
-    descricao: 'Cursinhos e equipes ate 10 alunos',
+    descricao: 'Cursinhos e equipes com até 10 alunos',
     precoMensalCentavos: 9900,
     seatsIncluidos: 10,
     seatAdicionalCentavos: 1500,
@@ -121,7 +121,7 @@ export const PLANOS_B2B: Record<PlanoOrgCodigo, DefinicaoPlanoOrg> = {
   GROWTH: {
     codigo: 'GROWTH',
     nome: 'Growth',
-    descricao: 'Ate 50 alunos com painel de admin',
+    descricao: 'Até 50 alunos com painel de administração',
     precoMensalCentavos: 29900,
     seatsIncluidos: 50,
     seatAdicionalCentavos: 1200,
@@ -129,7 +129,7 @@ export const PLANOS_B2B: Record<PlanoOrgCodigo, DefinicaoPlanoOrg> = {
   ENTERPRISE: {
     codigo: 'ENTERPRISE',
     nome: 'Enterprise',
-    descricao: 'Acima de 50 alunos, contrato customizado',
+    descricao: 'Acima de 50 alunos, contrato personalizado',
     precoMensalCentavos: 0, // sob consulta
     seatsIncluidos: 0,
     seatAdicionalCentavos: 0,

@@ -18,15 +18,15 @@ export default function HomeScreen() {
   return (
     <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
       <View>
-        <Text style={styles.saudacao}>Ola{nome ? `, ${nome}` : ''} 👋</Text>
-        <Text style={styles.subSaudacao}>Pronto para mais uma sessao?</Text>
+        <Text style={styles.saudacao}>Olá{nome ? `, ${nome}` : ''} 👋</Text>
+        <Text style={styles.subSaudacao}>Pronto para mais uma sessão?</Text>
       </View>
 
       {revisao.data && revisao.data.vencidos > 0 && (
         <Card style={{ borderColor: cores.warning, borderWidth: 1.5 }}>
           <View style={layout.rowBetween}>
             <View>
-              <Badge variant="warning">Revisao</Badge>
+              <Badge variant="warning">Revisão</Badge>
               <Text style={styles.cardLabel}>
                 {revisao.data.vencidos} {revisao.data.vencidos === 1 ? 'item vencido' : 'itens vencidos'}
               </Text>
@@ -57,7 +57,7 @@ export default function HomeScreen() {
       </View>
 
       <Card>
-        <CardTitle>O que voce quer fazer agora?</CardTitle>
+        <CardTitle>O que você quer fazer agora?</CardTitle>
         <View style={{ gap: espacamento.sm }}>
           <Button onPress={() => router.push('/simulado')} size="lg">
             Iniciar simulado

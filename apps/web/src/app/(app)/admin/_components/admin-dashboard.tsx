@@ -22,7 +22,7 @@ export function AdminDashboard() {
   return (
     <div className="mt-6 space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi icone={<Users className="size-4" />} label="Usuarios" valor={usuariosTotal} />
+        <Kpi icone={<Users className="size-4" />} label="Usuários" valor={usuariosTotal} />
         <Kpi
           icone={<Activity className="size-4" />}
           label="Ativos (30d)"
@@ -43,7 +43,7 @@ export function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Distribuicao de planos (ativas)</CardTitle>
+            <CardTitle>Distribuição de planos (ativas)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
@@ -69,7 +69,7 @@ export function AdminDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top 20 usuarios por custo IA (30d)</CardTitle>
+            <CardTitle>Top 20 usuários por custo IA (30d)</CardTitle>
           </CardHeader>
           <CardContent>
             {topIA.isLoading ? (
@@ -100,7 +100,7 @@ export function AdminDashboard() {
           <div className="grid grid-cols-3 gap-4 text-sm">
             <Detalhe label="Chamadas" valor={iaUltimos30d.chamadas.toLocaleString()} />
             <Detalhe label="Tokens entrada" valor={iaUltimos30d.inputTokens.toLocaleString()} />
-            <Detalhe label="Tokens saida" valor={iaUltimos30d.outputTokens.toLocaleString()} />
+            <Detalhe label="Tokens saída" valor={iaUltimos30d.outputTokens.toLocaleString()} />
           </div>
         </CardContent>
       </Card>

@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { AlertCircle, Check, X } from 'lucide-react'
 
-export const metadata = { title: 'Configuracao' }
+export const metadata = { title: 'Configuração' }
 
 const credenciais = [
   {
     chave: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
-    nome: 'Clerk (auth)',
-    descricao: 'Sign-in, sign-up, sessoes',
+    nome: 'Clerk (autenticação)',
+    descricao: 'Cadastro, login e gestão de sessões',
     onde: 'https://dashboard.clerk.com → API Keys',
     tempo: '2 min',
     obrigatoria: true,
@@ -15,7 +15,7 @@ const credenciais = [
   {
     chave: 'CLERK_SECRET_KEY',
     nome: 'Clerk Secret',
-    descricao: 'Servidor valida sessoes',
+    descricao: 'Permite o servidor validar as sessões',
     onde: 'mesmo lugar acima',
     tempo: '0',
     obrigatoria: true,
@@ -23,15 +23,15 @@ const credenciais = [
   {
     chave: 'DATABASE_URL',
     nome: 'Postgres + pgvector',
-    descricao: 'Banco de questoes, respostas, sessoes',
-    onde: 'https://neon.tech → Create Project (free tier)',
+    descricao: 'Banco de questões, respostas e sessões de estudo',
+    onde: 'https://neon.tech → Create Project (plano gratuito)',
     tempo: '3 min',
     obrigatoria: true,
   },
   {
     chave: 'ANTHROPIC_API_KEY',
     nome: 'Anthropic Claude',
-    descricao: 'Explicacoes IA dinamicas',
+    descricao: 'Explicações geradas por IA em tempo real',
     onde: 'https://console.anthropic.com → API Keys',
     tempo: '2 min',
     obrigatoria: false,
@@ -39,7 +39,7 @@ const credenciais = [
   {
     chave: 'STRIPE_SECRET_KEY',
     nome: 'Stripe',
-    descricao: 'Cobranca PRO/PREMIUM',
+    descricao: 'Cobrança dos planos PRO e PREMIUM',
     onde: 'https://dashboard.stripe.com → Developers → API keys',
     tempo: '5 min',
     obrigatoria: false,
@@ -47,8 +47,8 @@ const credenciais = [
   {
     chave: 'REDIS_URL',
     nome: 'Upstash Redis',
-    descricao: 'Cache + rate limit + filas',
-    onde: 'https://upstash.com → Create Database (free)',
+    descricao: 'Cache, rate limiting e fila de jobs',
+    onde: 'https://upstash.com → Create Database (gratuito)',
     tempo: '2 min',
     obrigatoria: false,
   },
@@ -65,12 +65,13 @@ export default function SetupPage() {
       <div className="container mx-auto max-w-3xl px-6 py-16">
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs">
           <AlertCircle className="size-3" />
-          Modo demo — credenciais nao configuradas
+          Modo de demonstração — credenciais ainda não configuradas
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Bem-vindo ao Residencia Med</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Bem-vindo ao Residência Med</h1>
         <p className="mt-3 text-lg text-muted-foreground">
-          A app esta no ar mas precisa de credenciais externas para liberar auth, banco e IA.
-          Cada uma e free tier instantaneo. Total: ~15 minutos.
+          A aplicação já está no ar, mas precisa de credenciais externas para liberar
+          autenticação, banco de dados e IA. Todas têm plano gratuito instantâneo.
+          Tempo total estimado: 15 minutos.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -95,7 +96,7 @@ export default function SetupPage() {
                     <h3 className="font-semibold">{c.nome}</h3>
                     {c.obrigatoria && (
                       <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
-                        Obrigatoria
+                        Obrigatória
                       </span>
                     )}
                     <span className="text-xs text-muted-foreground">~{c.tempo}</span>
@@ -105,7 +106,7 @@ export default function SetupPage() {
                     Onde criar: <code className="rounded bg-muted px-1">{c.onde}</code>
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Variavel: <code className="rounded bg-muted px-1 font-mono">{c.chave}</code>
+                    Variável: <code className="rounded bg-muted px-1 font-mono">{c.chave}</code>
                   </p>
                 </div>
               </div>
@@ -114,11 +115,11 @@ export default function SetupPage() {
         </div>
 
         <div className="mt-10 rounded-xl border bg-background p-6">
-          <h2 className="text-lg font-semibold">Proximos passos</h2>
+          <h2 className="text-lg font-semibold">Próximos passos</h2>
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
-            <li>Crie as contas necessarias (todas tem free tier sem cartao).</li>
+            <li>Crie as contas necessárias (todas têm plano gratuito sem cartão).</li>
             <li>
-              Cole as chaves nas{' '}
+              Cole as chaves em{' '}
               <a
                 className="text-primary underline"
                 href="https://vercel.com/dashboard"
@@ -127,16 +128,16 @@ export default function SetupPage() {
               >
                 Settings &gt; Environment Variables
               </a>{' '}
-              do projeto Vercel.
+              do projeto na Vercel.
             </li>
-            <li>Trigger redeploy: aba Deployments → ⋯ → Redeploy.</li>
-            <li>App entra em modo completo automaticamente.</li>
+            <li>Acione um redeploy: aba Deployments → ⋯ → Redeploy.</li>
+            <li>A aplicação entra em modo completo automaticamente.</li>
           </ol>
         </div>
 
         <div className="mt-6 text-sm">
           <Link href="/" className="text-primary underline">
-            ← Voltar para a landing
+            ← Voltar para a página inicial
           </Link>{' '}
           ·{' '}
           <Link href="/precos" className="text-primary underline">

@@ -21,7 +21,7 @@ export default function SignInScreen() {
         await setActive({ session: r.createdSessionId })
         router.replace('/(app)')
       } else {
-        Alert.alert('Confirmacao adicional necessaria', 'Verifique email/2fa.')
+        Alert.alert('Confirmação adicional necessária', 'Verifique email/2fa.')
       }
     } catch (e) {
       const msg = (e as { errors?: Array<{ message?: string }> }).errors?.[0]?.message ?? 'Erro ao entrar'
@@ -68,7 +68,7 @@ export default function SignInScreen() {
         </Button>
 
         <Link href="/(auth)/sign-up" style={styles.link}>
-          Nao tem conta? Cadastre-se
+          Não tem conta? Cadastre-se
         </Link>
       </View>
     </KeyboardAvoidingView>

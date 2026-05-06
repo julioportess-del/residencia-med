@@ -80,7 +80,7 @@ export default function SimuladoExecScreen() {
     )
   }
 
-  if (questaoIds.length === 0) return <Text>Sessao invalida</Text>
+  if (questaoIds.length === 0) return <Text>Sessão inválida</Text>
 
   const min = Math.floor(restanteSec / 60)
   const seg = restanteSec % 60
@@ -89,7 +89,7 @@ export default function SimuladoExecScreen() {
     <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
       <View style={layout.rowBetween}>
         <Text style={styles.contador}>
-          Questao {idx + 1} de {questaoIds.length}
+          Questão {idx + 1} de {questaoIds.length}
         </Text>
         <View
           style={[
@@ -139,7 +139,7 @@ export default function SimuladoExecScreen() {
               Anterior
             </Button>
             <Button onPress={onProxima} loading={responder.isPending || finalizar.isPending}>
-              {idx === questaoIds.length - 1 ? 'Finalizar' : 'Proxima'}
+              {idx === questaoIds.length - 1 ? 'Finalizar' : 'Próxima'}
             </Button>
           </View>
         </>

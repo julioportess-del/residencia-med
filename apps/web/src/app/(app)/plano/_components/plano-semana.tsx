@@ -10,11 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
 
-const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const TIPO_LABEL: Record<string, string> = {
   TEORIA: 'Teoria',
-  QUESTOES: 'Questoes',
-  REVISAO: 'Revisao',
+  QUESTOES: 'Questões',
+  REVISAO: 'Revisão',
   SIMULADO: 'Simulado',
 }
 
@@ -32,7 +32,7 @@ export function PlanoSemana() {
       <Card className="mt-6">
         <CardContent className="pt-6 text-center">
           <p className="text-muted-foreground">
-            Voce ainda nao tem um plano de estudo. Complete o onboarding primeiro.
+            Você ainda não tem um plano de estudo. Complete o onboarding primeiro.
           </p>
           <Button asChild className="mt-4">
             <Link href="/onboarding">Iniciar onboarding</Link>
@@ -71,7 +71,7 @@ export function PlanoSemana() {
             </div>
           </div>
           <div>
-            <div className="text-sm text-muted-foreground">Concluido</div>
+            <div className="text-sm text-muted-foreground">Concluído</div>
             <div className="text-xl font-semibold">
               {concluidos}/{blocos.length}
             </div>
@@ -132,9 +132,9 @@ export function PlanoSemana() {
       </div>
 
       <div className="text-xs text-muted-foreground">
-        Clique em qualquer bloco para marcar como concluido.{' '}
+        Clique em qualquer bloco para marcar como concluído.{' '}
         <Link href="/questoes" className="inline-flex items-center gap-1 underline">
-          Ir ao banco de questoes <ExternalLink className="size-3" />
+          Ir ao banco de questões <ExternalLink className="size-3" />
         </Link>
       </div>
     </div>

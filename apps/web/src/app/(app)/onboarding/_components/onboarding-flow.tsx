@@ -21,7 +21,7 @@ type Banca = {
   cor: string | null
 }
 
-const PASSOS = ['Bancas', 'Data da prova', 'Carga horaria', 'Confirmar'] as const
+const PASSOS = ['Bancas', 'Data da prova', 'Carga horária', 'Confirmar'] as const
 
 export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
   const router = useRouter()
@@ -34,7 +34,7 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
 
   const completar = trpc.onboarding.completar.useMutation({
     onSuccess: () => {
-      toast.success('Plano sendo gerado. Vamos comecar!')
+      toast.success('Plano sendo gerado. Vamos começar!')
       router.push('/dashboard')
       router.refresh()
     },
@@ -74,9 +74,9 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
         <CardHeader>
           <CardTitle>{PASSOS[passo]}</CardTitle>
           <CardDescription>
-            {passo === 0 && 'Selecione ate 5 bancas que voce quer estudar. A primeira sera sua banca alvo principal.'}
-            {passo === 1 && 'Quando e a sua prova? Ajusta o ritmo do plano de estudos.'}
-            {passo === 2 && 'Quantas horas por semana voce consegue dedicar?'}
+            {passo === 0 && 'Selecione até 5 bancas que você quer estudar. A primeira será sua banca-alvo principal.'}
+            {passo === 1 && 'Quando é a sua prova? Isso define o ritmo do plano de estudos.'}
+            {passo === 2 && 'Quantas horas por semana você consegue dedicar?'}
             {passo === 3 && 'Confira os dados antes de gerar seu plano.'}
           </CardDescription>
         </CardHeader>
@@ -178,10 +178,10 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
               </div>
               <p className="text-sm text-muted-foreground">
                 {cargaHoraria < 10
-                  ? 'Ritmo leve — bom pra manter o habito.'
+                  ? 'Ritmo leve — bom para manter o hábito.'
                   : cargaHoraria < 25
-                    ? 'Ritmo intermediario — equilibrio entre estudo e vida.'
-                    : 'Ritmo intenso — para reta final ou dedicacao integral.'}
+                    ? 'Ritmo intermediário — equilíbrio entre estudo e vida.'
+                    : 'Ritmo intenso — para a reta final ou dedicação integral.'}
               </p>
             </div>
           )}
@@ -197,7 +197,7 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
               <ResumoLinha icone={<Calendar className="size-4" />} label="Data da prova">
                 {format(new Date(dataProva), "dd/MM/yyyy")}
               </ResumoLinha>
-              <ResumoLinha icone={<Clock className="size-4" />} label="Carga horaria">
+              <ResumoLinha icone={<Clock className="size-4" />} label="Carga horária">
                 {cargaHoraria}h por semana
               </ResumoLinha>
             </div>
@@ -215,7 +215,7 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
         </Button>
         {passo < PASSOS.length - 1 ? (
           <Button onClick={() => setPasso((p) => p + 1)} disabled={!podeAvancar()}>
-            Avancar <ChevronRight className="size-4" />
+            Avançar <ChevronRight className="size-4" />
           </Button>
         ) : (
           <Button onClick={submeter} loading={completar.isPending}>

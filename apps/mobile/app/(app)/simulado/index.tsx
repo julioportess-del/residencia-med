@@ -22,9 +22,9 @@ export default function NovoSimuladoScreen() {
   return (
     <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
       <Card>
-        <CardTitle>Configuracao</CardTitle>
+        <CardTitle>Configuração</CardTitle>
         <CardDescription>
-          Selecione banca (opcional), numero de questoes e tempo. Cronometro inicia ao tocar Iniciar.
+          Selecione banca (opcional), número de questões e tempo. Cronômetro inicia ao tocar Iniciar.
         </CardDescription>
 
         <View style={styles.campo}>
@@ -48,7 +48,7 @@ export default function NovoSimuladoScreen() {
 
         <View style={styles.linha}>
           <View style={[styles.campo, { flex: 1 }]}>
-            <Text style={styles.label}>Numero de questoes</Text>
+            <Text style={styles.label}>Número de questões</Text>
             <TextInput
               value={nQuestoes}
               onChangeText={setNQuestoes}

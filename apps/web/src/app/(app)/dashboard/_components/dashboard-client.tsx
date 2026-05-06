@@ -41,13 +41,13 @@ export function DashboardClient() {
         />
         <KpiCard
           icone={<Activity className="size-4" />}
-          label="Sessoes (30d)"
+          label="Sessões (30 dias)"
           valor={resumo?.sessoes30d ?? '—'}
           loading={r1}
         />
         <KpiCard
           icone={<Flame className="size-4" />}
-          label="Streak"
+          label="Sequência"
           valor={resumo ? `${resumo.streak} ${resumo.streak === 1 ? 'dia' : 'dias'}` : '—'}
           loading={r1}
         />
@@ -55,13 +55,13 @@ export function DashboardClient() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Atividade dos ultimos 7 dias</CardTitle>
+          <CardTitle>Atividade dos últimos 7 dias</CardTitle>
         </CardHeader>
         <CardContent>
           {r1 ? (
             <Skeleton className="h-64" />
           ) : !resumo || resumo.ultimos7.every((d) => d.total === 0) ? (
-            <EstadoVazio>Nenhuma atividade nos ultimos 7 dias.</EstadoVazio>
+            <EstadoVazio>Nenhuma atividade nos últimos 7 dias.</EstadoVazio>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={resumo.ultimos7}>
@@ -86,7 +86,7 @@ export function DashboardClient() {
             {r2 ? (
               <Skeleton className="h-64" />
             ) : !porEsp || porEsp.length === 0 ? (
-              <EstadoVazio>Responda algumas questoes para ver seu desempenho por especialidade.</EstadoVazio>
+              <EstadoVazio>Responda algumas questões para ver seu desempenho por especialidade.</EstadoVazio>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -118,11 +118,11 @@ export function DashboardClient() {
             {r3 ? (
               <Skeleton className="h-40" />
             ) : !pf || (pf.fortes.length === 0 && pf.fracos.length === 0) ? (
-              <EstadoVazio>Responda mais questoes para revelar pontos fortes/fracos.</EstadoVazio>
+              <EstadoVazio>Responda mais questões para revelar seus pontos fortes e fracos.</EstadoVazio>
             ) : (
               <>
                 <Lista titulo="Mais fortes" itens={pf.fortes} variant="success" />
-                <Lista titulo="Reforcar" itens={pf.fracos} variant="destructive" />
+                <Lista titulo="Reforçar" itens={pf.fracos} variant="destructive" />
               </>
             )}
           </CardContent>

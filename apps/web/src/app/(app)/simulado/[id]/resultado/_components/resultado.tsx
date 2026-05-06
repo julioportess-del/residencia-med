@@ -13,7 +13,7 @@ export function ResultadoSimulado({ sessaoId }: { sessaoId: string }) {
   const resumo = trpc.sessao.finalizar.useMutation()
 
   if (sessao.isLoading) return <Skeleton className="h-96 w-full" />
-  if (!sessao.data) return <div>Sessao nao encontrada.</div>
+  if (!sessao.data) return <div>Sessão não encontrada.</div>
 
   const total = sessao.data.respostas.length
   const acertos = sessao.data.acertos
@@ -23,17 +23,17 @@ export function ResultadoSimulado({ sessaoId }: { sessaoId: string }) {
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6 text-center">
-          <div className="text-sm text-muted-foreground">Voce acertou</div>
+          <div className="text-sm text-muted-foreground">Você acertou</div>
           <div className="mt-2 text-6xl font-bold tabular-nums">{tx}%</div>
           <div className="mt-1 text-muted-foreground">
-            {acertos} de {total} questoes
+            {acertos} de {total} questões
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Detalhe das questoes</CardTitle>
+          <CardTitle>Detalhe das questões</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="divide-y">

@@ -42,7 +42,7 @@ export function ContaCliente() {
 
   const excluir = trpc.conta.excluir.useMutation({
     onSuccess: () => {
-      toast.success('Conta excluida.')
+      toast.success('Conta excluída.')
       router.push('/')
     },
     onError: (e) => toast.error(e.message ?? 'Erro ao excluir conta'),
@@ -97,11 +97,11 @@ export function ContaCliente() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Uso do mes</CardTitle>
+          <CardTitle>Uso do mês</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <UsoLinha
-            label="Questoes respondidas"
+            label="Questões respondidas"
             usado={uso.data?.questoesMes ?? 0}
             limite={plano === 'FREE' ? 100 : -1}
           />
@@ -111,7 +111,7 @@ export function ContaCliente() {
             limite={plano === 'FREE' ? 1 : -1}
           />
           <UsoLinha
-            label="Explicacoes IA"
+            label="Explicações IA"
             usado={uso.data?.iaMes ?? 0}
             limite={plano === 'FREE' ? 0 : plano === 'PRO' ? 50 : -1}
           />
@@ -127,7 +127,7 @@ export function ContaCliente() {
             <div className="text-sm">
               <div className="font-medium">Exportar meus dados</div>
               <p className="text-muted-foreground text-xs">
-                Baixe perfil, respostas, sessoes e plano em JSON (LGPD).
+                Baixe perfil, respostas, sessões e plano em JSON (LGPD).
               </p>
             </div>
             <Button variant="outline" size="sm" asChild>
@@ -141,7 +141,7 @@ export function ContaCliente() {
             <div className="text-sm">
               <div className="font-medium text-rose-600">Excluir minha conta</div>
               <p className="text-muted-foreground text-xs">
-                Irreversivel. Cancela assinatura ativa e remove todos os dados.
+                Irreversível. Cancela assinatura ativa e remove todos os dados.
               </p>
             </div>
             <Button variant="destructive" size="sm" onClick={() => setDialogExcluir(true)}>
@@ -160,8 +160,8 @@ export function ContaCliente() {
               Excluir conta permanentemente
             </DialogTitle>
             <DialogDescription>
-              Sua assinatura sera cancelada e todos os dados (respostas, simulados, plano) serao
-              removidos. Esta acao nao pode ser desfeita.
+              Sua assinatura será cancelada e todos os dados (respostas, simulados, plano) serão
+              removidos. Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -207,7 +207,7 @@ function UsoLinha({
       <div className="flex items-center justify-between text-sm">
         <span>{label}</span>
         <span className="text-muted-foreground tabular-nums">
-          {bloqueado ? 'Indisponivel no plano' : `${usado} / ${ilimitado ? '∞' : limite}`}
+          {bloqueado ? 'Indisponível no plano' : `${usado} / ${ilimitado ? '∞' : limite}`}
         </span>
       </div>
       {!ilimitado && !bloqueado && <Progress value={pct} className="mt-2" />}

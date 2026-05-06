@@ -40,7 +40,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
       </div>
     )
   }
-  if (!questao.data) return <div>Questao nao encontrada.</div>
+  if (!questao.data) return <div>Questão não encontrada.</div>
 
   const q = questao.data
   const respondida = responder.data
@@ -132,7 +132,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
       {!respondida && (
         <Card>
           <CardContent className="pt-6 space-y-3">
-            <div className="text-sm font-medium">Voce esta...</div>
+            <div className="text-sm font-medium">Você está...</div>
             <div className="flex gap-2">
               {(['CHUTE', 'INCERTO', 'CONFIANTE'] as const).map((c) => (
                 <Button
@@ -218,7 +218,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
 }
 
 function Markdown({ markdown }: { markdown: string }) {
-  // Renderizador minimo: divide por linhas, transforma headers, paragrafos
+  // Renderizador mínimo: divide por linhas, transforma headers, parágrafos
   const blocks = markdown.split(/\n\n+/)
   return (
     <>

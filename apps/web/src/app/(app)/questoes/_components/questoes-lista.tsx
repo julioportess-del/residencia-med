@@ -18,10 +18,10 @@ import { trpc } from '@/lib/trpc/client'
 import { cn } from '@/lib/cn'
 
 const DIFICULDADES = [
-  { v: 'FACIL', label: 'Facil', cor: 'bg-emerald-100 text-emerald-700' },
-  { v: 'MEDIO', label: 'Medio', cor: 'bg-amber-100 text-amber-700' },
-  { v: 'DIFICIL', label: 'Dificil', cor: 'bg-rose-100 text-rose-700' },
-  { v: 'MUITO_DIFICIL', label: 'Muito dificil', cor: 'bg-red-100 text-red-700' },
+  { v: 'FACIL', label: 'Fácil', cor: 'bg-emerald-100 text-emerald-700' },
+  { v: 'MEDIO', label: 'Médio', cor: 'bg-amber-100 text-amber-700' },
+  { v: 'DIFICIL', label: 'Difícil', cor: 'bg-rose-100 text-rose-700' },
+  { v: 'MUITO_DIFICIL', label: 'Muito difícil', cor: 'bg-red-100 text-red-700' },
 ] as const
 
 export function QuestoesLista() {
@@ -92,7 +92,7 @@ export function QuestoesLista() {
         </div>
       ) : !questoes.data || questoes.data.itens.length === 0 ? (
         <div className="flex h-40 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-          Nenhuma questao encontrada com esses filtros.
+          Nenhuma questão encontrada com esses filtros.
         </div>
       ) : (
         <div className="space-y-3">

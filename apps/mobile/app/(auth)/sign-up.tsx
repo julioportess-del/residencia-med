@@ -39,7 +39,7 @@ export default function SignUpScreen() {
         router.replace('/(app)')
       }
     } catch (e) {
-      const msg = (e as { errors?: Array<{ message?: string }> }).errors?.[0]?.message ?? 'Codigo invalido'
+      const msg = (e as { errors?: Array<{ message?: string }> }).errors?.[0]?.message ?? 'Código inválido'
       Alert.alert('Erro', msg)
     } finally {
       setCarregando(false)
@@ -55,8 +55,8 @@ export default function SignUpScreen() {
         <Text style={styles.titulo}>{aguardandoCodigo ? 'Confirme seu email' : 'Criar conta'}</Text>
         <Text style={styles.subtitulo}>
           {aguardandoCodigo
-            ? 'Enviamos um codigo para o email informado.'
-            : 'Comece de graca, sem cartao de credito.'}
+            ? 'Enviamos um código para o email informado.'
+            : 'Comece de graça, sem cartão de crédito.'}
         </Text>
 
         {!aguardandoCodigo ? (
@@ -86,13 +86,13 @@ export default function SignUpScreen() {
               Cadastrar
             </Button>
             <Link href="/(auth)/sign-in" style={styles.link}>
-              Ja tenho conta
+              Já tenho conta
             </Link>
           </>
         ) : (
           <>
             <View style={styles.campo}>
-              <Text style={styles.label}>Codigo recebido</Text>
+              <Text style={styles.label}>Código recebido</Text>
               <TextInput
                 value={codigo}
                 onChangeText={setCodigo}

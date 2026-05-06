@@ -25,8 +25,8 @@ export default function RevisaoScreen() {
           <CardTitle>Tudo em dia</CardTitle>
           <Text style={{ color: cores.mutedForeground }}>
             {contagem.data?.total
-              ? `Voce tem ${contagem.data.total} itens em revisao espacada — proximos vao aparecer aqui.`
-              : 'Responda algumas questoes para alimentar a revisao.'}
+              ? `Você tem ${contagem.data.total} itens em revisão espaçada — próximos vão aparecer aqui.`
+              : 'Responda algumas questões para alimentar a revisão.'}
           </Text>
         </Card>
       </View>
@@ -51,7 +51,7 @@ export default function RevisaoScreen() {
               <Badge bg={item.questao.banca.cor ?? cores.primary}>{item.questao.banca.codigo}</Badge>
               <Text style={styles.meta}>{item.questao.ano}</Text>
               <View style={{ flex: 1 }} />
-              <Text style={styles.meta}>repeticao {item.repeticoes}</Text>
+              <Text style={styles.meta}>repetição {item.repeticoes}</Text>
             </View>
             <Text style={styles.resumo} numberOfLines={2}>
               {item.questao.resumo}…
