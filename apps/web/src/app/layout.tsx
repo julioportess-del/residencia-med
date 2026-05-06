@@ -28,15 +28,23 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+export const dynamic = 'force-dynamic'
+
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+const CLERK_HABILITADO = Boolean(
+  PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('placeholder'),
+)
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <ClerkProvider>
-      <html lang="pt-BR" className={inter.variable}>
-        <body className="bg-background text-foreground font-sans antialiased min-h-screen">
-          <TRPCProvider>{children}</TRPCProvider>
-          <Toaster position="top-center" richColors />
-        </body>
-      </html>
-    </ClerkProvider>
+  const conteudo = (
+    <html lang="pt-BR" className={inter.variable}>
+      <body className="bg-background text-foreground font-sans antialiased min-h-screen">
+        <TRPCProvider>{children}</TRPCProvider>
+        <Toaster position="top-center" richColors />
+      </body>
+    </html>
   )
+
+  if (!CLERK_HABILITADO) return conteudo
+  return <ClerkProvider>{conteudo}</ClerkProvider>
 }

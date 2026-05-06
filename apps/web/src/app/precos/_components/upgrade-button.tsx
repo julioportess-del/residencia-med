@@ -42,3 +42,16 @@ export function PrecosUpgradeButton({ plano, destaque }: Props) {
     </Button>
   )
 }
+
+export function PrecosUpgradeButtonDemo({ plano, destaque }: Props) {
+  const router = useRouter()
+  return (
+    <Button
+      variant={destaque ? 'primary' : 'outline'}
+      className="w-full"
+      onClick={() => router.push('/setup')}
+    >
+      Assinar {plano}
+    </Button>
+  )
+}

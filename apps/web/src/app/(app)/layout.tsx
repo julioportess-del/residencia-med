@@ -4,6 +4,8 @@ import { prisma } from '@residencia-med/db'
 import { garantirUser } from '@/server/trpc'
 import { AppShell } from './_components/app-shell'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')

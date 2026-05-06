@@ -1,5 +1,7 @@
 # Residencia Med
 
+> 🟢 **No ar:** https://residencia-med.vercel.app (modo demo — completar setup em [docs/DEPLOY.md](docs/DEPLOY.md))
+
 Plataforma de estudo para residencia medica baseada em analise de bancas, repeticao espacada e IA.
 
 ## Visao em uma linha

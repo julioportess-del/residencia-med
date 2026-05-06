@@ -1,12 +1,17 @@
 import Link from 'next/link'
 import { Check, Sparkles } from 'lucide-react'
-import { PLANOS_B2C, precoFormatado } from '@residencia-med/billing'
-import { PrecosUpgradeButton } from './_components/upgrade-button'
+import { PLANOS_B2C, precoFormatado } from '@residencia-med/billing/plans'
+import { clerkHabilitado } from '@/lib/flags'
+import {
+  PrecosUpgradeButton,
+  PrecosUpgradeButtonDemo,
+} from './_components/upgrade-button'
 
 export const metadata = { title: 'Precos' }
 
 export default function PrecosPage() {
   const ordem: Array<keyof typeof PLANOS_B2C> = ['FREE', 'PRO', 'PREMIUM']
+  const Botao = clerkHabilitado() ? PrecosUpgradeButton : PrecosUpgradeButtonDemo
   return (
     <main className="min-h-screen">
       <header className="border-b">
@@ -76,7 +81,7 @@ export default function PrecosPage() {
                       Comecar gratis
                     </Link>
                   ) : (
-                    <PrecosUpgradeButton plano={codigo} destaque={destaque} />
+                    <Botao plano={codigo} destaque={destaque} />
                   )}
                 </div>
               </div>
