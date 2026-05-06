@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
 import { checarLimiteQuestoes } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
-import { enqueueAtualizarRevisao } from '@/lib/queues'
+import { enqueueAtualizarRevisao } from '../../lib/queues'
 
 export const questaoRouter = router({
   listar: procedureProtegida.input(FiltroQuestoesInput).query(async ({ ctx, input }) => {

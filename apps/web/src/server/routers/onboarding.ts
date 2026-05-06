@@ -1,6 +1,6 @@
 import { OnboardingInput } from '@residencia-med/types'
 import { router, procedureProtegida } from '../trpc'
-import { enqueueGerarPlano, enqueueRecomputarIncidencia } from '@/lib/queues'
+import { enqueueGerarPlano, enqueueRecomputarIncidencia } from '../../lib/queues'
 
 export const onboardingRouter = router({
   status: procedureProtegida.query(async ({ ctx }) => {

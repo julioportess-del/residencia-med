@@ -1,6 +1,11 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { criarSessaoCheckout, criarSessaoPortal, obterPlanoUsuario } from '@residencia-med/billing'
+import {
+  criarSessaoCheckout,
+  criarSessaoPortal,
+  obterPlanoUsuario,
+  PLANOS_B2C,
+} from '@residencia-med/billing'
 import { router, procedureProtegida, procedurePublica } from '../trpc'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -96,8 +101,5 @@ function inicioSemana(): Date {
 }
 
 export const planosPublicosRouter = router({
-  listar: procedurePublica.query(async () => {
-    const { PLANOS_B2C } = await import('@residencia-med/billing')
-    return PLANOS_B2C
-  }),
+  listar: procedurePublica.query(() => PLANOS_B2C),
 })
