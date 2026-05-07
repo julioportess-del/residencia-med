@@ -1,133 +1,180 @@
 # Deploy
 
-Status atual: **app no ar em modo demo** em https://residencia-med.vercel.app.
+Status: app no ar em modo demo em https://residencia-med.vercel.app.
 
-A landing, a pagina /precos e o /api/health respondem 200. Rotas autenticadas
-(/dashboard, /questoes, /simulado, etc) sao reescritas para /setup ate as
-credenciais reais serem configuradas.
+A landing, /precos e /api/health respondem 200. Rotas autenticadas
+(/dashboard, /questoes, /simulado etc) ficam protegidas até as credenciais
+reais serem configuradas.
 
-## Como ativar features completas
+## Caminho rápido (15-20 min)
 
-Total: ~15 minutos. Todos os servicos abaixo tem free tier sem cartao.
+Depois de criar as contas (links abaixo), rode:
 
-### 1. Postgres (Neon) — 3 min
-
-1. Criar conta em https://neon.tech (free tier ate 0.5GB)
-2. Create Project → escolha regiao mais proxima (us-east-1 sugerido)
-3. Copiar a connection string (formato `postgresql://...neon.tech/dbname?sslmode=require`)
-4. Atualizar no Vercel:
-   - Vercel Dashboard → Project residencia-med → Settings → Environment Variables
-   - Editar `DATABASE_URL` e `DIRECT_URL` com a string copiada
-
-Aplicar schema (rodar uma vez):
 ```bash
-DATABASE_URL="<sua-connection-string>" \
-  pnpm --filter @residencia-med/db db:migrate:deploy
-
-DATABASE_URL="<sua-connection-string>" \
-  pnpm --filter @residencia-med/db db:seed
+./scripts/setup-creds.sh
 ```
 
-Isso cria 18 tabelas + popula 14 bancas, 7 especialidades + 36 temas, 5 guidelines, 30 questoes.
+O wizard:
+- Pergunta cada chave em sequência (1 por serviço)
+- Valida cada uma com uma chamada de teste
+- Grava no `.env` local
+- (Opcional) sincroniza com Vercel via `vercel env add`
 
-### 2. Clerk (auth) — 2 min
+Após terminar:
 
-1. https://dashboard.clerk.com → Create Application
-2. Nome: "Residencia Med"
-3. Sign-in options: Email + Password
-4. Em "API Keys" copie:
-   - `Publishable key` → atualizar `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` no Vercel
-   - `Secret key` → atualizar `CLERK_SECRET_KEY` no Vercel
-5. Em "Webhooks" → Add Endpoint:
-   - URL: `https://residencia-med.vercel.app/api/webhooks/clerk` (futuro, opcional)
-   - Eventos: `user.created`
+```bash
+vercel --prod        # redeploy com as novas env vars
+```
 
-### 3. Anthropic Claude — 2 min
+## Serviços necessários
 
-1. https://console.anthropic.com → settings → API Keys → Create
-2. Copiar `sk-ant-...` → atualizar `ANTHROPIC_API_KEY` no Vercel
-3. Pre-pago: $5 minimo. Cada explicacao IA custa ~$0.001 com cache.
+Total: ~15min de cliques + colar chaves. Quase tudo tem free tier.
 
-### 4. Upstash Redis — 2 min
+### 1. Postgres produção — Neon (3 min)
 
-1. https://upstash.com → Create Database (free 10k req/dia)
-2. Copiar a "Redis URL" → atualizar `REDIS_URL` no Vercel
+- Acesse [neon.tech](https://neon.tech) → criar conta (free 0.5GB)
+- New Project → região mais próxima
+- Copie connection string (`postgresql://...?sslmode=require`)
 
-### 5. Stripe (cobranca) — 5 min
+O wizard pode aplicar migrations + seed automaticamente quando você colar a URL.
 
-So precisa se quiser monetizar. Pular se for usar so o tier FREE.
+### 2. Supabase Auth (2 min)
 
-1. https://dashboard.stripe.com → Developers → API keys
-2. Copiar `Secret key` → `STRIPE_SECRET_KEY`
-3. Em Products → Create Product:
-   - "Pro Mensal" — R$ 19/mes recorrente → copiar Price ID → `STRIPE_PRICE_PRO_MONTHLY`
-   - "Pro Anual" — R$ 189/ano → `STRIPE_PRICE_PRO_ANNUAL`
-   - "Premium Mensal" — R$ 39/mes → `STRIPE_PRICE_PREMIUM_MONTHLY`
-   - "Premium Anual" — R$ 389/ano → `STRIPE_PRICE_PREMIUM_ANNUAL`
-4. Em Developers → Webhooks → Add Endpoint:
-   - URL: `https://residencia-med.vercel.app/api/webhooks/stripe`
-   - Events: `checkout.session.completed`, `customer.subscription.*`, `invoice.payment_failed`
-   - Copiar Signing secret → `STRIPE_WEBHOOK_SECRET`
+- [supabase.com/dashboard](https://supabase.com/dashboard) → New project
+- Project Settings → API → URL + anon public key
+- (Opcional) Authentication → Providers → habilitar Google OAuth
+- (Opcional) Authentication → Email Templates → personalizar
 
-### 6. OpenAI (embeddings) — 2 min, opcional
+### 3. Anthropic Claude (2 min)
 
-So necessario se quiser busca semantica de guidelines. Pode pular.
+- [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+- Create Key → cole no wizard
+- Pré-pago, $5 mínimo. Cada explicação custa ~$0.001 com cache.
 
-1. https://platform.openai.com → API Keys → Create
-2. `OPENAI_API_KEY=sk-...`
+### 4. OpenAI embeddings (2 min, opcional)
 
-## Apos atualizar envs
+- [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- Necessário só pra busca semântica de guidelines (RAG)
 
-Trigger redeploy:
-- Vercel Dashboard → Deployments → ⋯ no ultimo → Redeploy
-- OU `vercel deploy --prod` no terminal
+### 5. Upstash Redis (2 min)
 
-A app entra automaticamente em modo completo apos o redeploy detectar credenciais reais
-(o middleware checa se `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` nao tem "placeholder").
+- [console.upstash.com](https://console.upstash.com) → Create Database
+- Região mais próxima, TLS habilitado
+- Copie a `rediss://` connection string (com TLS)
 
-## Workers (BullMQ) — Railway
+### 6. Stripe billing (5 min, opcional)
 
-A camada web nao precisa de worker para funcionar minimamente. Mas para SM-2 e geracao
-automatica de plano funcionarem, e preciso rodar `apps/workers`.
+Pular se vai usar só o tier FREE.
 
-1. https://railway.app → New Project → Empty Service
-2. Source: connect GitHub repo (apos pushar)
+- [dashboard.stripe.com/test/apikeys](https://dashboard.stripe.com/test/apikeys)
+- Copie Secret + Publishable
+- Products → criar 4 produtos:
+  - Pro Mensal — R$19/mês recorrente
+  - Pro Anual — R$189/ano
+  - Premium Mensal — R$39/mês
+  - Premium Anual — R$389/ano
+- Anotar Price IDs (`price_...`)
+- Webhooks → Add endpoint:
+  - URL: `https://SEU-DOMINIO/api/webhooks/stripe`
+  - Eventos: `checkout.session.completed`, `customer.subscription.*`, `invoice.payment_failed`
+  - Copiar Signing Secret → `STRIPE_WEBHOOK_SECRET`
+
+### 7. Resend email (1 min, opcional)
+
+- [resend.com/api-keys](https://resend.com/api-keys) → Create API key
+- Pra emails transacionais (boas-vindas, lembretes)
+- Free tier: 100 emails/dia, 3000/mês
+
+### 8. VAPID keys
+
+Geradas automaticamente pelo wizard (não precisa de conta externa).
+
+## Workers (BullMQ) em produção
+
+A camada web funciona sozinha pra fluxos básicos, mas para **SM-2**, **plano
+adaptativo** e **análise de incidência** funcionarem, é preciso rodar
+`apps/workers` continuamente.
+
+### Opção A — Railway (recomendado)
+
+1. [railway.app](https://railway.app) → New Project → Empty Service
+2. Connect GitHub repo
 3. Settings:
    - Root directory: `apps/workers`
-   - Build command: `pnpm install && pnpm --filter @residencia-med/db db:generate`
-   - Start command: `pnpm --filter @residencia-med/workers start`
-   - Variables: `DATABASE_URL`, `REDIS_URL`, `ANTHROPIC_API_KEY` (mesmas do Vercel)
+   - Build: `pnpm install --frozen-lockfile && pnpm --filter @residencia-med/db exec prisma generate`
+   - Start: `pnpm --filter @residencia-med/workers start`
+   - Variables: `DATABASE_URL`, `REDIS_URL`, `ANTHROPIC_API_KEY`
 
-Ou Fly.io / Render — qualquer container que rode Node continuamente.
+### Opção B — Fly.io ou Render
 
-## Mobile (Expo) — TestFlight + Play Store
+Qualquer container que rode Node continuamente funciona. Cole as mesmas
+envs do Vercel.
 
-1. `cd apps/mobile && npx eas-cli login`
-2. `eas build:configure` (gera eas.json)
-3. `eas build --platform ios` (precisa Apple Developer $99/ano)
-4. `eas build --platform android` (precisa Google Play $25 unico)
-5. `eas submit` para enviar
+## Mobile (Expo) → TestFlight + Play Store
 
-A API que o mobile consome ja esta no ar (https://residencia-med.vercel.app), basta
-configurar `EXPO_PUBLIC_API_URL` apontando para ela e `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+```bash
+cd apps/mobile
+npx eas-cli login
+eas build:configure
+eas build --platform ios       # precisa Apple Developer $99/ano
+eas build --platform android   # precisa Google Play $25 único
+eas submit
+```
+
+Configure no `eas.json`:
+- `EXPO_PUBLIC_API_URL=https://SEU-DOMINIO`
+- `EXPO_PUBLIC_SUPABASE_URL=...`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY=...`
+
+## Após terminar o wizard
+
+```bash
+# Local — reload das envs
+./scripts/dev-down.sh && ./scripts/dev-up.sh
+
+# Produção — redeploy
+vercel --prod
+```
+
+A app sai automaticamente do modo demo quando detecta `NEXT_PUBLIC_SUPABASE_URL`
+real (sem "placeholder") e `DEV_USER_EMAIL` vazio.
 
 ## CI/CD (GitHub Actions)
 
-Esta tudo pronto em `.github/workflows/ci.yml` mas precisa de:
+`.github/workflows/ci.yml` já está configurado. Pra ativar:
 
-1. Repo no GitHub: `gh repo create residencia-med --private --source . --push`
-2. Vercel detecta automaticamente (esta linkado por CLI)
-3. Cada PR vira preview deployment
+```bash
+gh repo create residencia-med --private --source . --push
+```
 
-## Custo estimado mensal (free tier exhausto)
+A Vercel detecta automaticamente (já está linkada via CLI). Cada PR vira
+preview deployment.
 
-| Servico | Free | $19 PRO esperado |
+## Custo estimado mensal
+
+| Serviço | Free | Após escala |
 |---|---|---|
-| Vercel Hobby | 100GB bandwidth | ate 1k usuarios ativos |
-| Neon Free | 0.5GB | ate 100 usuarios; subir pra Launch ($19/mo) em 500 |
-| Upstash | 10k cmds/dia | ate 1k usuarios; Pay-as-go barato |
-| Clerk | 10k MAU | suficiente para early stage |
-| Anthropic | pay-per-use | ~$0.50/usuario PRO |
-| Stripe | 4.99% transacoes | proporcional |
+| Vercel Hobby | 100GB BW | até ~1k MAU |
+| Neon Free | 0.5GB | até ~100 users; Launch $19/mo a partir disso |
+| Upstash | 10k cmds/dia | até ~1k users |
+| Supabase | 50k MAU | suficiente pra fase early |
+| Anthropic | pay-per-use | ~$0.50 por user PRO |
+| Stripe | 4.99% transações | proporcional |
+| Resend | 100/dia free | $20/mo a partir de 50k |
 
-Total inicial: $0 ate ~500 usuarios. Depois ~$50/mes ate ~5k.
+**Total inicial:** $0 até ~500 usuários. ~$50/mês até ~5k.
+
+## Solução de problemas
+
+**Push não funciona em mobile**: VAPID precisa ser HTTPS (Vercel é). Localhost
+não funciona em iOS Safari.
+
+**Webhooks Stripe falham**: o `STRIPE_WEBHOOK_SECRET` é diferente da Secret key.
+Pegue em Developers → Webhooks → seu endpoint → Reveal signing secret.
+
+**Auth Supabase loop**: confira que o Site URL e Redirect URLs em
+Authentication → URL Configuration apontam pro domínio Vercel.
+
+**Preview deployments quebram**: Vercel preview branches precisam das mesmas
+envs que prod. O wizard adiciona em `production preview development` por
+padrão.
