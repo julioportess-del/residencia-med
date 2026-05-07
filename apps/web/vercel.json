@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile=false",
-  "buildCommand": "cd ../.. && pnpm --filter @residencia-med/db exec prisma generate && mkdir -p apps/web/node_modules/.prisma/client && cp -r node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/* apps/web/node_modules/.prisma/client/ && pnpm --filter @residencia-med/web build",
+  "buildCommand": "bash ./build-vercel.sh",
   "outputDirectory": ".next"
 }
