@@ -16,8 +16,9 @@ build/
 !.env.example
 
 # Supabase CLI (local-only artifacts)
-supabase/.temp/
-supabase/.branches/
+**/supabase/.temp/
+**/supabase/.branches/
+**/supabase/.env
 
 # Logs
 *.log
