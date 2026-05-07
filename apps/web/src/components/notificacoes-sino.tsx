@@ -123,7 +123,17 @@ export function NotificacoesSino() {
                             </p>
                           )}
                           <span className="text-[10px] text-muted-foreground">
-                            {format(n.createdAt, 'dd/MM HH:mm')}
+                            {(() => {
+                              try {
+                                const d =
+                                  n.createdAt instanceof Date
+                                    ? n.createdAt
+                                    : new Date(n.createdAt)
+                                return format(d, 'dd/MM HH:mm')
+                              } catch {
+                                return ''
+                              }
+                            })()}
                           </span>
                         </div>
                         <button
