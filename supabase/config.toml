@@ -1,0 +1,17 @@
+project_id = "iytnxfzxhatikodkmjuv"
+
+[auth]
+site_url = "https://residencia-med.vercel.app"
+additional_redirect_urls = [
+  "https://residencia-med.vercel.app/**",
+  "http://localhost:3000/**",
+  "exp://**",
+  "residencia-med://**"
+]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+otp_expiry = 3600
+otp_length = 8
+max_frequency = "1m0s"
