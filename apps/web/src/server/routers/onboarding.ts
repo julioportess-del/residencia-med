@@ -42,19 +42,12 @@ export const onboardingRouter = router({
       },
     })
 
-    // Garantir analise de incidencia das bancas selecionadas (idempotente).
-    for (const banca of bancas) {
-      await enqueueRecomputarIncidencia({ bancaId: banca.id })
-    }
-
-    await enqueueGerarPlano({ userId: ctx.userId, motivo: 'onboarding' })
-
-    // Email de boas-vindas (best-effort, não bloqueia)
-    void emailBemVindo(ctx.user.email, ctx.user.name).catch((e) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[email] falha envio bem-vindo', e)
-      }
-    })
+    // Enqueues paralelos (não bloqueia o usuário — fail-safe se Redis offline)
+    void Promise.allSettled([
+      ...bancas.map((b) => enqueueRecomputarIncidencia({ bancaId: b.id })),
+      enqueueGerarPlano({ userId: ctx.userId, motivo: 'onboarding' }),
+      emailBemVindo(ctx.user.email, ctx.user.name).catch(() => null),
+    ])
 
     return { ok: true }
   }),

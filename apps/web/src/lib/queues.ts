@@ -11,6 +11,14 @@ import {
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
+/**
+ * Em produção, se REDIS_URL aponta pra localhost, Redis claramente não está
+ * configurado — pular todos os enqueues sem tentar conectar (evita timeout).
+ */
+const REDIS_HABILITADO =
+  Boolean(process.env.REDIS_URL) &&
+  !(REDIS_URL.includes('localhost') && process.env.NODE_ENV === 'production')
+
 const globalForQueues = globalThis as unknown as {
   __queueConnection?: Redis
   __filaRevisao?: Queue<JobAtualizarRevisao>
@@ -20,7 +28,13 @@ const globalForQueues = globalThis as unknown as {
 
 function getConnection(): Redis {
   if (!globalForQueues.__queueConnection) {
-    globalForQueues.__queueConnection = new Redis(REDIS_URL, { maxRetriesPerRequest: null })
+    globalForQueues.__queueConnection = new Redis(REDIS_URL, {
+      maxRetriesPerRequest: null,
+      // Timeout de conexão curto pra serverless functions não travarem
+      connectTimeout: 2000,
+      commandTimeout: 2000,
+      lazyConnect: true,
+    })
   }
   return globalForQueues.__queueConnection
 }
@@ -60,9 +74,7 @@ const opcoesPadrao = {
 }
 
 export async function enqueueAtualizarRevisao(payload: JobAtualizarRevisao): Promise<void> {
-  if (!process.env.REDIS_URL && process.env.NODE_ENV === 'production') {
-    return
-  }
+  if (!REDIS_HABILITADO) return
   try {
     await getFilaRevisao().add('atualizar-revisao', payload, {
       ...opcoesPadrao,
@@ -76,9 +88,7 @@ export async function enqueueAtualizarRevisao(payload: JobAtualizarRevisao): Pro
 }
 
 export async function enqueueGerarPlano(payload: JobGerarPlano): Promise<void> {
-  if (!process.env.REDIS_URL && process.env.NODE_ENV === 'production') {
-    return
-  }
+  if (!REDIS_HABILITADO) return
   try {
     await getFilaPlano().add('gerar-plano', payload, opcoesPadrao)
   } catch (e) {
@@ -91,6 +101,7 @@ export async function enqueueGerarPlano(payload: JobGerarPlano): Promise<void> {
 export async function enqueueRecomputarIncidencia(
   payload: JobRecomputarIncidencia,
 ): Promise<void> {
+  if (!REDIS_HABILITADO) return
   try {
     await getFilaIncidencia().add('recomputar-incidencia', payload, {
       ...opcoesPadrao,
