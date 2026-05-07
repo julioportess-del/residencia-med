@@ -1,7 +1,7 @@
-import { useAuth, useUser } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useAuthSession } from '@/lib/auth-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
@@ -17,8 +17,7 @@ const COR_PLANO: Record<string, string> = {
 
 export default function ContaScreen() {
   const router = useRouter()
-  const { signOut } = useAuth()
-  const { user } = useUser()
+  const { signOut, user } = useAuthSession()
   const meu = trpc.billing.meuPlano.useQuery()
   const uso = trpc.billing.uso.useQuery()
   const utils = trpc.useUtils()
@@ -63,7 +62,7 @@ export default function ContaScreen() {
   return (
     <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
       <Card>
-        <CardTitle>{user?.primaryEmailAddress?.emailAddress ?? 'Conta'}</CardTitle>
+        <CardTitle>{user?.email ?? 'Conta'}</CardTitle>
         <CardDescription>Plano, sincronização e logout.</CardDescription>
 
         <View style={layout.rowBetween}>

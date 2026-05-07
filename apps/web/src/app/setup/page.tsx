@@ -5,17 +5,17 @@ export const metadata = { title: 'Configuração' }
 
 const credenciais = [
   {
-    chave: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
-    nome: 'Clerk (autenticação)',
+    chave: 'NEXT_PUBLIC_SUPABASE_URL',
+    nome: 'Supabase (autenticação)',
     descricao: 'Cadastro, login e gestão de sessões',
-    onde: 'https://dashboard.clerk.com → API Keys',
+    onde: 'https://supabase.com/dashboard → Project Settings → API',
     tempo: '2 min',
     obrigatoria: true,
   },
   {
-    chave: 'CLERK_SECRET_KEY',
-    nome: 'Clerk Secret',
-    descricao: 'Permite o servidor validar as sessões',
+    chave: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    nome: 'Supabase Anon Key',
+    descricao: 'Chave pública usada no client e no server',
     onde: 'mesmo lugar acima',
     tempo: '0',
     obrigatoria: true,

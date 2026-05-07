@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Check, Sparkles } from 'lucide-react'
 import { PLANOS_B2C, precoFormatado } from '@residencia-med/billing/plans'
-import { clerkHabilitado } from '@/lib/flags'
+import { authHabilitado } from '@/lib/flags'
 import {
   PrecosUpgradeButton,
   PrecosUpgradeButtonDemo,
@@ -11,7 +11,7 @@ export const metadata = { title: 'Preços' }
 
 export default function PrecosPage() {
   const ordem: Array<keyof typeof PLANOS_B2C> = ['FREE', 'PRO', 'PREMIUM']
-  const Botao = clerkHabilitado() ? PrecosUpgradeButton : PrecosUpgradeButtonDemo
+  const Botao = authHabilitado() ? PrecosUpgradeButton : PrecosUpgradeButtonDemo
   return (
     <main className="min-h-screen">
       <header className="border-b">

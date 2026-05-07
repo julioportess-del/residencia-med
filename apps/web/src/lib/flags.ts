@@ -3,7 +3,8 @@
  * Servem tanto no servidor quanto no cliente (qualquer var NEXT_PUBLIC_).
  */
 
-export function clerkHabilitado(): boolean {
-  const k = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  return Boolean(k && !k.includes('placeholder'))
+export function authHabilitado(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return Boolean(url && anon && !url.includes('placeholder'))
 }

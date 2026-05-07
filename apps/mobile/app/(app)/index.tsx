@@ -1,7 +1,7 @@
-import { useUser } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useAuthSession } from '@/lib/auth-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { cores, espacamento, fontes, layout } from '@/lib/theme'
 
 export default function HomeScreen() {
   const router = useRouter()
-  const { user } = useUser()
+  const { user } = useAuthSession()
   const status = trpc.onboarding.status.useQuery()
   const resumo = trpc.dashboard.resumo.useQuery(undefined, {
     enabled: status.data?.completo === true,
@@ -33,7 +33,10 @@ export default function HomeScreen() {
     )
   }
 
-  const nome = user?.firstName ?? user?.primaryEmailAddress?.emailAddress?.split('@')[0] ?? ''
+  const nome =
+    (user?.user_metadata?.name as string | undefined) ??
+    user?.email?.split('@')[0] ??
+    ''
 
   return (
     <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { explicarErroStream } from '@residencia-med/ai'
 import { checarLimiteIA } from '@residencia-med/billing'
 import { prisma } from '@residencia-med/db'
+import { supabaseUserAtual } from '@/lib/supabase/server'
 import { garantirUser } from '@/server/trpc'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -15,8 +15,8 @@ const InputSchema = z.object({
 })
 
 export async function POST(req: Request) {
-  const { userId: clerkId } = await auth()
-  if (!clerkId) return new NextResponse('Unauthorized', { status: 401 })
+  const { user: authUser } = await supabaseUserAtual()
+  if (!authUser?.email) return new NextResponse('Unauthorized', { status: 401 })
 
   const body = await req.json().catch(() => null)
   const parsed = InputSchema.safeParse(body)
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 })
   }
 
-  const user = await garantirUser(clerkId)
+  const user = await garantirUser(authUser.id, authUser.email)
 
   const limite = await checarLimiteIA(user.id)
   if (!limite.permitido) {

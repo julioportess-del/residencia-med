@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@residencia-med/db'
+import { supabaseUserAtual } from '@/lib/supabase/server'
 import { garantirUser } from '@/server/trpc'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const { userId: clerkId } = await auth()
-  if (!clerkId) return new NextResponse('Unauthorized', { status: 401 })
-  const user = await garantirUser(clerkId)
+  const { user: authUser } = await supabaseUserAtual()
+  if (!authUser?.email) return new NextResponse('Unauthorized', { status: 401 })
+  const user = await garantirUser(authUser.id, authUser.email)
 
   const dados = await prisma.user.findUnique({
     where: { id: user.id },
@@ -22,9 +22,9 @@ export async function GET() {
   })
   if (!dados) return new NextResponse('Not found', { status: 404 })
 
-  const { id: _id, clerkId: _ck, ...perfil } = dados
+  const { id: _id, authId: _aid, ...perfil } = dados
   void _id
-  void _ck
+  void _aid
 
   const json = JSON.stringify(
     { exportadoEm: new Date(), perfil },

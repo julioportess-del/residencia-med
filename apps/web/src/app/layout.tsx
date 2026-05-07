@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'sonner'
 import { TRPCProvider } from '@/lib/trpc/provider'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -69,13 +68,8 @@ export const viewport: Viewport = {
 
 export const dynamic = 'force-dynamic'
 
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-const CLERK_HABILITADO = Boolean(
-  PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('placeholder'),
-)
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const conteudo = (
+  return (
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <body className="bg-background text-foreground font-sans antialiased min-h-screen">
         <ThemeProvider>
@@ -85,7 +79,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </body>
     </html>
   )
-
-  if (!CLERK_HABILITADO) return conteudo
-  return <ClerkProvider>{conteudo}</ClerkProvider>
 }

@@ -6,8 +6,8 @@ App React Native compartilhando API com o web.
 
 - **Expo SDK 52** (React Native 0.76, New Architecture)
 - **Expo Router 4** com tabs e stacks aninhados
-- **Clerk Expo** com `expo-secure-store` como token cache
-- **tRPC v11** apontando para o mesmo `apps/web` API (resolvido via `EXPO_PUBLIC_API_URL` ou IP do debugger)
+- **Supabase Auth** (`@supabase/supabase-js`) com `expo-secure-store` para persistência de sessão
+- **tRPC v11** apontando para o mesmo `apps/web` API (resolvido via `EXPO_PUBLIC_API_URL` ou IP do debugger). Mobile envia `Authorization: Bearer <supabase_jwt>`
 - **AsyncStorage** para fila offline de respostas
 - **expo-notifications** para push diario + lembrete de revisao
 
@@ -15,8 +15,8 @@ App React Native compartilhando API com o web.
 
 | Rota | Funcao |
 |---|---|
-| `/(auth)/sign-in` | Login com email/senha (Clerk) |
-| `/(auth)/sign-up` | Cadastro + verificacao por codigo |
+| `/(auth)/sign-in` | Login com email/senha (Supabase) |
+| `/(auth)/sign-up` | Cadastro + (opcional) confirmacao por email |
 | `/(app)/index` | Home com KPIs, streak, alerta de revisao vencida |
 | `/(app)/questoes` | Lista do banco com filtros |
 | `/(app)/questoes/[id]` | Responder questao + correcao + offline queue |

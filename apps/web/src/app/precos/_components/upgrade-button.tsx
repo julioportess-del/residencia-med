@@ -1,9 +1,11 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import type { Session, User } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
+import { supabaseBrowser } from '@/lib/supabase/client'
 import { trpc } from '@/lib/trpc/client'
 
 type Props = {
@@ -12,8 +14,23 @@ type Props = {
 }
 
 export function PrecosUpgradeButton({ plano, destaque }: Props) {
-  const { isSignedIn, isLoaded } = useUser()
   const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [carregado, setCarregado] = useState(false)
+
+  useEffect(() => {
+    const supabase = supabaseBrowser()
+    supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => {
+      setUser(data.user)
+      setCarregado(true)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_event: string, session: Session | null) => {
+        setUser(session?.user ?? null)
+      },
+    )
+    return () => sub.subscription.unsubscribe()
+  }, [])
 
   const checkout = trpc.billing.iniciarCheckout.useMutation({
     onSuccess: ({ url }) => {
@@ -23,9 +40,9 @@ export function PrecosUpgradeButton({ plano, destaque }: Props) {
   })
 
   const onClick = () => {
-    if (!isLoaded) return
-    if (!isSignedIn) {
-      router.push(`/sign-up?redirect_url=/precos`)
+    if (!carregado) return
+    if (!user) {
+      router.push('/sign-up?next=/precos')
       return
     }
     checkout.mutate({ plano, ciclo: 'monthly' })

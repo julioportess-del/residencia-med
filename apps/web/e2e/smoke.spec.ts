@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * Smoke tests que rodam mesmo em modo demo (sem Clerk/Stripe/DB reais).
+ * Smoke tests que rodam mesmo em modo demo (sem Supabase/Stripe/DB reais).
  * Validam que as rotas públicas e o rewrite de modo demo funcionam.
  */
 
@@ -41,12 +41,12 @@ test.describe('rotas públicas', () => {
   })
 })
 
-test.describe('modo demo (sem Clerk real)', () => {
+test.describe('modo demo (sem Supabase real)', () => {
   test('/dashboard reescreve para /setup com checklist de credenciais', async ({ page }) => {
     await page.goto('/dashboard')
     await expect(page.getByText(/Modo de demonstração/i)).toBeVisible()
     await expect(page.getByRole('heading', { name: /Bem-vindo ao Residência Med/i })).toBeVisible()
-    await expect(page.getByText('Clerk (autenticação)')).toBeVisible()
+    await expect(page.getByText('Supabase (autenticação)')).toBeVisible()
     await expect(page.getByText('Postgres + pgvector')).toBeVisible()
   })
 

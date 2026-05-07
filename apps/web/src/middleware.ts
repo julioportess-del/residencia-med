@@ -1,59 +1,81 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { atualizarSessaoSupabase } from '@/lib/supabase/middleware'
 
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-const CLERK_HABILITADO = Boolean(
-  PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('placeholder'),
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const SUPABASE_HABILITADO = Boolean(
+  SUPABASE_URL && SUPABASE_ANON && !SUPABASE_URL.includes('placeholder'),
 )
 
-const ehRotaPublica = createRouteMatcher([
+const PUBLIC_PATHS = [
   '/',
   '/precos',
   '/setup',
   '/docs/api',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/webhooks(.*)',
+  '/sign-in',
+  '/sign-up',
+  '/auth/callback',
+  '/api/webhooks',
   '/api/health',
-  '/api/v1(.*)',
+  '/api/v1',
   '/api/trpc/banca.listar',
   '/api/trpc/planos.listar',
-])
+]
 
-const ehRotaProtegidaDemo = createRouteMatcher([
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/onboarding(.*)',
-  '/dashboard(.*)',
-  '/questoes(.*)',
-  '/simulado(.*)',
-  '/revisao(.*)',
-  '/plano(.*)',
-  '/conta(.*)',
-  '/admin(.*)',
-  '/mentor(.*)',
-  '/org(.*)',
-  '/convite(.*)',
-  '/contribuir(.*)',
-  '/live(.*)',
-])
+const PROTECTED_DEMO_PREFIXES = [
+  '/sign-in',
+  '/sign-up',
+  '/onboarding',
+  '/dashboard',
+  '/questoes',
+  '/simulado',
+  '/revisao',
+  '/plano',
+  '/conta',
+  '/admin',
+  '/mentor',
+  '/org',
+  '/convite',
+  '/contribuir',
+  '/live',
+]
 
-const middlewareDemo = (req: NextRequest) => {
-  if (ehRotaProtegidaDemo(req)) {
-    const url = req.nextUrl.clone()
-    url.pathname = '/setup'
-    return NextResponse.rewrite(url)
-  }
-  return NextResponse.next()
+function ehPublica(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => {
+    if (p === '/') return pathname === '/'
+    return pathname === p || pathname.startsWith(`${p}/`)
+  })
 }
 
-const middlewareReal = clerkMiddleware(async (auth, req) => {
-  if (!ehRotaPublica(req)) {
-    await auth.protect()
-  }
-})
+function ehProtegidaDemo(pathname: string): boolean {
+  return PROTECTED_DEMO_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
 
-export default CLERK_HABILITADO ? middlewareReal : middlewareDemo
+export default async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
+
+  // Modo demo (sem Supabase) — redireciona rotas protegidas pra /setup
+  if (!SUPABASE_HABILITADO) {
+    if (ehProtegidaDemo(pathname)) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/setup'
+      return NextResponse.rewrite(url)
+    }
+    return NextResponse.next()
+  }
+
+  const { response, user } = await atualizarSessaoSupabase(req)
+
+  // Redireciona pra sign-in se rota protegida e sem sessão
+  if (!user && !ehPublica(pathname)) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/sign-in'
+    url.searchParams.set('next', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  return response
+}
 
 export const config = {
   matcher: [

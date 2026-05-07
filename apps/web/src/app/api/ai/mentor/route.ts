@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { mentorStream } from '@residencia-med/ai'
 import { checarLimiteIA } from '@residencia-med/billing'
 import { prisma } from '@residencia-med/db'
+import { supabaseUserAtual } from '@/lib/supabase/server'
 import { garantirUser } from '@/server/trpc'
 import { rateLimit } from '@/lib/rate-limit'
 import { montarContextoUsuario } from '@/server/routers/mentor'
@@ -17,8 +17,8 @@ const InputSchema = z.object({
 })
 
 export async function POST(req: Request) {
-  const { userId: clerkId } = await auth()
-  if (!clerkId) return new NextResponse('Unauthorized', { status: 401 })
+  const { user: authUser } = await supabaseUserAtual()
+  if (!authUser?.email) return new NextResponse('Unauthorized', { status: 401 })
 
   const body = await req.json().catch(() => null)
   const parsed = InputSchema.safeParse(body)
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Entrada inválida', details: parsed.error.flatten() }, { status: 400 })
   }
 
-  const user = await garantirUser(clerkId)
+  const user = await garantirUser(authUser.id, authUser.email)
 
   // Mentor consome cota de IA — usa o mesmo limite de explicações
   const limite = await checarLimiteIA(user.id)

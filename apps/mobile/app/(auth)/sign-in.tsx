@@ -1,34 +1,37 @@
-import { useSignIn } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native'
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native'
+import { useAuthSession } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { cores, espacamento, fontes, layout, radii } from '@/lib/theme'
 
 export default function SignInScreen() {
-  const { signIn, setActive, isLoaded } = useSignIn()
+  const { signIn } = useAuthSession()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [carregando, setCarregando] = useState(false)
 
   const onSubmit = async () => {
-    if (!isLoaded) return
     setCarregando(true)
-    try {
-      const r = await signIn.create({ identifier: email, password: senha })
-      if (r.status === 'complete') {
-        await setActive({ session: r.createdSessionId })
-        router.replace('/(app)')
-      } else {
-        Alert.alert('Confirmação adicional necessária', 'Verifique email/2fa.')
-      }
-    } catch (e) {
-      const msg = (e as { errors?: Array<{ message?: string }> }).errors?.[0]?.message ?? 'Erro ao entrar'
-      Alert.alert('Erro', msg)
-    } finally {
-      setCarregando(false)
+    const { erro } = await signIn(email, senha)
+    setCarregando(false)
+    if (erro) {
+      Alert.alert(
+        'Erro',
+        erro === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : erro,
+      )
+      return
     }
+    router.replace('/(app)')
   }
 
   return (

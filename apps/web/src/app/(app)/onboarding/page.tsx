@@ -1,14 +1,10 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@residencia-med/db'
-import { garantirUser } from '@/server/trpc'
+import { exigirUser } from '@/lib/auth'
 import { OnboardingFlow } from './_components/onboarding-flow'
 
 export default async function OnboardingPage() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
-
-  const user = await garantirUser(userId)
+  const user = await exigirUser()
   const completo = Boolean(
     user.bancasAlvo.length > 0 &&
       user.dataProva &&

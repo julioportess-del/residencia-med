@@ -1,20 +1,20 @@
-import { useAuth } from '@clerk/clerk-expo'
 import { Redirect, Tabs } from 'expo-router'
 import { useEffect } from 'react'
+import { useAuthSession } from '@/lib/auth-context'
 import { registrarPushToken } from '@/lib/notifications'
 import { cores } from '@/lib/theme'
 
 export default function AppLayout() {
-  const { isSignedIn, isLoaded } = useAuth()
+  const { carregado, session } = useAuthSession()
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (session) {
       void registrarPushToken()
     }
-  }, [isSignedIn])
+  }, [session])
 
-  if (!isLoaded) return null
-  if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />
+  if (!carregado) return null
+  if (!session) return <Redirect href="/(auth)/sign-in" />
 
   return (
     <Tabs

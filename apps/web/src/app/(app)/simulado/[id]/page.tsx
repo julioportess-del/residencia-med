@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@residencia-med/db'
+import { exigirUser } from '@/lib/auth'
 import { SimuladoRunner } from './_components/simulado-runner'
 
 export default async function SimuladoExecPage({
@@ -9,11 +9,10 @@ export default async function SimuladoExecPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { userId: clerkId } = await auth()
-  if (!clerkId) redirect('/sign-in')
+  const user = await exigirUser()
 
   const sessao = await prisma.sessao.findFirst({
-    where: { id, user: { clerkId } },
+    where: { id, userId: user.id },
   })
   if (!sessao) redirect('/simulado')
 

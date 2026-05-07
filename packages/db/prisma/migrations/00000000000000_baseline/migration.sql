@@ -49,7 +49,7 @@ CREATE TYPE "TipoNotificacao" AS ENUM ('REVISAO_VENCENDO', 'PLANO_ATIVADO', 'PLA
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "clerkId" TEXT NOT NULL,
+    "authId" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
     "avatarUrl" TEXT,
@@ -72,7 +72,7 @@ CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "clerkOrgId" TEXT,
+    "authOrgId" TEXT,
     "plano" "PlanoOrg" NOT NULL DEFAULT 'STARTER',
     "seats" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -539,14 +539,67 @@ CREATE TABLE "Notificacao" (
     CONSTRAINT "Notificacao_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "PushSubscription" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PushSubscription_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Experimento" (
+    "id" TEXT NOT NULL,
+    "chave" TEXT NOT NULL,
+    "nome" TEXT NOT NULL,
+    "descricao" TEXT,
+    "variantesJson" JSONB NOT NULL,
+    "ativo" BOOLEAN NOT NULL DEFAULT false,
+    "iniciadoEm" TIMESTAMP(3),
+    "encerradoEm" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Experimento_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AtribuicaoExperimento" (
+    "id" TEXT NOT NULL,
+    "experimentoId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "variante" TEXT NOT NULL,
+    "primeiraVisita" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AtribuicaoExperimento_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EventoExperimento" (
+    "id" TEXT NOT NULL,
+    "experimentoId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "variante" TEXT NOT NULL,
+    "evento" TEXT NOT NULL,
+    "metadataJson" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EventoExperimento_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
-CREATE UNIQUE INDEX "User_clerkId_key" ON "User"("clerkId");
+CREATE UNIQUE INDEX "User_authId_key" ON "User"("authId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE INDEX "User_clerkId_idx" ON "User"("clerkId");
+CREATE INDEX "User_authId_idx" ON "User"("authId");
 
 -- CreateIndex
 CREATE INDEX "User_organizationId_idx" ON "User"("organizationId");
@@ -558,7 +611,7 @@ CREATE INDEX "User_email_idx" ON "User"("email");
 CREATE UNIQUE INDEX "Organization_slug_key" ON "Organization"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Organization_clerkOrgId_key" ON "Organization"("clerkOrgId");
+CREATE UNIQUE INDEX "Organization_authOrgId_key" ON "Organization"("authOrgId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ConviteOrg_token_key" ON "ConviteOrg"("token");
@@ -764,6 +817,30 @@ CREATE INDEX "Notificacao_userId_createdAt_idx" ON "Notificacao"("userId", "crea
 -- CreateIndex
 CREATE INDEX "Notificacao_userId_lidaEm_idx" ON "Notificacao"("userId", "lidaEm");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "PushSubscription"("endpoint");
+
+-- CreateIndex
+CREATE INDEX "PushSubscription_userId_idx" ON "PushSubscription"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Experimento_chave_key" ON "Experimento"("chave");
+
+-- CreateIndex
+CREATE INDEX "Experimento_ativo_idx" ON "Experimento"("ativo");
+
+-- CreateIndex
+CREATE INDEX "AtribuicaoExperimento_experimentoId_variante_idx" ON "AtribuicaoExperimento"("experimentoId", "variante");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AtribuicaoExperimento_experimentoId_userId_key" ON "AtribuicaoExperimento"("experimentoId", "userId");
+
+-- CreateIndex
+CREATE INDEX "EventoExperimento_experimentoId_evento_createdAt_idx" ON "EventoExperimento"("experimentoId", "evento", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "EventoExperimento_experimentoId_userId_idx" ON "EventoExperimento"("experimentoId", "userId");
+
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -889,4 +966,13 @@ ALTER TABLE "Proficiencia" ADD CONSTRAINT "Proficiencia_userId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "Notificacao" ADD CONSTRAINT "Notificacao_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PushSubscription" ADD CONSTRAINT "PushSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AtribuicaoExperimento" ADD CONSTRAINT "AtribuicaoExperimento_experimentoId_fkey" FOREIGN KEY ("experimentoId") REFERENCES "Experimento"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventoExperimento" ADD CONSTRAINT "EventoExperimento_experimentoId_fkey" FOREIGN KEY ("experimentoId") REFERENCES "Experimento"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

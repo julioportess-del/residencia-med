@@ -1,48 +1,46 @@
-import { useSignUp } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native'
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native'
+import { useAuthSession } from '@/lib/auth-context'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { cores, espacamento, fontes, layout, radii } from '@/lib/theme'
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp()
+  const { signUp } = useAuthSession()
   const router = useRouter()
+  const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [codigo, setCodigo] = useState('')
   const [aguardandoCodigo, setAguardandoCodigo] = useState(false)
   const [carregando, setCarregando] = useState(false)
 
   const onCriar = async () => {
-    if (!isLoaded) return
-    setCarregando(true)
-    try {
-      await signUp.create({ emailAddress: email, password: senha })
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-      setAguardandoCodigo(true)
-    } catch (e) {
-      const msg = (e as { errors?: Array<{ message?: string }> }).errors?.[0]?.message ?? 'Erro ao cadastrar'
-      Alert.alert('Erro', msg)
-    } finally {
-      setCarregando(false)
+    if (senha.length < 8) {
+      Alert.alert('Senha', 'Pelo menos 8 caracteres.')
+      return
     }
-  }
-
-  const onConfirmar = async () => {
-    if (!isLoaded) return
     setCarregando(true)
-    try {
-      const r = await signUp.attemptEmailAddressVerification({ code: codigo })
-      if (r.status === 'complete') {
-        await setActive({ session: r.createdSessionId })
-        router.replace('/(app)')
-      }
-    } catch (e) {
-      const msg = (e as { errors?: Array<{ message?: string }> }).errors?.[0]?.message ?? 'Código inválido'
-      Alert.alert('Erro', msg)
-    } finally {
-      setCarregando(false)
+    const { erro } = await signUp(email, senha, nome)
+    setCarregando(false)
+    if (erro) {
+      Alert.alert('Erro', erro)
+      return
+    }
+    // Se confirmação de email estiver desligada, sessão é criada na hora
+    const { data } = await supabase.auth.getSession()
+    if (data.session) {
+      router.replace('/(app)')
+    } else {
+      setAguardandoCodigo(true)
     }
   }
 
@@ -55,12 +53,21 @@ export default function SignUpScreen() {
         <Text style={styles.titulo}>{aguardandoCodigo ? 'Confirme seu email' : 'Criar conta'}</Text>
         <Text style={styles.subtitulo}>
           {aguardandoCodigo
-            ? 'Enviamos um código para o email informado.'
+            ? `Enviamos um link de confirmação para ${email}. Abra o e-mail para ativar a conta.`
             : 'Comece de graça, sem cartão de crédito.'}
         </Text>
 
         {!aguardandoCodigo ? (
           <>
+            <View style={styles.campo}>
+              <Text style={styles.label}>Nome</Text>
+              <TextInput
+                value={nome}
+                onChangeText={setNome}
+                placeholder="Seu nome"
+                style={styles.input}
+              />
+            </View>
             <View style={styles.campo}>
               <Text style={styles.label}>Email</Text>
               <TextInput
@@ -78,7 +85,7 @@ export default function SignUpScreen() {
                 value={senha}
                 onChangeText={setSenha}
                 secureTextEntry
-                placeholder="••••••••"
+                placeholder="mínimo 8 caracteres"
                 style={styles.input}
               />
             </View>
@@ -90,21 +97,9 @@ export default function SignUpScreen() {
             </Link>
           </>
         ) : (
-          <>
-            <View style={styles.campo}>
-              <Text style={styles.label}>Código recebido</Text>
-              <TextInput
-                value={codigo}
-                onChangeText={setCodigo}
-                keyboardType="number-pad"
-                placeholder="123456"
-                style={styles.input}
-              />
-            </View>
-            <Button onPress={onConfirmar} loading={carregando} size="lg">
-              Confirmar
-            </Button>
-          </>
+          <Link href="/(auth)/sign-in" style={styles.link}>
+            Voltar para entrar
+          </Link>
         )}
       </View>
     </KeyboardAvoidingView>

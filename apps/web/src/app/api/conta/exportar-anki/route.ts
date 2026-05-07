@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@residencia-med/db'
+import { supabaseUserAtual } from '@/lib/supabase/server'
 import { garantirUser } from '@/server/trpc'
 
 export const dynamic = 'force-dynamic'
@@ -17,18 +17,18 @@ export const dynamic = 'force-dynamic'
  * No Anki: File → Import → Field separator: Semicolon → mapear front/back/tags.
  */
 export async function GET() {
-  let clerkId: string | null = null
+  let authUser
   try {
-    const r = await auth()
-    clerkId = r.userId
+    const r = await supabaseUserAtual()
+    authUser = r.user
   } catch {
     return new NextResponse('Unauthorized', { status: 401 })
   }
-  if (!clerkId) return new NextResponse('Unauthorized', { status: 401 })
+  if (!authUser?.email) return new NextResponse('Unauthorized', { status: 401 })
 
   let user
   try {
-    user = await garantirUser(clerkId)
+    user = await garantirUser(authUser.id, authUser.email)
   } catch {
     return NextResponse.json(
       { error: 'Banco indisponível.' },

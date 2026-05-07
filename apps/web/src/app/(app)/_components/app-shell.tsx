@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { UserButton } from '@clerk/nextjs'
+import { usePathname, useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
+import { supabaseBrowser } from '@/lib/supabase/client'
 import {
   BookOpen,
   Building2,
@@ -42,10 +43,14 @@ const NAV = [
 
 export function AppShell({ user, onboardingCompleto, children }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const naoEhOnboarding = !pathname.startsWith('/onboarding')
 
-  // Registra SW pra PWA + push (no-op se já registrado)
-  void user
+  async function sair() {
+    await supabaseBrowser().auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -80,13 +85,23 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
         <div className="border-t px-3 py-3 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <UserButton afterSignOutUrl="/" />
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                {(user.nome[0] ?? 'U').toUpperCase()}
+              </div>
               <div className="text-xs min-w-0">
                 <div className="font-medium leading-tight truncate">{user.nome}</div>
                 <div className="truncate text-muted-foreground">{user.email}</div>
               </div>
             </div>
             <NotificacoesSino />
+            <button
+              type="button"
+              onClick={sair}
+              aria-label="Sair"
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <LogOut className="size-4" />
+            </button>
           </div>
           <ThemeToggle compacto />
         </div>
