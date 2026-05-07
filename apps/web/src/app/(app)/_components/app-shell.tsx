@@ -22,6 +22,7 @@ import { cn } from '@/lib/cn'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { NotificacoesSino } from '@/components/notificacoes-sino'
 import { RegistrarSW } from '@/components/registrar-sw'
+import { SafeBoundary } from '@/components/safe-boundary'
 
 type Props = {
   user: { nome: string; email: string }
@@ -54,7 +55,9 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
 
   return (
     <div className="flex min-h-screen">
-      <RegistrarSW />
+      <SafeBoundary name="registrar-sw">
+        <RegistrarSW />
+      </SafeBoundary>
       <aside className="hidden w-60 shrink-0 border-r md:flex md:flex-col">
         <Link href="/dashboard" className="flex items-center gap-2 px-6 py-5 border-b">
           <Stethoscope className="size-5 text-primary" />
@@ -93,7 +96,9 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
                 <div className="truncate text-muted-foreground">{user.email}</div>
               </div>
             </div>
-            <NotificacoesSino />
+            <SafeBoundary name="notificacoes-sino">
+              <NotificacoesSino />
+            </SafeBoundary>
             <button
               type="button"
               onClick={sair}

@@ -5,7 +5,7 @@
  * - Cache leve: assets estáticos (Next.js cache funciona bem por padrão)
  */
 
-const CACHE_NAME = 'residencia-med-v1'
+const CACHE_NAME = 'residencia-med-v3'
 
 self.addEventListener('install', () => {
   self.skipWaiting()
@@ -15,12 +15,13 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
-      caches.keys().then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
-      ),
+      // limpa TODOS os caches antigos
+      caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))),
     ]),
   )
 })
+
+// Não intercepta fetches — apenas push notifications. Evita servir bundle JS desatualizado.
 
 // Push notifications
 self.addEventListener('push', (event) => {
