@@ -3,6 +3,8 @@ import type { NextConfig } from 'next'
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // @prisma/client tem binários nativos — mantém fora do bundle pra Vercel achar
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   experimental: {
     optimizePackageImports: ['lucide-react', '@residencia-med/ui'],
   },
@@ -13,6 +15,11 @@ const config: NextConfig = {
     '@residencia-med/ai',
     '@residencia-med/db',
   ],
+  outputFileTracingIncludes: {
+    '/api/**/*': [
+      '../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/*.node',
+    ],
+  },
   async headers() {
     return [
       {
