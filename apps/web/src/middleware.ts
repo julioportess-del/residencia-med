@@ -6,6 +6,8 @@ const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const SUPABASE_HABILITADO = Boolean(
   SUPABASE_URL && SUPABASE_ANON && !SUPABASE_URL.includes('placeholder'),
 )
+const DEV_USER_EMAIL =
+  process.env.NODE_ENV !== 'production' ? process.env.DEV_USER_EMAIL?.trim() || null : null
 
 const PUBLIC_PATHS = [
   '/',
@@ -53,6 +55,11 @@ function ehProtegidaDemo(pathname: string): boolean {
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  // Modo dev local: pula autenticação completamente
+  if (DEV_USER_EMAIL) {
+    return NextResponse.next()
+  }
 
   // Modo demo (sem Supabase) — redireciona rotas protegidas pra /setup
   if (!SUPABASE_HABILITADO) {

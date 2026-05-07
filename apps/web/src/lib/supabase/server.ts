@@ -11,6 +11,20 @@ export const SUPABASE_HABILITADO = Boolean(
 )
 
 /**
+ * Modo dev local: quando `DEV_USER_EMAIL` está setado, autentica automaticamente
+ * como esse usuário (cria a row se não existe). Permite testar a plataforma sem
+ * precisar configurar Supabase. NUNCA habilitar em produção.
+ */
+export const DEV_USER_EMAIL =
+  process.env.NODE_ENV !== 'production' ? process.env.DEV_USER_EMAIL?.trim() || null : null
+
+export type AuthUser = {
+  id: string
+  email: string
+  user_metadata?: Record<string, unknown>
+}
+
+/**
  * Server client com cookies do request — use em Server Components, Route Handlers
  * e Server Actions. Cookies são propagados pra renovar refresh tokens.
  */
@@ -36,15 +50,28 @@ export async function supabaseServer() {
 
 /**
  * Devolve `{ user, supabase }` ou `{ user: null, supabase }` se não autenticado.
- * Suporta modo demo: quando Supabase não está configurado, devolve user nulo.
+ * Em modo dev (DEV_USER_EMAIL), devolve um usuário sintético sem chamar Supabase.
  */
-export async function supabaseUserAtual() {
+export async function supabaseUserAtual(): Promise<{
+  user: AuthUser | null
+  supabase: ReturnType<typeof createServerClient> | null
+}> {
+  if (DEV_USER_EMAIL) {
+    return {
+      user: {
+        id: `dev-${DEV_USER_EMAIL.replace(/[^a-z0-9]/gi, '-')}`,
+        email: DEV_USER_EMAIL,
+        user_metadata: { name: 'Dev User' },
+      },
+      supabase: null,
+    }
+  }
   if (!SUPABASE_HABILITADO) {
-    return { user: null, supabase: null as never }
+    return { user: null, supabase: null }
   }
   const supabase = await supabaseServer()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  return { user, supabase }
+  return { user: user as AuthUser | null, supabase }
 }

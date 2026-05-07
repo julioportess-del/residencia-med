@@ -17,7 +17,7 @@ O estudante define a banca-alvo e o tempo disponível. A plataforma gera um plan
 | API | Next.js Route Handlers + tRPC | Type-safety end-to-end sem boilerplate REST |
 | Banco | Postgres (Neon) + Prisma + pgvector | Relacional + busca semântica nas guidelines |
 | Cache / fila | Upstash Redis + BullMQ | Jobs de análise de provas e geração de questões com IA |
-| Auth | Clerk | Multi-tenant nativo, B2C e B2B no mesmo SDK |
+| Auth | Supabase Auth | Email/senha + OAuth (Google), JWT pra mobile, sem vendor lock-in |
 | Pagamento | Stripe (Checkout + Customer Portal) | Padrão de mercado para SaaS |
 | IA | Anthropic Claude (primário) + OpenAI (fallback) | Claude para raciocínio clínico longo; OpenAI para embeddings |
 | Observabilidade | Sentry + Axiom + PostHog | Erros, logs e métricas de produto |
@@ -47,15 +47,40 @@ residencia-med/
     adr/        Architecture Decision Records
 ```
 
-## Setup local
+## Setup local — caminho rápido
+
+Pré-requisito: `pnpm` e Homebrew.
+
+```bash
+# 1. Instalar Colima + Docker CLI (uma vez)
+brew install colima docker docker-compose
+
+# 2. Instalar deps + subir tudo
+pnpm install
+./scripts/dev-up.sh
+```
+
+`./scripts/dev-up.sh` faz tudo: inicia Colima, sobe Postgres + Redis,
+aplica migrations e roda o Next.js dev server. Depois:
+
+- Abrir http://localhost:3000
+- Você já está logado como `dev@residencia-med.local` (modo dev — definido por
+  `DEV_USER_EMAIL` no `.env`). Para autenticação real, configure
+  `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` e remova `DEV_USER_EMAIL`.
+
+Outros scripts:
+- `./scripts/dev-seed.sh` — repopula bancas, temas, guidelines e questões
+- `./scripts/dev-down.sh` — para os containers (mantém os dados)
+
+## Setup local — manual
 
 ```bash
 pnpm install
-cp .env.example .env.local
-docker compose up -d   # Postgres + Redis local
-pnpm db:migrate
-pnpm db:seed
-pnpm dev
+cp .env.example .env
+docker-compose up -d
+pnpm --filter @residencia-med/db exec prisma migrate deploy
+pnpm --filter @residencia-med/db db:seed
+pnpm --filter @residencia-med/web dev
 ```
 
 A web sobe em `http://localhost:3000`.
