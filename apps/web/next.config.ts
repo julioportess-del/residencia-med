@@ -16,8 +16,10 @@ const config: NextConfig = {
     '@residencia-med/db',
   ],
   outputFileTracingIncludes: {
-    '/api/**/*': [
-      '../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/*.node',
+    // Engine binary é copiado pra apps/web/node_modules/.prisma/client no build
+    '*': [
+      './node_modules/.prisma/client/**/*',
+      '../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/**/*',
     ],
   },
   async headers() {
