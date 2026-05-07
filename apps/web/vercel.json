@@ -3,5 +3,11 @@
   "framework": "nextjs",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile=false",
   "buildCommand": "bash ./build-vercel.sh",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "regions": ["gru1"],
+  "functions": {
+    "src/app/api/**/*.{ts,tsx}": {
+      "maxDuration": 30
+    }
+  }
 }

@@ -12,9 +12,12 @@ export function TRPCProvider({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30_000,
+            // Cache mais agressivo — dados estáticos como bancas/temas mudam raramente
+            staleTime: 60_000 * 5, // 5 min
+            gcTime: 60_000 * 30, // 30 min de garbage collection
             retry: 1,
             refetchOnWindowFocus: false,
+            refetchOnMount: false,
           },
         },
       }),
