@@ -1,5 +1,6 @@
 import { useUser } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
+import { useEffect } from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,8 +11,27 @@ import { cores, espacamento, fontes, layout } from '@/lib/theme'
 export default function HomeScreen() {
   const router = useRouter()
   const { user } = useUser()
-  const resumo = trpc.dashboard.resumo.useQuery()
-  const revisao = trpc.revisao.contagem.useQuery()
+  const status = trpc.onboarding.status.useQuery()
+  const resumo = trpc.dashboard.resumo.useQuery(undefined, {
+    enabled: status.data?.completo === true,
+  })
+  const revisao = trpc.revisao.contagem.useQuery(undefined, {
+    enabled: status.data?.completo === true,
+  })
+
+  useEffect(() => {
+    if (status.data && !status.data.completo) {
+      router.replace('/onboarding' as never)
+    }
+  }, [status.data, router])
+
+  if (status.isLoading || status.data?.completo === false) {
+    return (
+      <View style={layout.centered}>
+        <ActivityIndicator size="large" color={cores.primary} />
+      </View>
+    )
+  }
 
   const nome = user?.firstName ?? user?.primaryEmailAddress?.emailAddress?.split('@')[0] ?? ''
 

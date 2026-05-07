@@ -31,6 +31,10 @@ export default function AppLayout() {
       <Tabs.Screen name="simulado" options={{ title: 'Simulado', headerShown: false }} />
       <Tabs.Screen name="revisao" options={{ title: 'Revisao' }} />
       <Tabs.Screen name="conta" options={{ title: 'Conta' }} />
+      <Tabs.Screen
+        name="onboarding"
+        options={{ title: 'Onboarding', href: null, headerShown: false }}
+      />
     </Tabs>
   )
 }

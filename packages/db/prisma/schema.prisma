@@ -775,3 +775,48 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+// ==================== A/B TEST ====================
+
+model Experimento {
+  id            String                    @id @default(cuid())
+  chave         String                    @unique
+  nome          String
+  descricao     String?                   @db.Text
+  variantesJson Json // [{nome: 'A', peso: 50}, {nome: 'B', peso: 50}]
+  ativo         Boolean                   @default(false)
+  iniciadoEm    DateTime?
+  encerradoEm   DateTime?
+  atribuicoes   AtribuicaoExperimento[]
+  eventos       EventoExperimento[]
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@index([ativo])
+}
+
+model AtribuicaoExperimento {
+  id             String      @id @default(cuid())
+  experimentoId  String
+  experimento    Experimento @relation(fields: [experimentoId], references: [id], onDelete: Cascade)
+  userId         String
+  variante       String
+  primeiraVisita DateTime    @default(now())
+
+  @@unique([experimentoId, userId])
+  @@index([experimentoId, variante])
+}
+
+model EventoExperimento {
+  id            String      @id @default(cuid())
+  experimentoId String
+  experimento   Experimento @relation(fields: [experimentoId], references: [id], onDelete: Cascade)
+  userId        String
+  variante      String
+  evento        String // 'view', 'click', 'conversion', etc
+  metadataJson  Json?
+  createdAt     DateTime    @default(now())
+
+  @@index([experimentoId, evento, createdAt])
+  @@index([experimentoId, userId])
+}
