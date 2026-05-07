@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { mentorStream } from '@residencia-med/ai'
+import { mentorStream, ANTHROPIC_HABILITADO } from '@residencia-med/ai'
 import { checarLimiteIA } from '@residencia-med/billing'
 import { prisma } from '@residencia-med/db'
 import { supabaseUserAtual } from '@/lib/supabase/server'
@@ -24,6 +24,13 @@ export async function POST(req: Request) {
   const parsed = InputSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: 'Entrada inválida', details: parsed.error.flatten() }, { status: 400 })
+  }
+
+  if (!ANTHROPIC_HABILITADO) {
+    return NextResponse.json(
+      { error: 'Mentor IA não configurado — defina ANTHROPIC_API_KEY no .env.' },
+      { status: 503 },
+    )
   }
 
   const user = await garantirUser(authUser.id, authUser.email)

@@ -2,11 +2,10 @@
   "name": "@residencia-med/workers",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
   "main": "./src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "start": "tsx --env-file=.env src/index.ts",
     "build": "tsc --noEmit",
     "lint": "eslint src --max-warnings=0",
     "typecheck": "tsc --noEmit",
@@ -25,7 +24,8 @@
   "devDependencies": {
     "@residencia-med/config": "workspace:*",
     "@types/node": "^22.9.0",
-    "tsx": "^4.19.2",
+    "pino-pretty": "^13.1.3",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }

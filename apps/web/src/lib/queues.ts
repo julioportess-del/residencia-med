@@ -66,7 +66,7 @@ export async function enqueueAtualizarRevisao(payload: JobAtualizarRevisao): Pro
   try {
     await getFilaRevisao().add('atualizar-revisao', payload, {
       ...opcoesPadrao,
-      jobId: `${payload.userId}:${payload.respostaId}`,
+      jobId: `${payload.userId}-${payload.respostaId}`,
     })
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {
@@ -94,7 +94,7 @@ export async function enqueueRecomputarIncidencia(
   try {
     await getFilaIncidencia().add('recomputar-incidencia', payload, {
       ...opcoesPadrao,
-      jobId: `incidencia:${payload.bancaId}`,
+      jobId: `incidencia-${payload.bancaId}`,
     })
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {

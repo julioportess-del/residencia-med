@@ -7,7 +7,7 @@ import {
   type JobAtualizarRevisao,
   type JobGerarPlano,
   type JobRecomputarIncidencia,
-} from '@residencia-med/types'
+} from '@residencia-med/types/queues'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 

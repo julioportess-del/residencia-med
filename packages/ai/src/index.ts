@@ -11,3 +11,4 @@ export type { ExplicarErroInput, ExplicarErroOutput } from './funcoes/explicar-e
 export type { GerarQuestaoInput, QuestaoGerada } from './funcoes/gerar-questao'
 export type { MentorStreamInput, MentorStreamResultado, MensagemHistorico } from './funcoes/mentor'
 export type { ContextoEstudante } from './prompts/mentor'
+export { ANTHROPIC_HABILITADO, OPENAI_HABILITADO } from './clients'
