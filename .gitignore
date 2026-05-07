@@ -15,6 +15,10 @@ build/
 .env.*.local
 !.env.example
 
+# Supabase CLI (local-only artifacts)
+supabase/.temp/
+supabase/.branches/
+
 # Logs
 *.log
 npm-debug.log*

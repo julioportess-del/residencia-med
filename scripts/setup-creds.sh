@@ -85,12 +85,14 @@ config_supabase() {
   log "Supabase Auth"
   hint "1. Acesse https://supabase.com/dashboard"
   hint "2. New project → escolha região São Paulo"
-  hint "3. Project Settings → API → copie URL e anon (public) key"
+  hint "3. Botão verde 'Conectar' no topo → aba 'Direto'"
+  hint "   Copie URL + Publishable key (formato sb_publishable_...)"
+  hint "   ou aba API Keys → Publishable (recomendado pra novos projetos)"
   abrir_url "https://supabase.com/dashboard"
   echo ""
   read -rp "  Project URL (https://xxx.supabase.co): " SB_URL
-  SB_ANON=$(prompt_secret "Anon (public) key")
-  SB_SVC=$(prompt_secret "Service role key (opcional, server-only)")
+  SB_ANON=$(prompt_secret "Publishable/anon key (sb_publishable_... ou eyJ...)")
+  SB_SVC=$(prompt_secret "Service role/secret key (opcional, server-only)")
 
   if [ -n "$SB_URL" ] && [ -n "$SB_ANON" ]; then
     log "Validando..."
