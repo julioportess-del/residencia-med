@@ -58,6 +58,59 @@ export const questaoRouter = router({
     }
   }),
 
+  /**
+   * Devolve o ID da próxima questão publicada que o usuário ainda não respondeu
+   * (na ordem do banco). Usa as bancas-alvo do usuário se houver.
+   */
+  proxima: procedureProtegida
+    .input(z.object({ atualId: z.string().cuid().optional() }).default({}))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: ctx.userId },
+        select: { bancasAlvo: true },
+      })
+      const bancaCodigos = user?.bancasAlvo ?? []
+      const bancaIds = bancaCodigos.length
+        ? (
+            await ctx.prisma.banca.findMany({
+              where: { codigo: { in: bancaCodigos } },
+              select: { id: true },
+            })
+          ).map((b) => b.id)
+        : []
+
+      const respondidas = await ctx.prisma.resposta.findMany({
+        where: { userId: ctx.userId },
+        select: { questaoId: true },
+        distinct: ['questaoId'],
+      })
+      const respondidasIds = respondidas.map((r) => r.questaoId)
+      if (input.atualId) respondidasIds.push(input.atualId)
+
+      const proxima = await ctx.prisma.questao.findFirst({
+        where: {
+          publicada: true,
+          ...(bancaIds.length ? { bancaId: { in: bancaIds } } : {}),
+          ...(respondidasIds.length ? { id: { notIn: respondidasIds } } : {}),
+        },
+        orderBy: [{ ano: 'desc' }, { id: 'asc' }],
+        select: { id: true },
+      })
+
+      if (!proxima) {
+        const fallback = await ctx.prisma.questao.findFirst({
+          where: {
+            publicada: true,
+            ...(input.atualId ? { id: { not: input.atualId } } : {}),
+          },
+          orderBy: [{ ano: 'desc' }, { id: 'asc' }],
+          select: { id: true },
+        })
+        return { id: fallback?.id ?? null }
+      }
+      return { id: proxima.id }
+    }),
+
   detalhe: procedureProtegida.input(z.object({ id: z.string().cuid() })).query(async ({ ctx, input }) => {
     const questao = await ctx.prisma.questao.findUnique({
       where: { id: input.id, publicada: true },

@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Check, Clock, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Clock, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,11 +18,20 @@ import { cn } from '@/lib/cn'
 type Confianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE'
 
 export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string }) {
+  const router = useRouter()
   const questao = trpc.questao.detalhe.useQuery({ id })
   const [escolha, setEscolha] = useState<string | null>(null)
   const [confianca, setConfianca] = useState<Confianca>('INCERTO')
-  const [inicio] = useState(() => Date.now())
+  const [inicio, setInicio] = useState(() => Date.now())
   const [tempoSegundos, setTempoSegundos] = useState(0)
+
+  // Reset do estado local quando muda de questão
+  useEffect(() => {
+    setEscolha(null)
+    setConfianca('INCERTO')
+    setInicio(Date.now())
+    setTempoSegundos(0)
+  }, [id])
 
   useEffect(() => {
     const t = setInterval(() => setTempoSegundos(Math.floor((Date.now() - inicio) / 1000)), 1000)
@@ -32,6 +42,20 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
     onError: (e) => toast.error(e.message ?? 'Erro ao registrar resposta'),
   })
 
+  const proximaQ = trpc.questao.proxima.useQuery(
+    { atualId: id },
+    { enabled: Boolean(responder.data) },
+  )
+
+  const irParaProxima = () => {
+    if (proximaQ.data?.id) {
+      router.push(`/questoes/${proximaQ.data.id}`)
+    } else {
+      toast.info('Você respondeu todas as questões disponíveis. 🎉')
+      router.push('/questoes')
+    }
+  }
+
   if (questao.isLoading) {
     return (
       <div className="space-y-4">
@@ -41,11 +65,27 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
       </div>
     )
   }
+  if (questao.error) {
+    return (
+      <div className="rounded-lg border border-rose-200 bg-rose-50 p-6">
+        <p className="font-semibold text-rose-900">Erro ao carregar questão</p>
+        <p className="mt-1 text-sm text-rose-800">{questao.error.message}</p>
+        <Button asChild className="mt-3" size="sm">
+          <Link href="/questoes">Voltar ao banco</Link>
+        </Button>
+      </div>
+    )
+  }
   if (!questao.data) return <div>Questão não encontrada.</div>
 
   const q = questao.data
   const respondida = responder.data
   const correta = respondida?.correta
+  const temaPrimario = q.temas?.find((t) => t.primario)
+  const corBanca = q.banca?.cor ?? '#1d4ed8'
+  const codigoBanca = q.banca?.codigo ?? '?'
+  const alternativas = q.alternativas ?? []
+  const guidelines = q.guidelines ?? []
 
   const submeter = () => {
     if (!escolha) return
@@ -62,7 +102,10 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Link href="/questoes" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          href="/questoes"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="size-4" /> Voltar ao banco
         </Link>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -75,25 +118,23 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
       </div>
 
       <div className="flex items-center gap-2 text-xs">
-        <Badge style={{ background: q.banca.cor ?? '#1d4ed8', color: 'white' }}>{q.banca.codigo}</Badge>
+        <Badge style={{ background: corBanca, color: 'white' }}>{codigoBanca}</Badge>
         <span className="text-muted-foreground">{q.ano}</span>
-        {q.temas.find((t) => t.primario) && (
+        {temaPrimario?.tema?.nome ? (
           <>
             <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">
-              {q.temas.find((t) => t.primario)?.tema.nome}
-            </span>
+            <span className="text-muted-foreground">{temaPrimario.tema.nome}</span>
           </>
-        )}
+        ) : null}
       </div>
 
-      {q.enunciadoVignette && (
+      {q.enunciadoVignette ? (
         <Card>
           <CardContent className="pt-6">
             <p className="whitespace-pre-line text-sm leading-relaxed">{q.enunciadoVignette}</p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <div>
         <p className="font-medium leading-relaxed">{q.enunciado}</p>
@@ -104,9 +145,9 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
         onValueChange={(v) => !respondida && setEscolha(v)}
         disabled={!!respondida}
       >
-        {q.alternativas.map((a) => {
-          const ehGabarito = respondida && a.letra === respondida.gabaritoLetra
-          const ehEscolhidaErrada = respondida && a.letra === escolha && !correta
+        {alternativas.map((a) => {
+          const ehGabarito = !!respondida && a.letra === respondida.gabaritoLetra
+          const ehEscolhidaErrada = !!respondida && a.letra === escolha && !correta
           return (
             <label
               key={a.id}
@@ -123,14 +164,14 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
                 <span className="font-semibold mr-2">{a.letra})</span>
                 {a.texto}
               </div>
-              {ehGabarito && <Check className="size-5 text-emerald-600 shrink-0" />}
-              {ehEscolhidaErrada && <X className="size-5 text-rose-600 shrink-0" />}
+              {ehGabarito ? <Check className="size-5 text-emerald-600 shrink-0" /> : null}
+              {ehEscolhidaErrada ? <X className="size-5 text-rose-600 shrink-0" /> : null}
             </label>
           )
         })}
       </RadioGroup>
 
-      {!respondida && (
+      {!respondida ? (
         <Card>
           <CardContent className="pt-6 space-y-3">
             <div className="text-sm font-medium">Você está...</div>
@@ -149,7 +190,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {!respondida ? (
         <Button size="lg" onClick={submeter} disabled={!escolha} loading={responder.isPending}>
@@ -164,7 +205,11 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
           >
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 font-semibold">
-                {correta ? <Check className="text-emerald-600" /> : <X className="text-rose-600" />}
+                {correta ? (
+                  <Check className="text-emerald-600" />
+                ) : (
+                  <X className="text-rose-600" />
+                )}
                 {correta
                   ? 'Resposta correta!'
                   : `Errou. O gabarito era ${respondida.gabaritoLetra}.`}
@@ -172,22 +217,24 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="prose prose-sm max-w-none pt-6">
-              <Markdown markdown={respondida.explicacaoMd} />
-            </CardContent>
-          </Card>
+          {respondida.explicacaoMd ? (
+            <Card>
+              <CardContent className="prose prose-sm max-w-none pt-6">
+                <Markdown markdown={respondida.explicacaoMd} />
+              </CardContent>
+            </Card>
+          ) : null}
 
-          {q.guidelines.length > 0 && (
+          {guidelines.length > 0 ? (
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm font-medium mb-2">Guidelines citados</div>
                 <ul className="space-y-2">
-                  {q.guidelines.map((g, i) => (
+                  {guidelines.map((g, i) => (
                     <li key={i} className="text-sm">
-                      <Badge variant="outline">{g.guideline.fonte}</Badge>{' '}
-                      <span className="font-medium">{g.guideline.titulo}</span>
-                      {g.guideline.url && (
+                      <Badge variant="outline">{g.guideline?.fonte ?? '—'}</Badge>{' '}
+                      <span className="font-medium">{g.guideline?.titulo ?? ''}</span>
+                      {g.guideline?.url ? (
                         <a
                           href={g.guideline.url}
                           target="_blank"
@@ -196,18 +243,21 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
                         >
                           ver
                         </a>
-                      )}
+                      ) : null}
                     </li>
                   ))}
                 </ul>
               </CardContent>
             </Card>
-          )}
+          ) : null}
 
           <div className="flex flex-wrap gap-3">
-            {escolha && (
+            <Button onClick={irParaProxima} loading={proximaQ.isLoading}>
+              Próxima questão <ArrowRight className="size-4" />
+            </Button>
+            {escolha ? (
               <ExplicarComIA questaoId={q.id} alternativaEscolhida={escolha} />
-            )}
+            ) : null}
             <GerarSimilarDialog questaoId={q.id} />
             <Button variant="outline" asChild>
               <Link href="/questoes">Voltar ao banco</Link>
@@ -220,7 +270,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
 }
 
 function Markdown({ markdown }: { markdown: string }) {
-  // Renderizador mínimo: divide por linhas, transforma headers, parágrafos
+  if (!markdown) return null
   const blocks = markdown.split(/\n\n+/)
   return (
     <>
