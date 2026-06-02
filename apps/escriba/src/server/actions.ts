@@ -40,7 +40,7 @@ export async function criarConsulta(
   const consulta = await prismaClinico.consulta.create({
     data: {
       usuarioAuthId: user.id,
-      pacienteIniciais: pacienteIniciais.toUpperCase(),
+      pacienteIniciais: pacienteIniciais.trim(),
       tipoConsulta,
       status: 'GRAVANDO',
       consentimentoConfirmado: true,
@@ -149,6 +149,29 @@ export async function salvarPreferencias(entrada: PreferenciasInput): Promise<Re
   })
 
   revalidatePath('/preferencias')
+  return { ok: true }
+}
+
+/**
+ * Exclui uma consulta (soft-delete: marca `excluidoEm`). Reversível e some das
+ * listagens (que filtram `excluidoEm: null`). Multi-tenant: só consultas do
+ * próprio médico.
+ */
+export async function excluirConsulta(consultaId: string): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+
+  const res = await prismaClinico.consulta.updateMany({
+    where: { id: consultaId, usuarioAuthId: user.id, excluidoEm: null },
+    data: { excluidoEm: new Date() },
+  })
+  if (res.count === 0) {
+    return { ok: false, erro: 'Consulta não encontrada ou já excluída.' }
+  }
+
+  await prismaClinico.logAcesso.create({
+    data: { usuarioAuthId: user.id, acao: 'EXCLUIR_CONSULTA', consultaId },
+  })
+  revalidatePath('/consultas')
   return { ok: true }
 }
 

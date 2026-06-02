@@ -9,7 +9,14 @@ const SUPABASE_HABILITADO = Boolean(
 const DEV_USER_EMAIL =
   process.env.NODE_ENV !== 'production' ? process.env.DEV_USER_EMAIL?.trim() || null : null
 
-const PUBLIC_PATHS = ['/sign-in', '/auth/callback', '/setup']
+const PUBLIC_PATHS = [
+  '/sign-in',
+  '/cadastro',
+  '/recuperar-senha',
+  '/redefinir-senha',
+  '/auth/callback',
+  '/setup',
+]
 
 function ehPublica(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))

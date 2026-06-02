@@ -6,7 +6,8 @@ import type { EstruturaClinica } from './tipos'
  * documentos a partir de uma transcricao, instantaneo e sem custo extra.
  *
  * Tudo aqui e RASCUNHO para revisao medica. CID, posologia e condutas sao
- * sugestoes. LGPD: usa apenas iniciais do paciente, nunca nome/CPF.
+ * sugestoes. O identificador do paciente (`pacienteIniciais`) pode ser o nome
+ * completo ou iniciais, conforme preenchido pelo medico.
  */
 
 export type TipoDocumento =
@@ -49,7 +50,7 @@ function formatarData(data: Date): string {
 
 function cabecalho(titulo: string, ctx: ContextoDocumento): string {
   const data = formatarData(ctx.data ?? new Date())
-  return `${titulo}\n\nPaciente (iniciais): ${ctx.pacienteIniciais}\nData: ${data}`
+  return `${titulo}\n\nPaciente: ${ctx.pacienteIniciais}\nData: ${data}`
 }
 
 function numerar(itens: string[]): string {
@@ -77,7 +78,7 @@ export function renderizarAtestado(
   const linhas = [
     'ATESTADO MÉDICO',
     '',
-    `Atesto, para os devidos fins, que o(a) paciente de iniciais ${ctx.pacienteIniciais} esteve sob atendimento médico nesta data (${data})${afastamento}.`,
+    `Atesto, para os devidos fins, que o(a) paciente ${ctx.pacienteIniciais} esteve sob atendimento médico nesta data (${data})${afastamento}.`,
     opcoes.observacao ? `\nObservação: ${opcoes.observacao}` : null,
     cid ? `\nCID-10 (a critério do paciente informar): ${cid}` : null,
     '',

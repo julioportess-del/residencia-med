@@ -7,6 +7,7 @@ import { listarConsultas } from '@/server/consultas'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/status-badge'
 import { TIPO_CONSULTA_LABEL } from '@/lib/rotulos'
+import { ExcluirConsultaBotao } from './_components/excluir-consulta-botao'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,8 +56,11 @@ export default async function ConsultasPage() {
         <ul className="space-y-3">
           {consultas.map((c) => (
             <li key={c.id}>
-              <Link href={`/consultas/${c.id}`}>
-                <Card className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-accent/50">
+              <Card className="flex items-center gap-2 p-4 transition-colors hover:bg-accent/50">
+                <Link
+                  href={`/consultas/${c.id}`}
+                  className="flex min-w-0 flex-1 items-center justify-between gap-4"
+                >
                   <div className="min-w-0">
                     <p className="truncate font-medium">
                       {c.pacienteIniciais} ·{' '}
@@ -69,8 +73,9 @@ export default async function ConsultasPage() {
                     </p>
                   </div>
                   <StatusBadge status={c.status} />
-                </Card>
-              </Link>
+                </Link>
+                <ExcluirConsultaBotao consultaId={c.id} rotulo={c.pacienteIniciais} />
+              </Card>
             </li>
           ))}
         </ul>

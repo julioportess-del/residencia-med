@@ -46,18 +46,19 @@ export function NovaConsultaForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       <div className="space-y-1.5">
-        <Label htmlFor="iniciais">Iniciais do paciente</Label>
+        <Label htmlFor="iniciais">Nome do paciente</Label>
         <Input
           id="iniciais"
           value={iniciais}
           onChange={(e) => setIniciais(e.target.value)}
-          placeholder="Ex.: J.S."
+          placeholder="Ex.: Maria Silva (ou apenas iniciais)"
           autoComplete="off"
-          maxLength={8}
+          maxLength={120}
           required
         />
         <p className="text-xs text-muted-foreground">
-          Não registre nome completo, CPF ou outros dados que identifiquem o paciente.
+          Nome completo ou iniciais. Não registre CPF, RG ou outros números. Os dados ficam
+          visíveis apenas para você.
         </p>
       </div>
 

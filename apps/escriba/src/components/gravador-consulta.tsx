@@ -62,6 +62,17 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
 
   async function iniciar() {
     setErro(null)
+
+    // getUserMedia exige contexto seguro: https OU localhost. Em http via IP
+    // da rede (ex.: 192.168.x.x), navigator.mediaDevices nem existe.
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setErro(
+        'O microfone só funciona em conexão segura (https) ou em localhost. ' +
+          'Abra o app pelo endereço https publicado, não pelo IP da rede.',
+      )
+      return
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
@@ -82,8 +93,19 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
       setSegundos(0)
       iniciarTimer()
       setEstado('gravando')
-    } catch {
-      setErro('Não foi possível acessar o microfone. Verifique a permissão do navegador.')
+    } catch (e: unknown) {
+      const nome = e instanceof DOMException ? e.name : ''
+      if (nome === 'NotAllowedError' || nome === 'SecurityError') {
+        setErro(
+          'Permissão de microfone negada. Autorize o microfone para este site nas configurações do navegador e tente de novo.',
+        )
+      } else if (nome === 'NotFoundError' || nome === 'DevicesNotFoundError') {
+        setErro('Nenhum microfone encontrado. Conecte um microfone e tente novamente.')
+      } else if (nome === 'NotReadableError') {
+        setErro('O microfone está em uso por outro aplicativo. Feche-o e tente novamente.')
+      } else {
+        setErro('Não foi possível acessar o microfone. Verifique a permissão do navegador.')
+      }
     }
   }
 

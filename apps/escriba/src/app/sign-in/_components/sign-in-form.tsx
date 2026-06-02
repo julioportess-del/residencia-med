@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@residencia-med/ui'
 import { Input } from '@/components/ui/input'
@@ -52,7 +53,15 @@ export function SignInForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="senha">Senha</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="senha">Senha</Label>
+          <Link
+            href="/recuperar-senha"
+            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
         <Input
           id="senha"
           type="password"
@@ -73,6 +82,13 @@ export function SignInForm() {
       <Button type="submit" size="lg" className="w-full" loading={carregando}>
         Entrar
       </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Não tem conta?{' '}
+        <Link href="/cadastro" className="font-medium text-foreground hover:underline">
+          Criar conta
+        </Link>
+      </p>
     </form>
   )
 }
