@@ -1,0 +1,70 @@
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co'
+const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+
+export const SUPABASE_HABILITADO = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder'),
+)
+
+/**
+ * Modo dev local: com `DEV_USER_EMAIL` setado, autentica automaticamente como
+ * esse usuario sem precisar de Supabase. NUNCA habilitar em producao.
+ */
+export const DEV_USER_EMAIL =
+  process.env.NODE_ENV !== 'production' ? process.env.DEV_USER_EMAIL?.trim() || null : null
+
+export type AuthUser = {
+  id: string
+  email: string
+  user_metadata?: Record<string, unknown>
+}
+
+/** Server client com cookies do request — Server Components, Route Handlers, Actions. */
+export async function supabaseServer() {
+  const store = await cookies()
+  return createServerClient(URL, ANON, {
+    cookies: {
+      getAll() {
+        return store.getAll().map((c) => ({ name: c.name, value: c.value }))
+      },
+      setAll(items: Array<{ name: string; value: string; options: CookieOptions }>) {
+        try {
+          for (const item of items) {
+            store.set(item.name, item.value, item.options)
+          }
+        } catch {
+          // chamado fora de Server Action — ignorar
+        }
+      },
+    },
+  })
+}
+
+/** `{ user, supabase }` ou `{ user: null }`. Em modo dev devolve usuario sintetico. */
+export async function usuarioAtual(): Promise<{
+  user: AuthUser | null
+  supabase: ReturnType<typeof createServerClient> | null
+}> {
+  if (DEV_USER_EMAIL) {
+    return {
+      user: {
+        id: `dev-${DEV_USER_EMAIL.replace(/[^a-z0-9]/gi, '-')}`,
+        email: DEV_USER_EMAIL,
+        user_metadata: { name: 'Médico (dev)' },
+      },
+      supabase: null,
+    }
+  }
+  if (!SUPABASE_HABILITADO) {
+    return { user: null, supabase: null }
+  }
+  const supabase = await supabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return { user: user as AuthUser | null, supabase }
+}

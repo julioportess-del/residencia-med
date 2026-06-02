@@ -1,0 +1,145 @@
+// Schema Prisma ISOLADO — dados clinicos do Escriba (transcricao de consultas)
+// Isolamento: PG schema `clinico`, client gerado em path proprio, env var dedicada.
+// NUNCA misturar com o schema da plataforma de estudos (packages/db).
+// Principio LGPD: minimizacao (so iniciais do paciente), audio nunca persistido.
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL_CLINICO")
+  directUrl = env("DIRECT_URL_CLINICO")
+  schemas   = ["clinico"]
+}
+
+// ==================== ENUMS ====================
+
+enum StatusConsulta {
+  GRAVANDO
+  TRANSCREVENDO
+  ESTRUTURANDO
+  RASCUNHO
+  REVISADO
+
+  @@schema("clinico")
+}
+
+enum TipoConsulta {
+  DEMANDA_ESPONTANEA
+  HIPERTENSAO
+  DIABETES
+  RENOVACAO_RECEITA
+  AVALIACAO_EXAMES
+  SAUDE_MENTAL
+  PUERICULTURA
+  SAUDE_DA_MULHER
+  DOR_LOMBAR
+  CEFALEIA
+  IVAS
+  DOR_ABDOMINAL
+  ANSIEDADE
+  ENCAMINHAMENTO
+  OUTRO
+
+  @@schema("clinico")
+}
+
+enum ModeloEvolucao {
+  SOAP
+  CORRIDA
+  UBS
+
+  @@schema("clinico")
+}
+
+// ==================== MODELS ====================
+
+/// Uma consulta gravada. Referencia o medico apenas por `usuarioAuthId`
+/// (Supabase auth UUID) — sem FK cross-schema, mantendo o isolamento.
+model Consulta {
+  id                      String         @id @default(cuid())
+  usuarioAuthId           String // identidade do medico (Supabase auth.users.id)
+  pacienteIniciais        String // minimizacao de dados: nunca nome completo/CPF
+  tipoConsulta            TipoConsulta   @default(DEMANDA_ESPONTANEA)
+  status                  StatusConsulta @default(GRAVANDO)
+
+  // Consentimento do paciente p/ gravacao (LGPD art. 11)
+  consentimentoConfirmado Boolean        @default(false)
+  consentimentoEm         DateTime?
+
+  transcricao             Transcricao?
+  evolucoes               Evolucao[]
+
+  criadoEm                DateTime       @default(now())
+  atualizadoEm            DateTime       @updatedAt
+  excluidoEm              DateTime? // soft-delete; exclusao permanente faz hard-delete
+
+  @@index([usuarioAuthId])
+  @@index([status])
+  @@schema("clinico")
+}
+
+/// Transcricao crua do audio. EFEMERA: `expiraEm` define TTL para purga.
+/// O audio original nunca chega aqui — so o texto.
+model Transcricao {
+  id         String   @id @default(cuid())
+  consultaId String   @unique
+  consulta   Consulta @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+  texto      String
+  expiraEm   DateTime? // null = manter ate exclusao manual
+  criadoEm   DateTime @default(now())
+
+  @@schema("clinico")
+}
+
+/// Evolucao clinica gerada pela IA a partir da transcricao filtrada.
+/// `dadosEstruturados` = JSON dos campos clinicos validados por Zod.
+/// `textoGerado` = render do modelo; `textoEditado` = versao revisada pelo medico.
+model Evolucao {
+  id                 String         @id @default(cuid())
+  consultaId         String
+  consulta           Consulta       @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+  modelo             ModeloEvolucao @default(SOAP)
+  dadosEstruturados  Json?
+  textoGerado        String
+  textoEditado       String?
+  revisadoPeloMedico Boolean        @default(false)
+  revisadoEm         DateTime?
+  criadoEm           DateTime       @default(now())
+  atualizadoEm       DateTime       @updatedAt
+
+  @@index([consultaId])
+  @@schema("clinico")
+}
+
+/// Preferencias do medico p/ personalizar a estruturacao da evolucao.
+/// Uma linha por medico (`usuarioAuthId` unico). Injetadas no prompt de IA via
+/// ContextoEstruturacao — nao contem dado de paciente.
+model PreferenciasMedico {
+  id               String         @id @default(cuid())
+  usuarioAuthId    String         @unique
+  especialidade    String? // ex.: "Medicina de Familia e Comunidade"
+  instrucoesCustom String? // instrucoes livres do medico p/ a IA seguir
+  formatoPadrao    ModeloEvolucao @default(SOAP)
+  criadoEm         DateTime       @default(now())
+  atualizadoEm     DateTime       @updatedAt
+
+  @@schema("clinico")
+}
+
+/// Log minimo de acesso para auditoria LGPD.
+model LogAcesso {
+  id            String   @id @default(cuid())
+  usuarioAuthId String
+  acao          String
+  consultaId    String?
+  em            DateTime @default(now())
+
+  @@index([usuarioAuthId])
+  @@schema("clinico")
+}

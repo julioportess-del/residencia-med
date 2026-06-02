@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./prompts": "./src/prompts/index.ts",
-    "./cache": "./src/cache.ts"
+    "./cache": "./src/cache.ts",
+    "./clinico": "./src/clinico/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

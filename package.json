@@ -17,6 +17,8 @@
     "db:seed": "pnpm --filter @residencia-med/db db:seed",
     "db:studio": "pnpm --filter @residencia-med/db db:studio",
     "db:reset": "pnpm --filter @residencia-med/db db:reset",
+    "db:clinico:generate": "pnpm --filter @residencia-med/db-clinico db:generate",
+    "db:clinico:migrate": "pnpm --filter @residencia-med/db-clinico db:migrate",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo clean && rm -rf node_modules"
