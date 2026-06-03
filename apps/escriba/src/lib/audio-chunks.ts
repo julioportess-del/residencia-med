@@ -10,7 +10,10 @@ interface AudioContextCtor {
 }
 
 function obterAudioContext(): AudioContext {
-  const w = window as unknown as { AudioContext?: AudioContextCtor; webkitAudioContext?: AudioContextCtor }
+  const w = window as unknown as {
+    AudioContext?: AudioContextCtor
+    webkitAudioContext?: AudioContextCtor
+  }
   const Ctor = w.AudioContext ?? w.webkitAudioContext
   if (!Ctor) throw new Error('Web Audio API indisponível neste navegador.')
   return new Ctor()

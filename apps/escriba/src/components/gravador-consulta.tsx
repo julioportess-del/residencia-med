@@ -8,7 +8,11 @@ import { audioParaChunksWav } from '@/lib/audio-chunks'
 
 type Estado = 'ocioso' | 'gravando' | 'pausado' | 'finalizado'
 type Envio = 'ocioso' | 'enviando' | 'erro'
-type Progresso = { fase: 'cortando' | 'transcrevendo' | 'estruturando'; atual: number; total: number }
+type Progresso = {
+  fase: 'cortando' | 'transcrevendo' | 'estruturando'
+  atual: number
+  total: number
+}
 
 const CONCORRENCIA_CHUNKS = 3
 
@@ -168,7 +172,9 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
           | { ok: false; erro: string }
           | null
         if (!resp.ok || !dados || dados.ok === false) {
-          throw new Error((dados && 'erro' in dados && dados.erro) || 'Falha ao transcrever um trecho.')
+          throw new Error(
+            (dados && 'erro' in dados && dados.erro) || 'Falha ao transcrever um trecho.',
+          )
         }
         resultados[i] = dados.texto ?? ''
         concluidos++

@@ -77,9 +77,24 @@ export async function POST(req: Request, { params }: Contexto) {
     await prismaClinico.evolucao.deleteMany({ where: { consultaId: consulta.id } })
     await prismaClinico.evolucao.createMany({
       data: [
-        { consultaId: consulta.id, modelo: 'SOAP', textoGerado: evolucoes.soap, dadosEstruturados: dados },
-        { consultaId: consulta.id, modelo: 'CORRIDA', textoGerado: evolucoes.corrida, dadosEstruturados: dados },
-        { consultaId: consulta.id, modelo: 'UBS', textoGerado: evolucoes.ubs, dadosEstruturados: dados },
+        {
+          consultaId: consulta.id,
+          modelo: 'SOAP',
+          textoGerado: evolucoes.soap,
+          dadosEstruturados: dados,
+        },
+        {
+          consultaId: consulta.id,
+          modelo: 'CORRIDA',
+          textoGerado: evolucoes.corrida,
+          dadosEstruturados: dados,
+        },
+        {
+          consultaId: consulta.id,
+          modelo: 'UBS',
+          textoGerado: evolucoes.ubs,
+          dadosEstruturados: dados,
+        },
       ],
     })
 
