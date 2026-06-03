@@ -14,6 +14,7 @@ import { TIPO_CONSULTA_LABEL, STATUS_CONSULTA_LABEL } from '@/lib/rotulos'
 import { type EvolucaoItem } from './_components/evolucoes-viewer'
 import { ConsultaConteudo } from './_components/consulta-conteudo'
 import { ProcessandoPoll } from './_components/processando-poll'
+import { ConsultaAnexos, type AnexoHistorico } from './_components/consulta-anexos'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +57,20 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
     ? documentosDisponiveis(estruturaParse.data)
     : []
 
+  // Anexos (exames/imagens) vinculados a esta consulta.
+  const anexosConsulta = await prismaClinico.anexo.findMany({
+    where: { consultaId: consulta.id, usuarioAuthId: user.id, excluidoEm: null },
+    orderBy: { criadoEm: 'desc' },
+    select: { id: true, nomeArquivo: true, tipoMime: true, status: true, resumoAnalise: true },
+  })
+  const anexosIniciais: AnexoHistorico[] = anexosConsulta.map((a) => ({
+    id: a.id,
+    nomeArquivo: a.nomeArquivo,
+    tipoMime: a.tipoMime,
+    status: a.status,
+    resumoAnalise: a.resumoAnalise,
+  }))
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <Link
@@ -89,6 +104,15 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
               Nenhuma evolução foi gerada. Volte e grave novamente a consulta.
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Exames e imagens</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ConsultaAnexos consultaId={consulta.id} anexosIniciais={anexosIniciais} />
         </CardContent>
       </Card>
     </div>
