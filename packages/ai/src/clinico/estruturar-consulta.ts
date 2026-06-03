@@ -88,11 +88,9 @@ export async function estruturarConsulta(
     model: MODELO_ANTHROPIC,
     max_tokens: MAX_TOKENS,
     system: SYSTEM_ESTRUTURAR,
-    messages: [
-      { role: 'user', content: montarMensagemUsuario(textoLimpo, contexto) },
-      // Prefill p/ coagir saida a comecar em JSON.
-      { role: 'assistant', content: '{' },
-    ],
+    // Sem prefill de assistant: modelos novos (Claude 4+) nao aceitam prefill;
+    // o SYSTEM_ESTRUTURAR ja instrui saida JSON e extrairJson isola o objeto.
+    messages: [{ role: 'user', content: montarMensagemUsuario(textoLimpo, contexto) }],
   })
 
   const bruto = resposta.content
@@ -100,8 +98,8 @@ export async function estruturarConsulta(
     .map((bloco) => bloco.text)
     .join('')
 
-  // O prefill "{" nao volta no content; recompoe.
-  const jsonTexto = extrairJson(`{${bruto}`)
+  // Modelo retorna o JSON (eventualmente com texto ao redor); extrai o objeto.
+  const jsonTexto = extrairJson(bruto)
 
   let parseado: unknown
   try {
