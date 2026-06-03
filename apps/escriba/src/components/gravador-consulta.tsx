@@ -14,7 +14,8 @@ type Progresso = {
   total: number
 }
 
-const CONCORRENCIA_CHUNKS = 3
+const CONCORRENCIA_CHUNKS = 6
+const MAX_TENTATIVAS_CHUNK = 3
 
 function formatarTempo(segundos: number): string {
   const m = Math.floor(segundos / 60)
@@ -156,27 +157,42 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     let proximo = 0
     let concluidos = 0
 
+    // Envia um chunk com retry + backoff: protege contra falhas transitórias
+    // (rede, 429, 5xx) que ficam mais prováveis ao subir a concorrência.
+    async function enviarChunk(i: number, chunk: Blob): Promise<string> {
+      let ultimoErro = 'desconhecido'
+      for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CHUNK; tentativa++) {
+        try {
+          const form = new FormData()
+          form.append('audio', chunk, `chunk-${i}.wav`)
+          const resp = await fetch(`/api/consultas/${consultaId}/transcrever-chunk`, {
+            method: 'POST',
+            body: form,
+          })
+          const dados = (await resp.json().catch(() => null)) as
+            | { ok: true; texto: string }
+            | { ok: false; erro: string }
+            | null
+          if (resp.ok && dados && dados.ok !== false) {
+            return dados.texto ?? ''
+          }
+          ultimoErro = (dados && 'erro' in dados && dados.erro) || `HTTP ${resp.status}`
+        } catch (e) {
+          ultimoErro = e instanceof Error ? e.message : 'falha de rede'
+        }
+        if (tentativa < MAX_TENTATIVAS_CHUNK) {
+          await new Promise((r) => setTimeout(r, 800 * tentativa))
+        }
+      }
+      throw new Error(`Falha ao transcrever um trecho (${MAX_TENTATIVAS_CHUNK}x): ${ultimoErro}`)
+    }
+
     async function worker() {
       for (;;) {
         const i = proximo++
         const chunk = chunks[i]
         if (i >= chunks.length || !chunk) return
-        const form = new FormData()
-        form.append('audio', chunk, `chunk-${i}.wav`)
-        const resp = await fetch(`/api/consultas/${consultaId}/transcrever-chunk`, {
-          method: 'POST',
-          body: form,
-        })
-        const dados = (await resp.json().catch(() => null)) as
-          | { ok: true; texto: string }
-          | { ok: false; erro: string }
-          | null
-        if (!resp.ok || !dados || dados.ok === false) {
-          throw new Error(
-            (dados && 'erro' in dados && dados.erro) || 'Falha ao transcrever um trecho.',
-          )
-        }
-        resultados[i] = dados.texto ?? ''
+        resultados[i] = await enviarChunk(i, chunk)
         concluidos++
         aoProgredir(concluidos)
       }
