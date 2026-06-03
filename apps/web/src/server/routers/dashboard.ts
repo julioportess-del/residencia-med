@@ -1,4 +1,5 @@
 import { differenceInDays, startOfDay, subDays } from 'date-fns'
+import type { PrismaClient } from '@residencia-med/db'
 import { router, procedureProtegida } from '../trpc'
 
 export type ComparacaoParesOutput = null | {
@@ -242,10 +243,7 @@ export const dashboardRouter = router({
   }),
 })
 
-async function calcularStreak(
-  prisma: typeof import('@residencia-med/db').prisma,
-  userId: string,
-): Promise<number> {
+async function calcularStreak(prisma: PrismaClient, userId: string): Promise<number> {
   const respostas = await prisma.resposta.findMany({
     where: { userId },
     select: { createdAt: true },

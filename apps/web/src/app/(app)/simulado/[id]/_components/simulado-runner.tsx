@@ -82,7 +82,7 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
           confianca: 'INCERTO',
           sessaoId,
         })
-      } catch (e) {
+      } catch {
         toast.error('Erro ao salvar resposta')
         return
       }

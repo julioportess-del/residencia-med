@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { subDays } from 'date-fns'
 import { z } from 'zod'
+import type { PrismaClient } from '@residencia-med/db'
 import { router, procedureProtegida } from '../trpc'
 
 const TITULO_PADRAO = 'Nova conversa'
@@ -78,10 +79,7 @@ export const mentorRouter = router({
  * Monta snapshot do contexto do usuário para alimentar o mentor.
  * Usado tanto no criar() quanto no endpoint de streaming (sempre fresco).
  */
-export async function montarContextoUsuario(
-  prisma: typeof import('@residencia-med/db').prisma,
-  userId: string,
-) {
+export async function montarContextoUsuario(prisma: PrismaClient, userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {

@@ -84,7 +84,7 @@ export const orgRouter = router({
       const baseSlug = slugify(input.nome) || `org-${Date.now()}`
       let slug = baseSlug
       let i = 0
-      // eslint-disable-next-line no-constant-condition
+
       while (true) {
         const ja = await ctx.prisma.organization.findUnique({ where: { slug } })
         if (!ja) break

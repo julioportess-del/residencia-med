@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "lint": "turbo lint",
+    "lint": "eslint .",
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "db:migrate": "pnpm --filter @residencia-med/db db:migrate",
@@ -24,10 +24,16 @@
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "@eslint/js": "^9.14.0",
     "@types/node": "^22.9.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.12.0",
     "prettier": "^3.3.3",
     "turbo": "^2.3.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0"
   },
   "pnpm": {
     "overrides": {
