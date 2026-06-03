@@ -57,27 +57,46 @@ enum ModeloEvolucao {
   @@schema("clinico")
 }
 
+enum CategoriaAnexo {
+  EXAME_LAB
+  EXAME_IMAGEM
+  IMAGEM_CLINICA
+  OUTRO
+
+  @@schema("clinico")
+}
+
+enum StatusAnexo {
+  ENVIADO
+  PROCESSANDO
+  ANALISADO
+  ERRO
+
+  @@schema("clinico")
+}
+
 // ==================== MODELS ====================
 
 /// Uma consulta gravada. Referencia o medico apenas por `usuarioAuthId`
 /// (Supabase auth UUID) — sem FK cross-schema, mantendo o isolamento.
 model Consulta {
-  id                      String         @id @default(cuid())
-  usuarioAuthId           String // identidade do medico (Supabase auth.users.id)
-  pacienteIniciais        String // minimizacao de dados: nunca nome completo/CPF
-  tipoConsulta            TipoConsulta   @default(DEMANDA_ESPONTANEA)
-  status                  StatusConsulta @default(GRAVANDO)
+  id               String         @id @default(cuid())
+  usuarioAuthId    String // identidade do medico (Supabase auth.users.id)
+  pacienteIniciais String // minimizacao de dados: nunca nome completo/CPF
+  tipoConsulta     TipoConsulta   @default(DEMANDA_ESPONTANEA)
+  status           StatusConsulta @default(GRAVANDO)
 
   // Consentimento do paciente p/ gravacao (LGPD art. 11)
-  consentimentoConfirmado Boolean        @default(false)
+  consentimentoConfirmado Boolean   @default(false)
   consentimentoEm         DateTime?
 
-  transcricao             Transcricao?
-  evolucoes               Evolucao[]
+  transcricao Transcricao?
+  evolucoes   Evolucao[]
+  anexos      Anexo[]
 
-  criadoEm                DateTime       @default(now())
-  atualizadoEm            DateTime       @updatedAt
-  excluidoEm              DateTime? // soft-delete; exclusao permanente faz hard-delete
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+  excluidoEm   DateTime? // soft-delete; exclusao permanente faz hard-delete
 
   @@index([usuarioAuthId])
   @@index([status])
@@ -87,12 +106,12 @@ model Consulta {
 /// Transcricao crua do audio. EFEMERA: `expiraEm` define TTL para purga.
 /// O audio original nunca chega aqui — so o texto.
 model Transcricao {
-  id         String   @id @default(cuid())
-  consultaId String   @unique
-  consulta   Consulta @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  consultaId String    @unique
+  consulta   Consulta  @relation(fields: [consultaId], references: [id], onDelete: Cascade)
   texto      String
   expiraEm   DateTime? // null = manter ate exclusao manual
-  criadoEm   DateTime @default(now())
+  criadoEm   DateTime  @default(now())
 
   @@schema("clinico")
 }
@@ -141,5 +160,35 @@ model LogAcesso {
   em            DateTime @default(now())
 
   @@index([usuarioAuthId])
+  @@schema("clinico")
+}
+
+/// Arquivo anexado para analise multimodal (exame laboratorial/imagem, laudo,
+/// foto clinica). LGPD: guardado em bucket PRIVADO criptografado, TTL curto
+/// (`expiraEm`) com hard-delete na limpeza. Pode conter dado sensivel do
+/// paciente (nome/CPF em laudos) — por isso retencao minima e auditoria.
+model Anexo {
+  id            String    @id @default(cuid())
+  usuarioAuthId String // medico (Supabase auth.users.id) — isolamento multi-tenant
+  consultaId    String? // opcional: vinculo a uma consulta especifica
+  consulta      Consulta? @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+
+  nomeArquivo  String
+  tipoMime     String
+  tamanhoBytes Int
+  categoria    CategoriaAnexo @default(OUTRO)
+  storagePath  String // caminho no bucket privado: {usuarioAuthId}/{anexoId}/{arquivo}
+
+  status        StatusAnexo @default(ENVIADO)
+  resumoAnalise String? // resultado da analise multimodal (texto)
+
+  expiraEm    DateTime // TTL para exclusao automatica
+  criadoEm    DateTime  @default(now())
+  analisadoEm DateTime?
+  excluidoEm  DateTime?
+
+  @@index([usuarioAuthId])
+  @@index([consultaId])
+  @@index([expiraEm])
   @@schema("clinico")
 }
