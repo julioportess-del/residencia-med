@@ -105,6 +105,12 @@ export async function POST(req: Request, { params }: Contexto) {
 
     return NextResponse.json({ ok: true, id: consulta.id })
   } catch (erro: unknown) {
+    // Log do erro real (Whisper/Claude) para diagnostico nos logs da Vercel.
+    console.error(
+      '[transcrever] falha:',
+      erro instanceof Error ? `${erro.name}: ${erro.message}` : String(erro),
+    )
+
     // Reverte para GRAVANDO para permitir nova tentativa.
     await prismaClinico.consulta
       .update({ where: { id: consulta.id }, data: { status: 'GRAVANDO' } })
