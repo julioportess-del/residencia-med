@@ -4,9 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Circle, Loader2, Mic, Pause, Play, RotateCcw, Square } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
+import { audioParaChunksWav } from '@/lib/audio-chunks'
 
 type Estado = 'ocioso' | 'gravando' | 'pausado' | 'finalizado'
 type Envio = 'ocioso' | 'enviando' | 'erro'
+type Progresso = { fase: 'cortando' | 'transcrevendo' | 'estruturando'; atual: number; total: number }
+
+const CONCORRENCIA_CHUNKS = 3
 
 function formatarTempo(segundos: number): string {
   const m = Math.floor(segundos / 60)
@@ -26,6 +30,7 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   const [audio, setAudio] = useState<{ blob: Blob; url: string } | null>(null)
   const [envio, setEnvio] = useState<Envio>('ocioso')
   const [erroEnvio, setErroEnvio] = useState<string | null>(null)
+  const [progresso, setProgresso] = useState<Progresso | null>(null)
 
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -133,28 +138,80 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     })
     setErroEnvio(null)
     setEnvio('ocioso')
+    setProgresso(null)
     setSegundos(0)
     setEstado('ocioso')
+  }
+
+  // Transcreve os chunks com concorrência limitada, preservando a ordem.
+  async function transcreverChunks(
+    chunks: Blob[],
+    aoProgredir: (concluidos: number) => void,
+  ): Promise<string> {
+    const resultados = new Array<string>(chunks.length).fill('')
+    let proximo = 0
+    let concluidos = 0
+
+    async function worker() {
+      for (;;) {
+        const i = proximo++
+        const chunk = chunks[i]
+        if (i >= chunks.length || !chunk) return
+        const form = new FormData()
+        form.append('audio', chunk, `chunk-${i}.wav`)
+        const resp = await fetch(`/api/consultas/${consultaId}/transcrever-chunk`, {
+          method: 'POST',
+          body: form,
+        })
+        const dados = (await resp.json().catch(() => null)) as
+          | { ok: true; texto: string }
+          | { ok: false; erro: string }
+          | null
+        if (!resp.ok || !dados || dados.ok === false) {
+          throw new Error((dados && 'erro' in dados && dados.erro) || 'Falha ao transcrever um trecho.')
+        }
+        resultados[i] = dados.texto ?? ''
+        concluidos++
+        aoProgredir(concluidos)
+      }
+    }
+
+    const trabalhadores = Math.min(CONCORRENCIA_CHUNKS, chunks.length)
+    await Promise.all(Array.from({ length: trabalhadores }, () => worker()))
+    return resultados.join(' ').replace(/\s+/g, ' ').trim()
   }
 
   async function gerarProntuario() {
     if (!audio) return
     setEnvio('enviando')
     setErroEnvio(null)
+    setProgresso({ fase: 'cortando', atual: 0, total: 0 })
     try {
-      const extensao = (audio.blob.type.split('/')[1] || 'webm').split(';')[0]
-      const form = new FormData()
-      form.append('audio', audio.blob, `consulta.${extensao}`)
+      // 1) Corta o áudio em chunks WAV curtos (no navegador, sem subir o áudio inteiro).
+      const chunks = await audioParaChunksWav(audio.blob)
 
-      const resp = await fetch(`/api/consultas/${consultaId}/transcrever`, {
+      // 2) Transcreve cada chunk (chamadas curtas, cabem no limite serverless).
+      setProgresso({ fase: 'transcrevendo', atual: 0, total: chunks.length })
+      const transcricao = await transcreverChunks(chunks, (concluidos) =>
+        setProgresso({ fase: 'transcrevendo', atual: concluidos, total: chunks.length }),
+      )
+      if (!transcricao) {
+        setErroEnvio('Não foi possível captar fala no áudio. Tente regravar.')
+        setEnvio('erro')
+        return
+      }
+
+      // 3) Estrutura o SOAP a partir da transcrição completa (uma chamada ao Claude).
+      setProgresso({ fase: 'estruturando', atual: 0, total: 0 })
+      const resp = await fetch(`/api/consultas/${consultaId}/estruturar`, {
         method: 'POST',
-        body: form,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcricao }),
       })
       const dados = (await resp.json().catch(() => null)) as
         | { ok: true; id: string }
         | { ok: false; erro: string }
         | null
-
       if (!resp.ok || !dados || dados.ok === false) {
         setErroEnvio(
           (dados && 'erro' in dados && dados.erro) ||
@@ -164,17 +221,30 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
         return
       }
 
-      // Libera o áudio da memória do navegador assim que o texto já existe.
       URL.revokeObjectURL(audio.url)
       router.replace(`/consultas/${consultaId}`)
-    } catch {
-      setErroEnvio('Falha de conexão ao enviar o áudio. Verifique a rede e tente novamente.')
+    } catch (e: unknown) {
+      setErroEnvio(
+        e instanceof Error && e.message
+          ? e.message
+          : 'Falha ao processar o áudio. Verifique a rede e tente novamente.',
+      )
       setEnvio('erro')
     }
   }
 
   if (estado === 'finalizado' && audio) {
     if (envio === 'enviando') {
+      const rotulo =
+        progresso?.fase === 'transcrevendo'
+          ? `Transcrevendo… (${progresso.atual}/${progresso.total} trechos)`
+          : progresso?.fase === 'estruturando'
+            ? 'Estruturando a evolução (SOAP, corrida e UBS)…'
+            : 'Preparando o áudio…'
+      const pct =
+        progresso?.fase === 'transcrevendo' && progresso.total > 0
+          ? Math.round((progresso.atual / progresso.total) * 100)
+          : null
       return (
         <div className="space-y-5 text-center">
           <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -182,11 +252,19 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
           </div>
           <div className="space-y-1">
             <p className="text-lg font-medium">Gerando prontuário…</p>
-            <p className="text-sm text-muted-foreground">
-              Transcrevendo o áudio e estruturando a evolução (SOAP, corrida e UBS). Pode levar
-              alguns instantes — não feche esta aba.
-            </p>
+            <p className="text-sm text-muted-foreground">{rotulo}</p>
           </div>
+          {pct !== null ? (
+            <div className="mx-auto h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          ) : null}
+          <p className="text-xs text-muted-foreground">
+            Consultas longas levam mais tempo. Não feche esta aba.
+          </p>
         </div>
       )
     }
