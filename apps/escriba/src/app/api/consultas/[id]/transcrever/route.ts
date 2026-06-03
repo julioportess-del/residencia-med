@@ -11,8 +11,9 @@ import { usuarioAtual } from '@/lib/supabase/server'
 import { obterPreferencias } from '@/server/preferencias'
 
 export const dynamic = 'force-dynamic'
-// Pipeline sincrono: Whisper + Claude rodam dentro do request. Sem timeout no dev.
-export const maxDuration = 300
+// Pipeline sincrono: Whisper + Claude rodam dentro do request.
+// Vercel Hobby limita a 60s; mantemos no teto do plano.
+export const maxDuration = 60
 
 const TAMANHO_MAXIMO_BYTES = 25 * 1024 * 1024 // limite do Whisper
 
