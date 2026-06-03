@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { exigirUsuario } from '@/lib/auth'
 import { Brand } from '@/components/brand'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { SairButton } from '@/components/sair-button'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await exigirUsuario()
@@ -46,6 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-muted-foreground sm:inline">{nome}</span>
             <ThemeToggle />
+            <SairButton />
           </div>
         </div>
       </header>
