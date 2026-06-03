@@ -3,8 +3,13 @@ import { toFile } from 'openai/uploads'
 import { openai } from '../clients'
 import { chaveCacheLLM, getCache, setCache } from '../cache'
 
+// gpt-4o-mini-transcribe: mais rápido, mais barato e mais preciso em PT que
+// whisper-1. Aceita language + response_format 'text' (sem timestamps, que não
+// usamos). Override por env OPENAI_TRANSCRIBE_MODEL se precisar voltar atrás.
 const MODELO_WHISPER =
-  process.env.OPENAI_TRANSCRIBE_MODEL ?? process.env.OPENAI_WHISPER_MODEL ?? 'whisper-1'
+  process.env.OPENAI_TRANSCRIBE_MODEL ??
+  process.env.OPENAI_WHISPER_MODEL ??
+  'gpt-4o-mini-transcribe'
 const VERSAO_TRANSCRICAO = '2026-06-01.1'
 
 export class TranscricaoVaziaError extends Error {
@@ -15,7 +20,7 @@ export class TranscricaoVaziaError extends Error {
 }
 
 /**
- * Transcreve audio de consulta via Whisper (whisper-1, zero-retention).
+ * Transcreve audio de consulta via OpenAI (gpt-4o-mini-transcribe, zero-retention).
  *
  * Privacidade: o audio NUNCA e persistido. Recebe os bytes em memoria,
  * envia ao Whisper e descarta. So o texto retorna. Cache por hash do audio
