@@ -74,8 +74,7 @@ export async function assistenteClinico(mensagens: MensagemChat[]): Promise<stri
   })
 
   const texto = resposta.content
-    .filter((bloco): bloco is { type: 'text'; text: string } => bloco.type === 'text')
-    .map((bloco) => bloco.text)
+    .map((bloco) => (bloco.type === 'text' ? bloco.text : ''))
     .join('')
     .trim()
 

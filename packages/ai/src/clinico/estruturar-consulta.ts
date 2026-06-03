@@ -93,10 +93,7 @@ export async function estruturarConsulta(
     messages: [{ role: 'user', content: montarMensagemUsuario(textoLimpo, contexto) }],
   })
 
-  const bruto = resposta.content
-    .filter((bloco): bloco is { type: 'text'; text: string } => bloco.type === 'text')
-    .map((bloco) => bloco.text)
-    .join('')
+  const bruto = resposta.content.map((bloco) => (bloco.type === 'text' ? bloco.text : '')).join('')
 
   // Modelo retorna o JSON (eventualmente com texto ao redor); extrai o objeto.
   const jsonTexto = extrairJson(bruto)

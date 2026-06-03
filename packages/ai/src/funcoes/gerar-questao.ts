@@ -62,10 +62,7 @@ export async function gerarQuestaoSimilar(input: GerarQuestaoInput): Promise<Que
     messages: [{ role: 'user', content: user }],
   })
 
-  const texto = response.content
-    .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-    .map((c) => c.text)
-    .join('\n')
+  const texto = response.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
 
   const json = extrairJSON(texto)
   const parsed = QuestaoGeradaSchema.parse(json)

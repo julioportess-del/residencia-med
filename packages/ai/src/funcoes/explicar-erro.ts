@@ -68,10 +68,7 @@ export async function explicarErro(input: ExplicarErroInput): Promise<ExplicarEr
       messages: [{ role: 'user', content: user }],
     })
 
-    const explicacaoMd = response.content
-      .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-      .map((c) => c.text)
-      .join('\n')
+    const explicacaoMd = response.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
 
     const latencia = Date.now() - inicio
     const custo = calcularCusto(

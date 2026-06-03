@@ -16,7 +16,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
+    "@anthropic-ai/sdk": "^0.65.0",
     "@residencia-med/db": "workspace:*",
     "@residencia-med/types": "workspace:*",
     "ioredis": "^5.4.1",

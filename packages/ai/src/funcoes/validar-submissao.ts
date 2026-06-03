@@ -89,10 +89,7 @@ Avalie e retorne o JSON do resultado.`
     inputTokens = r.usage.input_tokens
     outputTokens = r.usage.output_tokens
 
-    const texto = r.content
-      .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-      .map((c) => c.text)
-      .join('\n')
+    const texto = r.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
 
     const match = texto.match(/```json\s*([\s\S]*?)```/) ?? texto.match(/\{[\s\S]*\}/)
     const raw = match ? (Array.isArray(match) ? (match[1] ?? match[0]) : match) : texto

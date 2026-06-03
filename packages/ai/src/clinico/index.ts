@@ -34,3 +34,9 @@ export {
   type MensagemChat,
   type PapelChat,
 } from './assistente'
+export {
+  analisarAnexosClinicos,
+  AnaliseAnexosInvalidaError,
+  type AnexoParaAnalise,
+  type EntradaAnaliseAnexos,
+} from './analisar-anexos'
