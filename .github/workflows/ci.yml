@@ -43,7 +43,14 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/residencia_med_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/residencia_med_test
+      DATABASE_URL_CLINICO: postgresql://postgres:postgres@localhost:5432/residencia_med_test
+      DIRECT_URL_CLINICO: postgresql://postgres:postgres@localhost:5432/residencia_med_test
       REDIS_URL: redis://localhost:6379
+      # Placeholders para o build dos apps Next (lidos em build-time)
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
 
     steps:
       - uses: actions/checkout@v4
@@ -62,8 +69,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Prisma Client
-        run: pnpm --filter @residencia-med/db db:generate
+      - name: Generate Prisma Clients
+        run: |
+          pnpm --filter @residencia-med/db db:generate
+          pnpm --filter @residencia-med/db-clinico db:generate
 
       - name: Push schema (test DB)
         run: pnpm --filter @residencia-med/db db:push -- --skip-generate
