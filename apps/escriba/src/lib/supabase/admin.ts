@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { BUCKET_ANEXOS } from '@/lib/anexos-tipos'
 
 // Cliente Supabase com SERVICE ROLE — uso EXCLUSIVO no servidor (Route Handlers).
 // NUNCA importar em componente cliente: a service key dá acesso total ao projeto.
@@ -7,9 +8,6 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-/** Bucket privado dos anexos clínicos (criptografado em repouso, acesso só via service role). */
-export const BUCKET_ANEXOS = 'anexos-clinicos'
 
 export class StorageIndisponivelError extends Error {
   constructor() {
