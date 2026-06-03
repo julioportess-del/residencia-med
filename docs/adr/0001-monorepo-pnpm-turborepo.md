@@ -18,6 +18,7 @@ Monorepo com pnpm workspaces + Turborepo.
 ## Consequencias
 
 **Positivas:**
+
 - Type safety end-to-end: mudanca em `packages/db/prisma/schema.prisma` quebra build do `web` instantaneamente
 - Refactor cross-cutting em uma PR
 - Turborepo cacheia build/test/lint — CI volta de ~6min para <2min com cache quente
@@ -25,11 +26,13 @@ Monorepo com pnpm workspaces + Turborepo.
 - Compartilhar tsconfig, eslint, tailwind base via `packages/config`
 
 **Negativas:**
+
 - Curva de aprendizado pra quem nao viu monorepo
 - IDE precisa de setup (VS Code workspace settings)
 - Docker build de um app especifico requer `--filter` corretos
 
 **Mitigacoes:**
+
 - Documentar comandos comuns em CLAUDE.md
 - `.vscode/` commitado com extensions e settings recomendados
 - Dockerfile usa `pnpm deploy` para extrair so o necessario

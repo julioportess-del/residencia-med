@@ -128,8 +128,8 @@ export function ContaCliente() {
             <div className="text-sm">
               <div className="font-medium">Receber alertas no navegador</div>
               <p className="text-muted-foreground text-xs">
-                Item de revisão vencendo, convites e atualizações de plano. Funciona mesmo com a
-                aba fechada.
+                Item de revisão vencendo, convites e atualizações de plano. Funciona mesmo com a aba
+                fechada.
               </p>
             </div>
             <PushOptIn />
@@ -222,15 +222,7 @@ export function ContaCliente() {
   )
 }
 
-function UsoLinha({
-  label,
-  usado,
-  limite,
-}: {
-  label: string
-  usado: number
-  limite: number
-}) {
+function UsoLinha({ label, usado, limite }: { label: string; usado: number; limite: number }) {
   const ilimitado = limite === -1
   const bloqueado = limite === 0
   const pct = ilimitado || bloqueado ? 0 : Math.min(100, (usado / limite) * 100)

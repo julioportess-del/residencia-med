@@ -104,8 +104,8 @@ function SalasAtivas() {
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{s.codigo}</code>
                 </div>
                 <div className="text-xs text-muted-foreground mt-0.5">
-                  {s.banca?.codigo ?? 'Todas as bancas'} ·{' '}
-                  <Users className="inline size-3" /> {s._count.participantes} participantes
+                  {s.banca?.codigo ?? 'Todas as bancas'} · <Users className="inline size-3" />{' '}
+                  {s._count.participantes} participantes
                 </div>
               </div>
               <Badge
@@ -176,7 +176,10 @@ function CriarSala() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-2">
               <Label>Banca</Label>
-              <Select value={bancaId || 'todas'} onValueChange={(v) => setBancaId(v === 'todas' ? '' : v)}>
+              <Select
+                value={bancaId || 'todas'}
+                onValueChange={(v) => setBancaId(v === 'todas' ? '' : v)}
+              >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>

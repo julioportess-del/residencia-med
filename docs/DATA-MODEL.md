@@ -13,6 +13,7 @@ Racional do schema Prisma. Para o codigo canonico, ver [packages/db/prisma/schem
 - `Questao` pertence a uma `Prova` e uma `Banca` (denormalizado para query rapida sem join).
 
 Por que questao tem `bancaId` direto, alem do `provaId`?
+
 > Porque consulta tipica e "todas as questoes da AMRIGS sobre cardiologia" — evita join em `Prova`. Trade-off aceito: invariante mantido por trigger (ou pela aplicacao no import).
 
 ### Tema hierarquico
@@ -38,12 +39,14 @@ Fonte de verdade clinica: SBP, SBC, Ministerio da Saude, NICE, UpToDate. Cada gu
 Granularidade: uma linha por tentativa. Mantem historico completo, nao sobrescreve.
 
 Campos chave:
+
 - `correta`: bool (denormalizado de `alternativa.correta`, mantido por aplicacao)
 - `tempoSegundos`: usado para detectar "chute" (resposta < 10s costuma ser ruim)
 - `confianca`: enum auto-reportada — alimenta SM-2 modificado
 - `modoRevisao`: separa primeira tentativa de revisao espacada
 
 Indices criticos:
+
 - `(userId, createdAt)` — feed de atividade
 - `(questaoId)` — quantas pessoas erraram essa questao
 - `(sessaoId)` — relatorio de simulado
@@ -51,6 +54,7 @@ Indices criticos:
 ### Sessao
 
 Container para um conjunto de respostas. Tipo:
+
 - `ESTUDO`: estudo livre por filtro
 - `SIMULADO`: cronometrado, fechado, com correcao final
 - `REVISAO`: items vencidos do SM-2
@@ -61,6 +65,7 @@ Container para um conjunto de respostas. Tipo:
 ### ItemRevisao (SM-2 modificado)
 
 Estado do SuperMemo-2 por (usuario, questao):
+
 - `intervalo` em dias ate proxima revisao
 - `repeticoes` consecutivas com sucesso
 - `fatorFacilidade` (default 2.5, varia 1.3-2.5)
@@ -73,6 +78,7 @@ Indice critico: `(userId, proximaRevisao)` — query "items vencidos hoje" e a m
 ### PlanoEstudo + BlocoEstudo
 
 `PlanoEstudo` e 1-1 com `User`. Regenerado:
+
 - A cada onboarding completo
 - Semanalmente via cron
 - Apos cada 50 respostas (limiar para sinal estatistico)
@@ -88,11 +94,13 @@ Indice critico: `(userId, proximaRevisao)` — query "items vencidos hoje" e a m
 Pre-computada por job. Chave: `(bancaId, temaId, janelaAnos)`.
 
 Campos:
+
 - `totalQuestoes`: contagem na janela
 - `porcentagem`: peso relativo dentro da banca
 - `tendencia`: delta vs janela anterior — capta temas em alta
 
 Recomputada quando:
+
 - Nova prova importada
 - Nova questao classificada em tema diferente
 - Cron diario (idempotente)
@@ -104,6 +112,7 @@ Por que pre-computar? Calcular em request-path requer join em milhoes de respost
 Em `Questao` e `Guideline`. Modelo: `text-embedding-3-small` da OpenAI (1536 dim, $0.02/1M tokens).
 
 Usos:
+
 - Busca semantica de guideline relacionado a questao
 - "Questoes parecidas com essa" para revisao direcionada
 - Clustering para detectar duplicatas durante import
@@ -117,6 +126,7 @@ Indice: HNSW (`vector_cosine_ops`).
 ### Assinatura (B2C)
 
 1-1 com `User`. Espelha estado do Stripe — webhook atualiza. Plano:
+
 - `FREE`: 100 questoes/mes, 1 simulado/semana, sem IA
 - `PRO`: ilimitado, IA basica (50 explicacoes IA/mes)
 - `PREMIUM`: ilimitado, IA ilimitada, geracao de questoes, prioridade em fila
@@ -143,6 +153,7 @@ Validados em testes integration. Migracoes que violam isso falham em CI.
 NAO usamos. Delete e delete. Excecao: usuario deletado mantem suas respostas anonimizadas (foreign key vira null) para preservar `AnaliseIncidencia` agregada — implementado via `onDelete: SetNull` em `Resposta.userId`.
 
 Espera, isso conflita com LGPD direito ao esquecimento. Reconsiderar:
+
 - Usuario pede delecao -> apaga User cascade em todas suas tabelas pessoais
 - AnaliseIncidencia ja e agregada antes da delecao, nao impacta
 - Decisao: delete duro com cascade, sem anonimizacao

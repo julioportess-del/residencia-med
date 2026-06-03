@@ -1,6 +1,11 @@
 import { anthropic, MODELO_ANTHROPIC } from '../clients'
 import { calcularCusto, registrarLLMCall } from '../llm-call'
-import { SYSTEM_MENTOR, VERSAO_MENTOR, montarContextoMd, type ContextoEstudante } from '../prompts/mentor'
+import {
+  SYSTEM_MENTOR,
+  VERSAO_MENTOR,
+  montarContextoMd,
+  type ContextoEstudante,
+} from '../prompts/mentor'
 
 export type MensagemHistorico = {
   papel: 'USUARIO' | 'ASSISTENTE'

@@ -3,15 +3,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { Activity, Copy, Key, Plus, Trash2 } from 'lucide-react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -233,7 +225,11 @@ function UsoApi() {
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={stats.data.porDia}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-              <XAxis dataKey="dia" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
+              <XAxis
+                dataKey="dia"
+                tick={{ fontSize: 11 }}
+                tickFormatter={(v: string) => v.slice(5)}
+              />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip />
               <Bar dataKey="total" fill="#1d4ed8" name="Chamadas" radius={[4, 4, 0, 0]} />

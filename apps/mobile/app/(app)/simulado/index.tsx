@@ -20,17 +20,24 @@ export default function NovoSimuladoScreen() {
   })
 
   return (
-    <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
+    <ScrollView
+      contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}
+    >
       <Card>
         <CardTitle>Configuração</CardTitle>
         <CardDescription>
-          Selecione banca (opcional), número de questões e tempo. Cronômetro inicia ao tocar Iniciar.
+          Selecione banca (opcional), número de questões e tempo. Cronômetro inicia ao tocar
+          Iniciar.
         </CardDescription>
 
         <View style={styles.campo}>
           <Text style={styles.label}>Banca</Text>
           <View style={styles.bancasGrid}>
-            <BancaPill ativo={bancaId === null} onPress={() => setBancaId(null)} cor={cores.primary}>
+            <BancaPill
+              ativo={bancaId === null}
+              onPress={() => setBancaId(null)}
+              cor={cores.primary}
+            >
               Todas
             </BancaPill>
             {bancas.data?.map((b) => (

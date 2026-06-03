@@ -203,8 +203,13 @@ Dois tipos de usuario:
 **Isolamento**: middleware Prisma injeta filtro `userId = ctx.userId` em queries de dados pessoais (`Resposta`, `Sessao`, `PlanoEstudo`, `ItemRevisao`). Conteudo (`Questao`, `Banca`, etc.) e global.
 
 **Admin org query**:
+
 ```ts
-where: { user: { organizationId: ctx.organizationId } }
+where: {
+  user: {
+    organizationId: ctx.organizationId
+  }
+}
 ```
 
 Detalhe em [adr/0004-multi-tenant-strategy.md](adr/0004-multi-tenant-strategy.md).
@@ -213,16 +218,17 @@ Detalhe em [adr/0004-multi-tenant-strategy.md](adr/0004-multi-tenant-strategy.md
 
 ## 8. Observabilidade
 
-| Sinal | Ferramenta | Uso |
-|---|---|---|
-| Erros app | Sentry | Stack trace, breadcrumbs, source maps |
-| Logs estruturados | Axiom | Pino -> Axiom, busca SQL |
-| Metricas produto | PostHog | Funil onboarding, retencao, feature usage |
-| Custo IA | Tabela `LLMCall` | Cada chamada registra tokens, custo, latencia |
-| Performance DB | Prisma metrics + pg_stat_statements | Queries lentas |
-| Health checks | `/api/health` por app | Vercel + uptime monitor |
+| Sinal             | Ferramenta                          | Uso                                           |
+| ----------------- | ----------------------------------- | --------------------------------------------- |
+| Erros app         | Sentry                              | Stack trace, breadcrumbs, source maps         |
+| Logs estruturados | Axiom                               | Pino -> Axiom, busca SQL                      |
+| Metricas produto  | PostHog                             | Funil onboarding, retencao, feature usage     |
+| Custo IA          | Tabela `LLMCall`                    | Cada chamada registra tokens, custo, latencia |
+| Performance DB    | Prisma metrics + pg_stat_statements | Queries lentas                                |
+| Health checks     | `/api/health` por app               | Vercel + uptime monitor                       |
 
 **SLOs minimos:**
+
 - p95 latencia tRPC: 250ms
 - Disponibilidade: 99.5%
 - Tempo de resposta de questao (sem IA): 100ms p95
@@ -244,17 +250,20 @@ Detalhe em [adr/0004-multi-tenant-strategy.md](adr/0004-multi-tenant-strategy.md
 ## 10. Performance
 
 **Web:**
+
 - Bundle budget: 150kb JS gzip na landing, 300kb em apps autenticados
 - Imagens: next/image com AVIF/WebP, dimensoes explicitas
 - Fonts: Inter via next/font, swap, preload weight 400 e 600 so
 - LCP < 2.5s, INP < 200ms, CLS < 0.1
 
 **API:**
+
 - Connection pool Postgres via Prisma Data Proxy (Neon faz pool nativo)
 - Redis cache em queries de leitura quente: lista de bancas, especialidades, top temas
 - TanStack Query no cliente com staleTime de 5min para dados pouco mutaveis
 
 **Worker:**
+
 - Concurrency configuravel por tipo de job
 - Batch de jobs de embedding (OpenAI permite 100 textos/req)
 - Backoff exponencial em falha
@@ -264,12 +273,14 @@ Detalhe em [adr/0004-multi-tenant-strategy.md](adr/0004-multi-tenant-strategy.md
 ## 11. Deployment
 
 **Ambientes:**
+
 - `dev`: local docker-compose
 - `preview`: cada PR vira deploy Vercel + branch Neon
 - `staging`: branch `main` -> staging.residencia-med.com
 - `production`: tag `release-*` -> residencia-med.com
 
 **Pipeline (GitHub Actions):**
+
 1. Lint + typecheck (todos os pacotes em paralelo via Turborepo)
 2. Test (Vitest)
 3. Build

@@ -250,9 +250,7 @@ function DialogCriar({ aberto, onFechar }: { aberto: boolean; onFechar: () => vo
                     min={0}
                     max={100}
                     value={v.peso}
-                    onChange={(e) =>
-                      atualizarVariante(i, { peso: Number(e.target.value) || 0 })
-                    }
+                    onChange={(e) => atualizarVariante(i, { peso: Number(e.target.value) || 0 })}
                     className="w-20 tabular-nums"
                   />
                   <span className="text-sm text-muted-foreground">%</span>

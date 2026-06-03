@@ -11,10 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const user = await garantirUser(authUser.id, authUser.email)
   const onboardingCompleto = Boolean(
-    user.bancasAlvo.length > 0 &&
-      user.dataProva &&
-      user.cargaHorariaSemanal &&
-      user.metaResidencia,
+    user.bancasAlvo.length > 0 && user.dataProva && user.cargaHorariaSemanal && user.metaResidencia,
   )
 
   return (

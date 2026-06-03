@@ -82,7 +82,11 @@ const stylesSize = {
     text: { fontSize: fontes.size.sm },
   }),
   md: StyleSheet.create({
-    button: { paddingHorizontal: espacamento.md, paddingVertical: espacamento.sm + 4, minHeight: 44 },
+    button: {
+      paddingHorizontal: espacamento.md,
+      paddingVertical: espacamento.sm + 4,
+      minHeight: 44,
+    },
     text: { fontSize: fontes.size.md },
   }),
   lg: StyleSheet.create({

@@ -266,7 +266,10 @@ export const orgRouter = router({
         },
       })
       if (convitePend) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Já existe um convite pendente para este email' })
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Já existe um convite pendente para este email',
+        })
       }
 
       const token = gerarToken()
@@ -336,9 +339,12 @@ export const orgRouter = router({
         include: { organization: { include: { _count: { select: { users: true } } } } },
       })
       if (!convite) throw new TRPCError({ code: 'NOT_FOUND', message: 'Convite inválido' })
-      if (convite.aceitoEm) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Convite já aceito' })
-      if (convite.revogadoEm) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Convite revogado' })
-      if (convite.expiraEm < new Date()) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Convite expirado' })
+      if (convite.aceitoEm)
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Convite já aceito' })
+      if (convite.revogadoEm)
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Convite revogado' })
+      if (convite.expiraEm < new Date())
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Convite expirado' })
       if (convite.email.toLowerCase() !== ctx.user.email.toLowerCase()) {
         throw new TRPCError({
           code: 'FORBIDDEN',

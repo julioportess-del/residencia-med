@@ -13,9 +13,7 @@ export const questaoRouter = router({
       ...(input.bancaIds?.length ? { bancaId: { in: input.bancaIds } } : {}),
       ...(input.dificuldades?.length ? { dificuldade: { in: input.dificuldades } } : {}),
       ...(input.anos?.length ? { ano: { in: input.anos } } : {}),
-      ...(input.temaIds?.length
-        ? { temas: { some: { temaId: { in: input.temaIds } } } }
-        : {}),
+      ...(input.temaIds?.length ? { temas: { some: { temaId: { in: input.temaIds } } } } : {}),
     }
 
     const questoes = await ctx.prisma.questao.findMany({
@@ -111,30 +109,32 @@ export const questaoRouter = router({
       return { id: proxima.id }
     }),
 
-  detalhe: procedureProtegida.input(z.object({ id: z.string().cuid() })).query(async ({ ctx, input }) => {
-    const questao = await ctx.prisma.questao.findUnique({
-      where: { id: input.id, publicada: true },
-      include: {
-        alternativas: { orderBy: { ordem: 'asc' } },
-        banca: { select: { codigo: true, nome: true, cor: true } },
-        prova: { select: { ano: true, tipo: true } },
-        temas: {
-          select: {
-            primario: true,
-            tema: { select: { id: true, nome: true, codigo: true } },
+  detalhe: procedureProtegida
+    .input(z.object({ id: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      const questao = await ctx.prisma.questao.findUnique({
+        where: { id: input.id, publicada: true },
+        include: {
+          alternativas: { orderBy: { ordem: 'asc' } },
+          banca: { select: { codigo: true, nome: true, cor: true } },
+          prova: { select: { ano: true, tipo: true } },
+          temas: {
+            select: {
+              primario: true,
+              tema: { select: { id: true, nome: true, codigo: true } },
+            },
+          },
+          guidelines: {
+            select: {
+              trecho: true,
+              guideline: { select: { titulo: true, fonte: true, url: true, resumo: true } },
+            },
           },
         },
-        guidelines: {
-          select: {
-            trecho: true,
-            guideline: { select: { titulo: true, fonte: true, url: true, resumo: true } },
-          },
-        },
-      },
-    })
-    if (!questao) throw new TRPCError({ code: 'NOT_FOUND' })
-    return questao
-  }),
+      })
+      if (!questao) throw new TRPCError({ code: 'NOT_FOUND' })
+      return questao
+    }),
 
   responder: procedureProtegida.input(ResponderQuestaoInput).mutation(async ({ ctx, input }) => {
     const limite = await checarLimiteQuestoes(ctx.userId)

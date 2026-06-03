@@ -51,7 +51,13 @@ export function ExecDashboard() {
           sub={`${usuarios.ativos30d.toLocaleString('pt-BR')} ativos 30d`}
         />
         <Kpi
-          icone={crescimentoPositivo ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+          icone={
+            crescimentoPositivo ? (
+              <TrendingUp className="size-4" />
+            ) : (
+              <TrendingDown className="size-4" />
+            )
+          }
           label="Crescimento (30d vs 30-60d)"
           valor={`${crescimentoPositivo ? '+' : ''}${usuarios.crescimentoPct}%`}
           sub={`${usuarios.novos30d} novos nos últimos 30d`}
@@ -95,10 +101,7 @@ export function ExecDashboard() {
               />
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 border-t pt-4 text-sm">
-              <DetalheLinha
-                rotulo="Orgs ativas"
-                valor={`${orgs.ativas} de ${orgs.total}`}
-              />
+              <DetalheLinha rotulo="Orgs ativas" valor={`${orgs.ativas} de ${orgs.total}`} />
               <DetalheLinha
                 rotulo="Atividade no mês"
                 valor={`${atividade.respostasMes.toLocaleString('pt-BR')} respostas`}
@@ -197,14 +200,8 @@ export function ExecDashboard() {
               rotulo="Simulados"
               valor={atividade.simuladosMes.toLocaleString('pt-BR')}
             />
-            <DetalheLinha
-              rotulo="Novos 7d"
-              valor={usuarios.novos7d.toLocaleString('pt-BR')}
-            />
-            <DetalheLinha
-              rotulo="Novos 30d"
-              valor={usuarios.novos30d.toLocaleString('pt-BR')}
-            />
+            <DetalheLinha rotulo="Novos 7d" valor={usuarios.novos7d.toLocaleString('pt-BR')} />
+            <DetalheLinha rotulo="Novos 30d" valor={usuarios.novos30d.toLocaleString('pt-BR')} />
           </CardContent>
         </Card>
 
@@ -216,14 +213,8 @@ export function ExecDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4 text-sm">
-            <DetalheLinha
-              rotulo="Chamadas"
-              valor={ia.chamadasMes.toLocaleString('pt-BR')}
-            />
-            <DetalheLinha
-              rotulo="Custo"
-              valor={`$${ia.custoMesUsd.toFixed(2)}`}
-            />
+            <DetalheLinha rotulo="Chamadas" valor={ia.chamadasMes.toLocaleString('pt-BR')} />
+            <DetalheLinha rotulo="Custo" valor={`$${ia.custoMesUsd.toFixed(2)}`} />
             <DetalheLinha
               rotulo="Tokens entrada"
               valor={ia.inputTokensMes.toLocaleString('pt-BR')}

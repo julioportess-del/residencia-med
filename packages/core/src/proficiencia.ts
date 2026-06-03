@@ -73,16 +73,14 @@ export function calcularProficiencia(respostas: RespostaParaProficiencia[]): Res
     grupos.set(r.especialidadeId, ent)
   }
 
-  const porEspecialidade: ScoreEspecialidade[] = Array.from(grupos.entries()).map(
-    ([id, g]) => ({
-      especialidadeId: id,
-      nome: g.nome,
-      score: g.totalPond > 0 ? (g.acertosPond / g.totalPond) * 100 : 0,
-      total: g.total,
-      acertos: g.acertos,
-      pesoTotal: g.totalPond,
-    }),
-  )
+  const porEspecialidade: ScoreEspecialidade[] = Array.from(grupos.entries()).map(([id, g]) => ({
+    especialidadeId: id,
+    nome: g.nome,
+    score: g.totalPond > 0 ? (g.acertosPond / g.totalPond) * 100 : 0,
+    total: g.total,
+    acertos: g.acertos,
+    pesoTotal: g.totalPond,
+  }))
 
   // Score global: média ponderada pelo peso total de cada especialidade.
   // Penaliza quem só respondeu uma especialidade — ainda assim seu score

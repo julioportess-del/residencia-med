@@ -45,7 +45,10 @@ export function SimuladoConfig() {
       <CardContent className="pt-6 space-y-5">
         <div>
           <Label>Banca (opcional)</Label>
-          <Select value={bancaId || 'todas'} onValueChange={(v) => setBancaId(v === 'todas' ? '' : v)}>
+          <Select
+            value={bancaId || 'todas'}
+            onValueChange={(v) => setBancaId(v === 'todas' ? '' : v)}
+          >
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>

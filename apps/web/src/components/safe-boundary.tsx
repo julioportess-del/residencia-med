@@ -17,11 +17,7 @@ export class SafeBoundary extends Component<
   }
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
-    console.error(
-      `[safe-boundary${this.props.name ? ` :: ${this.props.name}` : ''}]`,
-      error,
-      info,
-    )
+    console.error(`[safe-boundary${this.props.name ? ` :: ${this.props.name}` : ''}]`, error, info)
   }
 
   override render() {

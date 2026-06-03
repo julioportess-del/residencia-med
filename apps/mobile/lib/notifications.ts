@@ -30,13 +30,10 @@ export async function registrarPushToken(): Promise<string | null> {
   }
   if (status !== 'granted') return null
 
-  const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
 
   try {
-    const token = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined,
-    )
+    const token = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)
     return token.data
   } catch {
     return null

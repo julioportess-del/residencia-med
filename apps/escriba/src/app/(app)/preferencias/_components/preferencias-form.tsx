@@ -57,8 +57,8 @@ export function PreferenciasForm({ inicial }: PreferenciasFormProps) {
       <label className="block space-y-1.5">
         <span className="text-sm font-medium">Instruções personalizadas</span>
         <span className="block text-xs text-muted-foreground">
-          Regras livres que a IA deve seguir ao montar a evolução (ex.: sempre listar CID,
-          detalhar posologia, separar condutas por prioridade).
+          Regras livres que a IA deve seguir ao montar a evolução (ex.: sempre listar CID, detalhar
+          posologia, separar condutas por prioridade).
         </span>
         <textarea
           value={instrucoesCustom}

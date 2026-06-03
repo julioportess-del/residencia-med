@@ -29,8 +29,8 @@ export function RevisaoLista() {
           <p>Nenhum item de revisão vencido.</p>
           {contagem.data && contagem.data.total > 0 ? (
             <p className="text-xs mt-1">
-              Você tem {contagem.data.total} itens em revisão espaçada — próximos vão aparecer aqui no
-              dia.
+              Você tem {contagem.data.total} itens em revisão espaçada — próximos vão aparecer aqui
+              no dia.
             </p>
           ) : (
             <p className="text-xs mt-1">Responda algumas questões para alimentar a revisão.</p>

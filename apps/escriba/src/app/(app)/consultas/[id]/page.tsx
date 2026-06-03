@@ -19,11 +19,7 @@ export const dynamic = 'force-dynamic'
 
 type Modelo = 'SOAP' | 'CORRIDA' | 'UBS'
 
-export default async function ConsultaDetalhePage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function ConsultaDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const user = await exigirUsuario()
 

@@ -9,9 +9,7 @@ test.describe('rotas públicas', () => {
   test('landing renderiza com headline e CTAs', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveTitle(/Residência Med/)
-    await expect(
-      page.getByRole('heading', { name: /Aprovação em residência/i }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Aprovação em residência/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /Começar grátis/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /Ver planos/i })).toBeVisible()
   })

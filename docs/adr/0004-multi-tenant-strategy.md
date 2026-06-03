@@ -6,6 +6,7 @@
 ## Contexto
 
 Dois publicos:
+
 - **B2C**: estudante individual (~95% dos usuarios projetados)
 - **B2B**: cursinhos/escolas com 5-500 estudantes (~5% dos usuarios, ~30% da receita projetada)
 
@@ -38,7 +39,7 @@ Para B2B: usuarios pertencem a `Organization`; queries de admin filtram por `org
 
 ```typescript
 prisma.$use(async (params, next) => {
-  const ctx = getTenantContext()  // AsyncLocalStorage
+  const ctx = getTenantContext() // AsyncLocalStorage
   if (!ctx) return next(params)
 
   const userScopedModels = ['Resposta', 'Sessao', 'PlanoEstudo', 'BlocoEstudo', 'ItemRevisao']
@@ -57,6 +58,7 @@ prisma.$use(async (params, next) => {
 ### Org admin queries
 
 Quando admin de Organization consulta dados agregados, query e:
+
 ```typescript
 prisma.resposta.groupBy({
   by: ['questaoId'],

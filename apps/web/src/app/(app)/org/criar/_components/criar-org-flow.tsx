@@ -24,12 +24,7 @@ const PLANOS = [
     nome: 'Growth',
     seats: 50,
     preco: 'R$ 299/mês',
-    benefits: [
-      'Até 50 alunos',
-      'Plano Premium para todos',
-      'IA ilimitada',
-      'Suporte prioritário',
-    ],
+    benefits: ['Até 50 alunos', 'Plano Premium para todos', 'IA ilimitada', 'Suporte prioritário'],
   },
 ]
 
@@ -93,7 +88,9 @@ export function CriarOrgFlow() {
                 onClick={() => setPlanoEscolhido(p.codigo)}
                 className={cn(
                   'flex flex-col items-start rounded-xl border p-4 text-left transition-all',
-                  ativo ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'hover:border-primary/50',
+                  ativo
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                    : 'hover:border-primary/50',
                 )}
               >
                 <div className="flex w-full items-start justify-between">

@@ -16,10 +16,7 @@ export type ContextoApi = {
   }
 }
 
-export type RotaApiHandler = (
-  req: NextRequest,
-  ctx: ContextoApi,
-) => Promise<Response> | Response
+export type RotaApiHandler = (req: NextRequest, ctx: ContextoApi) => Promise<Response> | Response
 
 const PREFIXO = 'rmed_'
 
@@ -108,18 +105,22 @@ export function withApiKey(handler: RotaApiHandler) {
     }
 
     // Registra uso (best-effort, não bloqueia)
-    void prisma.apiKey.update({
-      where: { id: apiKey.id },
-      data: { ultimoUsoEm: new Date() },
-    }).catch(() => {})
-    void prisma.apiKeyUso.create({
-      data: {
-        apiKeyId: apiKey.id,
-        rota: new URL(req.url).pathname,
-        status: resposta.status,
-        latenciaMs: Date.now() - inicio,
-      },
-    }).catch(() => {})
+    void prisma.apiKey
+      .update({
+        where: { id: apiKey.id },
+        data: { ultimoUsoEm: new Date() },
+      })
+      .catch(() => {})
+    void prisma.apiKeyUso
+      .create({
+        data: {
+          apiKeyId: apiKey.id,
+          rota: new URL(req.url).pathname,
+          status: resposta.status,
+          latenciaMs: Date.now() - inicio,
+        },
+      })
+      .catch(() => {})
 
     return resposta
   }

@@ -58,10 +58,7 @@ async function enviarPushParaUsuario(
   const expiradas: string[] = []
   await Promise.all(
     subs.map(async (s) => {
-      const r = await enviarPush(
-        { endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth },
-        payload,
-      )
+      const r = await enviarPush({ endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth }, payload)
       if (r.expirada) expiradas.push(s.id)
     }),
   )

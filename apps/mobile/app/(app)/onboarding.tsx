@@ -140,9 +140,7 @@ export default function OnboardingScreen() {
       {passo === 2 && (
         <Card>
           <CardTitle>Quantas horas por semana?</CardTitle>
-          <Text style={styles.dica}>
-            Seja realista — algo entre 10h e 40h costuma funcionar.
-          </Text>
+          <Text style={styles.dica}>Seja realista — algo entre 10h e 40h costuma funcionar.</Text>
           <TextInput
             value={cargaSemanal}
             onChangeText={(t) => setCargaSemanal(t.replace(/[^0-9]/g, ''))}
@@ -150,9 +148,7 @@ export default function OnboardingScreen() {
             keyboardType="number-pad"
             style={styles.input}
           />
-          <Text style={styles.dica}>
-            {carga > 0 ? `≈ ${(carga / 7).toFixed(1)}h/dia` : ' '}
-          </Text>
+          <Text style={styles.dica}>{carga > 0 ? `≈ ${(carga / 7).toFixed(1)}h/dia` : ' '}</Text>
         </Card>
       )}
 
@@ -178,11 +174,7 @@ export default function OnboardingScreen() {
       )}
 
       <View style={[layout.rowBetween, { marginTop: espacamento.md }]}>
-        <Button
-          variant="outline"
-          onPress={voltar}
-          disabled={passo === 0 || completar.isPending}
-        >
+        <Button variant="outline" onPress={voltar} disabled={passo === 0 || completar.isPending}>
           Voltar
         </Button>
         {passo < PASSOS.length - 1 ? (
@@ -212,12 +204,7 @@ function Indicador({ passo }: { passo: number }) {
                 concluido && styles.bolinhaConcluida,
               ]}
             >
-              <Text
-                style={[
-                  styles.bolinhaTexto,
-                  (ativo || concluido) && { color: '#fff' },
-                ]}
-              >
+              <Text style={[styles.bolinhaTexto, (ativo || concluido) && { color: '#fff' }]}>
                 {i + 1}
               </Text>
             </View>

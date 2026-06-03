@@ -49,7 +49,11 @@ export async function getCache<T>(chave: string): Promise<T | null> {
   }
 }
 
-export async function setCache<T>(chave: string, valor: T, ttl: number = TTL_SEGUNDOS): Promise<void> {
+export async function setCache<T>(
+  chave: string,
+  valor: T,
+  ttl: number = TTL_SEGUNDOS,
+): Promise<void> {
   const client = getRedis()
   if (!client) return
   try {

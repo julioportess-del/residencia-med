@@ -6,6 +6,7 @@
 ## Contexto
 
 Precisamos:
+
 - App web rapido (LCP <2.5s)
 - API type-safe (web + mobile consumindo mesmos endpoints)
 - Banco relacional (questoes tem estrutura clara) com busca semantica em guidelines
@@ -22,6 +23,7 @@ Precisamos:
 ## Consequencias
 
 **Positivas:**
+
 - Server Components reduzem JS no cliente (banco de questoes carrega <100KB)
 - Streaming UI para listas longas e geracao IA
 - tRPC: refatorar query renomeia tipo no client autom
@@ -30,6 +32,7 @@ Precisamos:
 - Vercel + Neon + Upstash: tres dashboards, zero servidor pra cuidar
 
 **Negativas:**
+
 - Next.js cold start em rotas raras (Vercel mitiga com edge cache)
 - App Router ainda tem casos extremos (parallel routes, intercepted routes) — evitar quando possivel
 - pgvector nao e tao rapido quanto Pinecone para >10M vetores; suficiente pra nosso caso (~100k guidelines + questoes)
@@ -37,13 +40,13 @@ Precisamos:
 
 ## Alternativas consideradas
 
-| Stack | Por que nao |
-|---|---|
+| Stack           | Por que nao                                                                       |
+| --------------- | --------------------------------------------------------------------------------- |
 | Remix + Drizzle | tRPC + Prisma melhor type-gen pra equipe pequena; Remix bom mas ecossistema menor |
-| SvelteKit | Curva de aprendizado nao justifica em time pequeno |
-| FastAPI + React | Duas linguagens, dois deploys, dois sistemas de tipos. Desnecessario |
-| Supabase | Otimo BaaS mas RLS complexo de testar; queremos ORM tipado |
-| MongoDB | Questoes/temas/guidelines sao relacionais natos. ORM tipado em Mongo e dor |
+| SvelteKit       | Curva de aprendizado nao justifica em time pequeno                                |
+| FastAPI + React | Duas linguagens, dois deploys, dois sistemas de tipos. Desnecessario              |
+| Supabase        | Otimo BaaS mas RLS complexo de testar; queremos ORM tipado                        |
+| MongoDB         | Questoes/temas/guidelines sao relacionais natos. ORM tipado em Mongo e dor        |
 
 ## Pontos de re-avaliar
 

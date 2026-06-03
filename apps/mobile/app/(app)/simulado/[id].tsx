@@ -86,7 +86,9 @@ export default function SimuladoExecScreen() {
   const seg = restanteSec % 60
 
   return (
-    <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
+    <ScrollView
+      contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}
+    >
       <View style={layout.rowBetween}>
         <Text style={styles.contador}>
           Questão {idx + 1} de {questaoIds.length}
@@ -135,7 +137,11 @@ export default function SimuladoExecScreen() {
           })}
 
           <View style={layout.rowBetween}>
-            <Button variant="outline" onPress={() => setIdx(Math.max(0, idx - 1))} disabled={idx === 0}>
+            <Button
+              variant="outline"
+              onPress={() => setIdx(Math.max(0, idx - 1))}
+              disabled={idx === 0}
+            >
               Anterior
             </Button>
             <Button onPress={onProxima} loading={responder.isPending || finalizar.isPending}>
@@ -164,7 +170,12 @@ const styles = StyleSheet.create({
     color: cores.foreground,
   },
   vignette: { fontSize: fontes.size.md, lineHeight: 22, color: cores.foreground },
-  enunciado: { fontSize: fontes.size.md, lineHeight: 22, fontWeight: fontes.weight.medium, color: cores.foreground },
+  enunciado: {
+    fontSize: fontes.size.md,
+    lineHeight: 22,
+    fontWeight: fontes.weight.medium,
+    color: cores.foreground,
+  },
   alternativa: {
     flexDirection: 'row',
     gap: espacamento.sm,
@@ -174,6 +185,11 @@ const styles = StyleSheet.create({
     borderColor: cores.border,
   },
   alternativaSel: { borderColor: cores.primary, borderWidth: 2 },
-  letra: { fontSize: fontes.size.md, fontWeight: fontes.weight.bold, color: cores.foreground, width: 20 },
+  letra: {
+    fontSize: fontes.size.md,
+    fontWeight: fontes.weight.bold,
+    color: cores.foreground,
+    width: 20,
+  },
   texto: { fontSize: fontes.size.md, color: cores.foreground, flex: 1, lineHeight: 22 },
 })

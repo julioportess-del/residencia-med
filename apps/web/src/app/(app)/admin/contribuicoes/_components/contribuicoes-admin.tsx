@@ -7,12 +7,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -130,8 +125,7 @@ function ModalRevisao({ id, onClose }: { id: string; onClose: () => void }) {
   })
 
   type AltJson = { letra: string; texto: string; correta?: boolean }
-  const alternativas =
-    (detalhe.data?.alternativasJson as unknown as AltJson[] | undefined) ?? []
+  const alternativas = (detalhe.data?.alternativasJson as unknown as AltJson[] | undefined) ?? []
 
   return (
     <Dialog open onOpenChange={onClose}>

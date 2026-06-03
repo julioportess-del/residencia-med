@@ -36,9 +36,7 @@ export function DocumentosPanel({ consultaId, disponiveis }: DocumentosPanelProp
     setCopiado(false)
     setTipo(t)
     const opcoes =
-      t === 'ATESTADO'
-        ? { dias: dias ? Number(dias) : undefined, incluirCid }
-        : undefined
+      t === 'ATESTADO' ? { dias: dias ? Number(dias) : undefined, incluirCid } : undefined
     iniciarGerar(async () => {
       const res = await gerarDocumento(consultaId, t, opcoes)
       if (res.ok) {

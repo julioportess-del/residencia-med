@@ -27,9 +27,7 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
   const router = useRouter()
   const [passo, setPasso] = useState(0)
   const [bancaIds, setBancaIds] = useState<string[]>([])
-  const [dataProva, setDataProva] = useState<string>(
-    format(addMonths(new Date(), 6), 'yyyy-MM-dd'),
-  )
+  const [dataProva, setDataProva] = useState<string>(format(addMonths(new Date(), 6), 'yyyy-MM-dd'))
   const [cargaHoraria, setCargaHoraria] = useState<number>(20)
 
   const completar = trpc.onboarding.completar.useMutation({
@@ -74,7 +72,8 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
         <CardHeader>
           <CardTitle>{PASSOS[passo]}</CardTitle>
           <CardDescription>
-            {passo === 0 && 'Selecione até 5 bancas que você quer estudar. A primeira será sua banca-alvo principal.'}
+            {passo === 0 &&
+              'Selecione até 5 bancas que você quer estudar. A primeira será sua banca-alvo principal.'}
             {passo === 1 && 'Quando é a sua prova? Isso define o ritmo do plano de estudos.'}
             {passo === 2 && 'Quantas horas por semana você consegue dedicar?'}
             {passo === 3 && 'Confira os dados antes de gerar seu plano.'}
@@ -108,7 +107,10 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
                       <div className="text-xs text-muted-foreground">{b.estado ?? 'Nacional'}</div>
                     </div>
                     {sel && (
-                      <span className="size-2 rounded-full" style={{ background: b.cor ?? '#1d4ed8' }} />
+                      <span
+                        className="size-2 rounded-full"
+                        style={{ background: b.cor ?? '#1d4ed8' }}
+                      />
                     )}
                   </button>
                 )
@@ -195,7 +197,7 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
                   .join(', ')}
               </ResumoLinha>
               <ResumoLinha icone={<Calendar className="size-4" />} label="Data da prova">
-                {format(new Date(dataProva), "dd/MM/yyyy")}
+                {format(new Date(dataProva), 'dd/MM/yyyy')}
               </ResumoLinha>
               <ResumoLinha icone={<Clock className="size-4" />} label="Carga horária">
                 {cargaHoraria}h por semana

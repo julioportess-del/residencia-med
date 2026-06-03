@@ -41,7 +41,10 @@ export function QuestoesLista() {
     <div className="mt-6 space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Filter className="size-4 text-muted-foreground" />
-        <Select value={bancaId ?? 'todas'} onValueChange={(v) => setBancaId(v === 'todas' ? undefined : v)}>
+        <Select
+          value={bancaId ?? 'todas'}
+          onValueChange={(v) => setBancaId(v === 'todas' ? undefined : v)}
+        >
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Banca" />
           </SelectTrigger>

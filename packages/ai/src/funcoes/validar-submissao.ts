@@ -95,7 +95,7 @@ Avalie e retorne o JSON do resultado.`
       .join('\n')
 
     const match = texto.match(/```json\s*([\s\S]*?)```/) ?? texto.match(/\{[\s\S]*\}/)
-    const raw = match ? (Array.isArray(match) ? match[1] ?? match[0] : match) : texto
+    const raw = match ? (Array.isArray(match) ? (match[1] ?? match[0]) : match) : texto
     const parsed = ResultadoSchema.parse(JSON.parse(typeof raw === 'string' ? raw : ''))
 
     const latencia = Date.now() - inicio

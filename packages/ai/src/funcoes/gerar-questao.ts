@@ -76,6 +76,6 @@ export async function gerarQuestaoSimilar(input: GerarQuestaoInput): Promise<Que
 
 function extrairJSON(texto: string): unknown {
   const match = texto.match(/```json\s*([\s\S]*?)```/) ?? texto.match(/\{[\s\S]*\}/)
-  const raw = match ? (Array.isArray(match) ? match[1] ?? match[0] : match) : texto
+  const raw = match ? (Array.isArray(match) ? (match[1] ?? match[0]) : match) : texto
   return JSON.parse(typeof raw === 'string' ? raw : '')
 }

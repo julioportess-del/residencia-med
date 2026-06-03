@@ -48,7 +48,9 @@ export default function RevisaoScreen() {
         <Pressable onPress={() => router.push(`/questoes/${item.questaoId}`)}>
           <Card>
             <View style={styles.linhaTop}>
-              <Badge bg={item.questao.banca.cor ?? cores.primary}>{item.questao.banca.codigo}</Badge>
+              <Badge bg={item.questao.banca.cor ?? cores.primary}>
+                {item.questao.banca.codigo}
+              </Badge>
               <Text style={styles.meta}>{item.questao.ano}</Text>
               <View style={{ flex: 1 }} />
               <Text style={styles.meta}>repetição {item.repeticoes}</Text>
@@ -56,9 +58,7 @@ export default function RevisaoScreen() {
             <Text style={styles.resumo} numberOfLines={2}>
               {item.questao.resumo}…
             </Text>
-            {item.questao.tema && (
-              <Text style={styles.tema}>{item.questao.tema.nome}</Text>
-            )}
+            {item.questao.tema && <Text style={styles.tema}>{item.questao.tema.nome}</Text>}
           </Card>
         </Pressable>
       )}
@@ -69,6 +69,11 @@ export default function RevisaoScreen() {
 const styles = StyleSheet.create({
   linhaTop: { flexDirection: 'row', alignItems: 'center', gap: espacamento.sm },
   meta: { fontSize: fontes.size.xs, color: cores.mutedForeground },
-  resumo: { fontSize: fontes.size.md, color: cores.foreground, lineHeight: 20, marginTop: espacamento.sm },
+  resumo: {
+    fontSize: fontes.size.md,
+    color: cores.foreground,
+    lineHeight: 20,
+    marginTop: espacamento.sm,
+  },
   tema: { fontSize: fontes.size.xs, color: cores.mutedForeground, marginTop: espacamento.xs },
 })

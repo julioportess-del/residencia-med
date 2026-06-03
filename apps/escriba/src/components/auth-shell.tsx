@@ -23,7 +23,9 @@ export function AuthShell({ titulo, subtitulo, children, rodape }: AuthShellProp
             {subtitulo ? <p className="text-sm text-muted-foreground">{subtitulo}</p> : null}
           </div>
           {children}
-          {rodape ? <div className="text-center text-sm text-muted-foreground">{rodape}</div> : null}
+          {rodape ? (
+            <div className="text-center text-sm text-muted-foreground">{rodape}</div>
+          ) : null}
         </div>
       </main>
     </div>

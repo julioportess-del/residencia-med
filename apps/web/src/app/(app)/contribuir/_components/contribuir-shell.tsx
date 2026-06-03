@@ -57,7 +57,11 @@ function FormSubmissao() {
   const [vignette, setVignette] = useState('')
   const [enunciado, setEnunciado] = useState('')
   const [alternativas, setAlternativas] = useState<Record<Letra, string>>({
-    A: '', B: '', C: '', D: '', E: '',
+    A: '',
+    B: '',
+    C: '',
+    D: '',
+    E: '',
   })
   const [gabarito, setGabarito] = useState<Letra>('A')
   const [fonteUrl, setFonteUrl] = useState('')
@@ -234,14 +238,20 @@ function MinhasSubmissoes() {
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">{s.banca.codigo}</Badge>
                         <span className="text-xs text-muted-foreground">{s.ano}</span>
-                        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium', meta?.cor)}>
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                            meta?.cor,
+                          )}
+                        >
                           {meta?.label}
                         </span>
                       </div>
                       <p className="mt-1.5 text-sm line-clamp-2">{s.enunciado}</p>
                       {s.scoreIA !== null && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Score IA: {Math.round((s.scoreIA ?? 0) * 100)}/100 · {s.motivoIA?.slice(0, 200)}
+                          Score IA: {Math.round((s.scoreIA ?? 0) * 100)}/100 ·{' '}
+                          {s.motivoIA?.slice(0, 200)}
                         </p>
                       )}
                       {s.motivoRejeicao && (

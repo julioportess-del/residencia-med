@@ -86,7 +86,11 @@ const styles = StyleSheet.create({
     gap: espacamento.md,
   },
   titulo: { fontSize: fontes.size['3xl'], fontWeight: fontes.weight.bold, color: cores.foreground },
-  subtitulo: { fontSize: fontes.size.md, color: cores.mutedForeground, marginBottom: espacamento.md },
+  subtitulo: {
+    fontSize: fontes.size.md,
+    color: cores.mutedForeground,
+    marginBottom: espacamento.md,
+  },
   campo: { gap: espacamento.xs },
   label: { fontSize: fontes.size.sm, fontWeight: fontes.weight.medium, color: cores.foreground },
   input: {

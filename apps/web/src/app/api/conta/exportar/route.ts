@@ -26,11 +26,7 @@ export async function GET() {
   void _id
   void _aid
 
-  const json = JSON.stringify(
-    { exportadoEm: new Date(), perfil },
-    null,
-    2,
-  )
+  const json = JSON.stringify({ exportadoEm: new Date(), perfil }, null, 2)
   return new NextResponse(json, {
     headers: {
       'Content-Type': 'application/json',

@@ -47,9 +47,7 @@ export default function QuestoesScreen() {
               {item.resumo}…
             </Text>
             <View style={styles.linhaBot}>
-              {item.temaPrincipal && (
-                <Text style={styles.tema}>{item.temaPrincipal.nome}</Text>
-              )}
+              {item.temaPrincipal && <Text style={styles.tema}>{item.temaPrincipal.nome}</Text>}
               {item.jaRespondida && (
                 <Text style={[styles.tema, { color: cores.success }]}>respondida</Text>
               )}

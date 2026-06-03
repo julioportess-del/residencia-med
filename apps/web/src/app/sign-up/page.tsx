@@ -21,9 +21,7 @@ export default async function SignUpPage() {
         </Link>
         <div className="rounded-xl border bg-background p-6 shadow-sm">
           <h1 className="text-2xl font-bold">Criar conta</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Comece grátis. Sem cartão.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Comece grátis. Sem cartão.</p>
           <SignUpForm />
         </div>
         <p className="mt-4 text-center text-sm text-muted-foreground">

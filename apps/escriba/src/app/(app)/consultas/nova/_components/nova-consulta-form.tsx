@@ -57,18 +57,14 @@ export function NovaConsultaForm() {
           required
         />
         <p className="text-xs text-muted-foreground">
-          Nome completo ou iniciais. Não registre CPF, RG ou outros números. Os dados ficam
-          visíveis apenas para você.
+          Nome completo ou iniciais. Não registre CPF, RG ou outros números. Os dados ficam visíveis
+          apenas para você.
         </p>
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="tipo">Tipo de consulta</Label>
-        <Select
-          id="tipo"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value as typeof tipo)}
-        >
+        <Select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)}>
           {TIPO_CONSULTA_VALORES.map((valor) => (
             <option key={valor} value={valor}>
               {TIPO_CONSULTA_LABEL[valor]}

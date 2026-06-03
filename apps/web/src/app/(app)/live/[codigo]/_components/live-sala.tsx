@@ -137,7 +137,11 @@ export function LiveSala({ codigo }: { codigo: string }) {
         />
       )}
 
-      <Leaderboard simuladoLiveId={s.id} mostrarBotaoIniciar={ehAguardando} onIniciar={() => iniciar.mutate({ id: s.id })} />
+      <Leaderboard
+        simuladoLiveId={s.id}
+        mostrarBotaoIniciar={ehAguardando}
+        onIniciar={() => iniciar.mutate({ id: s.id })}
+      />
 
       {void eCriador}
     </div>
@@ -371,7 +375,8 @@ function Leaderboard({
                     {p.acertos}/{p.acertos + p.erros}
                   </div>
                   <div className="text-muted-foreground">
-                    {Math.floor(p.tempoTotal / 60)}m{(p.tempoTotal % 60).toString().padStart(2, '0')}s
+                    {Math.floor(p.tempoTotal / 60)}m
+                    {(p.tempoTotal % 60).toString().padStart(2, '0')}s
                   </div>
                 </div>
                 {p.finalizado && <Badge variant="outline">finalizou</Badge>}

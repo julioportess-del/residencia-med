@@ -56,8 +56,7 @@ export const pushRouter = router({
       inscrito: c > 0,
       total: c,
       vapidConfigurado: Boolean(
-        process.env.VAPID_PUBLIC_KEY &&
-          !process.env.VAPID_PUBLIC_KEY.includes('placeholder'),
+        process.env.VAPID_PUBLIC_KEY && !process.env.VAPID_PUBLIC_KEY.includes('placeholder'),
       ),
     }
   }),

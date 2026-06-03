@@ -26,9 +26,7 @@ export default async function SignInPage({ searchParams }: Props) {
         </Link>
         <div className="rounded-xl border bg-background p-6 shadow-sm">
           <h1 className="text-2xl font-bold">Entrar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Acesse sua conta para continuar.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Acesse sua conta para continuar.</p>
           <SignInForm proximaUrl={proximaUrl} />
         </div>
         <p className="mt-4 text-center text-sm text-muted-foreground">

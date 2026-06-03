@@ -1,16 +1,14 @@
 import { differenceInDays, startOfDay, subDays } from 'date-fns'
 import { router, procedureProtegida } from '../trpc'
 
-export type ComparacaoParesOutput =
-  | null
-  | {
-      bancaAlvo: string
-      totalPares: number
-      minhaTaxa: number | null
-      mediaPares: number | null
-      percentil: number | null
-      quartis: { p10: number; p25: number; p50: number; p75: number; p90: number } | null
-    }
+export type ComparacaoParesOutput = null | {
+  bancaAlvo: string
+  totalPares: number
+  minhaTaxa: number | null
+  mediaPares: number | null
+  percentil: number | null
+  quartis: { p10: number; p25: number; p50: number; p75: number; p90: number } | null
+}
 
 export const dashboardRouter = router({
   resumo: procedureProtegida.query(async ({ ctx }) => {
@@ -40,7 +38,9 @@ export const dashboardRouter = router({
       porDia.set(dia, ent)
     }
     const ultimos7 = Array.from({ length: 7 }, (_, i) => {
-      const dia = startOfDay(subDays(new Date(), 6 - i)).toISOString().slice(0, 10)
+      const dia = startOfDay(subDays(new Date(), 6 - i))
+        .toISOString()
+        .slice(0, 10)
       const v = porDia.get(dia) ?? { total: 0, acertos: 0 }
       return { dia, total: v.total, acertos: v.acertos }
     })
@@ -216,8 +216,7 @@ export const dashboardRouter = router({
         quartis: null,
       }
     }
-    const minhaTaxa =
-      minhasRespostas.filter((r) => r.correta).length / minhasRespostas.length
+    const minhaTaxa = minhasRespostas.filter((r) => r.correta).length / minhasRespostas.length
 
     const ordenadas = [...taxas].sort((a, b) => a - b)
     const piores = ordenadas.filter((t) => t < minhaTaxa).length

@@ -17,7 +17,9 @@ function blocosSubjetivo(e: EstruturaClinica): string[] {
   return [
     linha('Queixa principal', s.queixaPrincipal),
     linha('HDA', s.historiaDoencaAtual),
-    s.antecedentesPessoais?.length ? `Antecedentes pessoais:\n${lista(s.antecedentesPessoais)}` : null,
+    s.antecedentesPessoais?.length
+      ? `Antecedentes pessoais:\n${lista(s.antecedentesPessoais)}`
+      : null,
     s.antecedentesFamiliares?.length
       ? `Antecedentes familiares:\n${lista(s.antecedentesFamiliares)}`
       : null,

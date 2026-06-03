@@ -26,7 +26,9 @@ export type EmailParams = {
  * Envia email via Resend. Retorna {ok, id?} ou {ok:false, motivo}.
  * Em modo demo (sem RESEND_API_KEY), apenas loga e retorna ok=false sem erro.
  */
-export async function enviarEmail(p: EmailParams): Promise<{ ok: boolean; id?: string; motivo?: string }> {
+export async function enviarEmail(
+  p: EmailParams,
+): Promise<{ ok: boolean; id?: string; motivo?: string }> {
   const resend = getResend()
   if (!resend) {
     if (process.env.NODE_ENV === 'development') {

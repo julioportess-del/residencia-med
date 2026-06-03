@@ -22,6 +22,7 @@ Migracao para FSRS planejada para v2 quando tivermos dados (>1M respostas).
 ### SM-2 puro (referencia)
 
 Para cada (usuario, questao):
+
 - `intervalo` (dias ate proxima revisao) — default 1
 - `repeticoes` (acertos consecutivos) — default 0
 - `EF` (ease factor) — default 2.5, range [1.3, 2.5+]
@@ -48,16 +49,16 @@ Em vez do usuario auto-reportar 0-5 explicitamente (atrito alto), inferimos:
 ```typescript
 function calcularQualidade(resposta: Resposta): number {
   if (!resposta.correta) {
-    if (resposta.confianca === 'CONFIANTE') return 0  // pior — confiante e errou
+    if (resposta.confianca === 'CONFIANTE') return 0 // pior — confiante e errou
     if (resposta.confianca === 'INCERTO') return 1
-    return 2  // chute — menos punitivo
+    return 2 // chute — menos punitivo
   }
   // correta
   const rapidoOk = resposta.tempoSegundos < 60
   if (resposta.confianca === 'CONFIANTE' && rapidoOk) return 5
   if (resposta.confianca === 'CONFIANTE') return 4
   if (resposta.confianca === 'INCERTO') return 3
-  return 3  // chute correto — nao reforca demais
+  return 3 // chute correto — nao reforca demais
 }
 ```
 
@@ -79,7 +80,11 @@ Primeira tentativa nao usa SM-2. Cria `ItemRevisao` so na segunda exposicao OU q
 
 ```typescript
 // packages/core/src/spacedRepetition.ts
-export function aplicarSM2(item: ItemRevisao | null, resposta: Resposta, ctx: { dataProva?: Date }): ItemRevisaoNovo {
+export function aplicarSM2(
+  item: ItemRevisao | null,
+  resposta: Resposta,
+  ctx: { dataProva?: Date },
+): ItemRevisaoNovo {
   const q = calcularQualidade(resposta)
   if (!item) {
     // primeira vez OU resposta correta de novidade
@@ -120,6 +125,7 @@ Roda em worker apos cada `Resposta` create. Idempotente (job key = `${userId}:${
 ## Testes
 
 Cenarios cobertos:
+
 - Sequencia de acertos com confianca: intervalo cresce 1, 6, 13, 28...
 - Erro confiante reseta tudo
 - Chute correto nao acelera intervalo

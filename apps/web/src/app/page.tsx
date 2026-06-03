@@ -32,9 +32,27 @@ const JSON_LD = {
         'Plataforma de estudo para residência médica com plano adaptativo, repetição espaçada e IA.',
       brand: { '@type': 'Brand', name: 'Residência Med' },
       offers: [
-        { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'BRL', url: `${APP_URL}/precos` },
-        { '@type': 'Offer', name: 'Pro', price: '19.00', priceCurrency: 'BRL', url: `${APP_URL}/precos` },
-        { '@type': 'Offer', name: 'Premium', price: '39.00', priceCurrency: 'BRL', url: `${APP_URL}/precos` },
+        {
+          '@type': 'Offer',
+          name: 'Free',
+          price: '0',
+          priceCurrency: 'BRL',
+          url: `${APP_URL}/precos`,
+        },
+        {
+          '@type': 'Offer',
+          name: 'Pro',
+          price: '19.00',
+          priceCurrency: 'BRL',
+          url: `${APP_URL}/precos`,
+        },
+        {
+          '@type': 'Offer',
+          name: 'Premium',
+          price: '39.00',
+          priceCurrency: 'BRL',
+          url: `${APP_URL}/precos`,
+        },
       ],
     },
   ],
@@ -157,15 +175,7 @@ export default function HomePage() {
   )
 }
 
-function Feature({
-  icon,
-  titulo,
-  desc,
-}: {
-  icon: React.ReactNode
-  titulo: string
-  desc: string
-}) {
+function Feature({ icon, titulo, desc }: { icon: React.ReactNode; titulo: string; desc: string }) {
   return (
     <div className="rounded-xl border bg-background p-6">
       <div className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">

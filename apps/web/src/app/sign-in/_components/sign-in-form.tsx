@@ -23,7 +23,11 @@ export function SignInForm({ proximaUrl }: { proximaUrl: string }) {
         password: senha,
       })
       if (error) {
-        toast.error(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : error.message)
+        toast.error(
+          error.message === 'Invalid login credentials'
+            ? 'E-mail ou senha incorretos'
+            : error.message,
+        )
         return
       }
       router.push(proximaUrl)
@@ -80,12 +84,7 @@ export function SignInForm({ proximaUrl }: { proximaUrl: string }) {
         </div>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={entrarComGoogle}
-      >
+      <Button type="button" variant="outline" className="w-full" onClick={entrarComGoogle}>
         Entrar com Google
       </Button>
     </form>

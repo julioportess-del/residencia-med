@@ -29,10 +29,7 @@ export function NotificacoesSino() {
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   })
-  const lista = trpc.notificacoes.listar.useQuery(
-    { limit: 20 },
-    { enabled: aberto },
-  )
+  const lista = trpc.notificacoes.listar.useQuery({ limit: 20 }, { enabled: aberto })
 
   const marcarLida = trpc.notificacoes.marcarLida.useMutation({
     onSuccess: () => {
@@ -126,9 +123,7 @@ export function NotificacoesSino() {
                             {(() => {
                               try {
                                 const d =
-                                  n.createdAt instanceof Date
-                                    ? n.createdAt
-                                    : new Date(n.createdAt)
+                                  n.createdAt instanceof Date ? n.createdAt : new Date(n.createdAt)
                                 return format(d, 'dd/MM HH:mm')
                               } catch {
                                 return ''
@@ -169,10 +164,7 @@ export function NotificacoesSino() {
                     return (
                       <li
                         key={n.id}
-                        className={cn(
-                          'cursor-pointer hover:bg-muted/50',
-                          !lida && 'bg-primary/5',
-                        )}
+                        className={cn('cursor-pointer hover:bg-muted/50', !lida && 'bg-primary/5')}
                         onClick={() => !lida && marcarLida.mutate({ id: n.id })}
                       >
                         {conteudo}

@@ -3,10 +3,7 @@
  * estudos: importa apenas helpers DB-free (clients, cache). A auditoria de
  * uso e feita pelo proprio app via clinico.LogAcesso, nao por registrarLLMCall.
  */
-export {
-  estruturarConsulta,
-  EstruturacaoInvalidaError,
-} from './estruturar-consulta'
+export { estruturarConsulta, EstruturacaoInvalidaError } from './estruturar-consulta'
 export { transcreverAudio, TranscricaoVaziaError } from './transcrever-audio'
 export {
   renderizarEvolucoes,

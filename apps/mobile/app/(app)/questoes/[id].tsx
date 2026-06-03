@@ -92,7 +92,9 @@ export default function QuestaoScreen() {
   const q = questao.data
 
   return (
-    <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
+    <ScrollView
+      contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}
+    >
       <View style={styles.cabecalho}>
         <Badge bg={q.banca.cor ?? cores.primary}>{q.banca.codigo}</Badge>
         <Text style={styles.metaTexto}>{q.ano}</Text>
@@ -191,7 +193,12 @@ const styles = StyleSheet.create({
   cabecalho: { flexDirection: 'row', alignItems: 'center', gap: espacamento.sm },
   metaTexto: { fontSize: fontes.size.sm, color: cores.mutedForeground },
   vignette: { fontSize: fontes.size.md, color: cores.foreground, lineHeight: 22 },
-  enunciado: { fontSize: fontes.size.md, color: cores.foreground, fontWeight: fontes.weight.medium, lineHeight: 22 },
+  enunciado: {
+    fontSize: fontes.size.md,
+    color: cores.foreground,
+    fontWeight: fontes.weight.medium,
+    lineHeight: 22,
+  },
   alternativa: {
     flexDirection: 'row',
     gap: espacamento.sm,
@@ -204,9 +211,18 @@ const styles = StyleSheet.create({
   alternativaSelecionada: { borderColor: cores.primary, borderWidth: 2 },
   alternativaCorreta: { borderColor: cores.success, backgroundColor: '#ecfdf5' },
   alternativaErrada: { borderColor: cores.destructive, backgroundColor: '#fef2f2' },
-  letraAlternativa: { fontSize: fontes.size.md, fontWeight: fontes.weight.bold, color: cores.foreground, width: 20 },
+  letraAlternativa: {
+    fontSize: fontes.size.md,
+    fontWeight: fontes.weight.bold,
+    color: cores.foreground,
+    width: 20,
+  },
   textoAlternativa: { fontSize: fontes.size.md, color: cores.foreground, flex: 1, lineHeight: 22 },
-  confiancaLabel: { fontSize: fontes.size.sm, fontWeight: fontes.weight.medium, color: cores.foreground },
+  confiancaLabel: {
+    fontSize: fontes.size.sm,
+    fontWeight: fontes.weight.medium,
+    color: cores.foreground,
+  },
   confiancaRow: { flexDirection: 'row', gap: espacamento.xs },
   explicacao: { fontSize: fontes.size.sm, color: cores.foreground, lineHeight: 20 },
 })

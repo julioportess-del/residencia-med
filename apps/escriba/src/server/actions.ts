@@ -16,18 +16,14 @@ import {
   type PreferenciasInput,
 } from '@/lib/validacao'
 
-export type ResultadoCriarConsulta =
-  | { ok: true; id: string }
-  | { ok: false; erro: string }
+export type ResultadoCriarConsulta = { ok: true; id: string } | { ok: false; erro: string }
 
 export type ResultadoAcao = { ok: true } | { ok: false; erro: string }
 
 const TAMANHO_MAXIMO_EVOLUCAO = 20_000
 
 /** Cria uma consulta em GRAVANDO. Sem nome/CPF — apenas iniciais (LGPD). */
-export async function criarConsulta(
-  entrada: NovaConsultaInput,
-): Promise<ResultadoCriarConsulta> {
+export async function criarConsulta(entrada: NovaConsultaInput): Promise<ResultadoCriarConsulta> {
   const user = await exigirUsuario()
 
   const analise = novaConsultaSchema.safeParse(entrada)
@@ -175,9 +171,7 @@ export async function excluirConsulta(consultaId: string): Promise<ResultadoAcao
   return { ok: true }
 }
 
-export type ResultadoDocumento =
-  | { ok: true; texto: string }
-  | { ok: false; erro: string }
+export type ResultadoDocumento = { ok: true; texto: string } | { ok: false; erro: string }
 
 /**
  * Gera um documento clinico derivado (atestado, receita, exames, etc.) a

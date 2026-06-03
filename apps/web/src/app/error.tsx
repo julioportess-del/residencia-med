@@ -37,9 +37,7 @@ export default function RootErrorBoundary({
           ) : null}
           {error.stack ? (
             <details style={{ marginTop: 12 }}>
-              <summary
-                style={{ cursor: 'pointer', fontSize: 12, color: '#b91c1c' }}
-              >
+              <summary style={{ cursor: 'pointer', fontSize: 12, color: '#b91c1c' }}>
                 Ver detalhes técnicos
               </summary>
               <pre
@@ -90,8 +88,8 @@ export default function RootErrorBoundary({
             </a>
           </div>
           <p style={{ fontSize: 12, color: '#6b7280', marginTop: 24 }}>
-            Se o erro persistir, abra o DevTools (Cmd+Option+I), aba Console, recarregue, e
-            envie o stack trace.
+            Se o erro persistir, abra o DevTools (Cmd+Option+I), aba Console, recarregue, e envie o
+            stack trace.
           </p>
         </div>
       </body>

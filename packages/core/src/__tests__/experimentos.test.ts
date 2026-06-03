@@ -1,10 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import {
-  calcularResultados,
-  escolherVariante,
-  hashString,
-  variantesValidas,
-} from '../experimentos'
+import { calcularResultados, escolherVariante, hashString, variantesValidas } from '../experimentos'
 
 describe('hashString', () => {
   test('produz uint32 estável para a mesma entrada', () => {

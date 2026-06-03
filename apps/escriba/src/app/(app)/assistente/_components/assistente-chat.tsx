@@ -94,10 +94,7 @@ export function AssistenteChat() {
           </div>
         ) : (
           mensagens.map((m, i) => (
-            <div
-              key={i}
-              className={m.papel === 'user' ? 'flex justify-end' : 'flex justify-start'}
-            >
+            <div key={i} className={m.papel === 'user' ? 'flex justify-end' : 'flex justify-start'}>
               <div
                 className={
                   m.papel === 'user'
@@ -150,7 +147,13 @@ export function AssistenteChat() {
           className="max-h-32 flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2.5 text-sm"
         />
         {!vazio ? (
-          <Button type="button" variant="outline" size="icon" onClick={limpar} title="Limpar conversa">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={limpar}
+            title="Limpar conversa"
+          >
             <Trash2 className="h-4 w-4" />
           </Button>
         ) : null}

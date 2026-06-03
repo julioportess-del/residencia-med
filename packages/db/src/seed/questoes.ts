@@ -3,16 +3,13 @@ import type { PrismaClient } from '@prisma/client'
 import { QUESTOES } from './questoes-data'
 
 function normalizar(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim()
 }
 
 function hashQuestao(enunciado: string, vignette?: string): string {
-  return createHash('sha256').update(normalizar((vignette ?? '') + enunciado)).digest('hex')
+  return createHash('sha256')
+    .update(normalizar((vignette ?? '') + enunciado))
+    .digest('hex')
 }
 
 export async function seedQuestoes(prisma: PrismaClient) {

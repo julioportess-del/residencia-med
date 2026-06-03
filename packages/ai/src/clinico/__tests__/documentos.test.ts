@@ -34,7 +34,9 @@ describe('documentosDisponiveis', () => {
   })
 
   it('inclui RECEITA quando há prescrições', () => {
-    const e = estrutura({ plano: { prescricoes: ['Amoxicilina 500mg VO 8/8h por 7 dias'] } as never })
+    const e = estrutura({
+      plano: { prescricoes: ['Amoxicilina 500mg VO 8/8h por 7 dias'] } as never,
+    })
     expect(documentosDisponiveis(e)).toContain('RECEITA')
   })
 

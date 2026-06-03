@@ -9,8 +9,8 @@ const ANON = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
 
 export const SUPABASE_HABILITADO = Boolean(
   process.env.EXPO_PUBLIC_SUPABASE_URL &&
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY &&
-    !process.env.EXPO_PUBLIC_SUPABASE_URL.includes('placeholder'),
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY &&
+  !process.env.EXPO_PUBLIC_SUPABASE_URL.includes('placeholder'),
 )
 
 /**

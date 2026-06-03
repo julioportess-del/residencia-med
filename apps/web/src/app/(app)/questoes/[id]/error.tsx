@@ -23,9 +23,7 @@ export default function QuestaoErrorBoundary({
         <p className="mt-2 text-sm text-rose-800">
           {error.message || 'Erro desconhecido ao renderizar a questão.'}
         </p>
-        {error.digest ? (
-          <p className="mt-1 text-xs text-rose-700">Digest: {error.digest}</p>
-        ) : null}
+        {error.digest ? <p className="mt-1 text-xs text-rose-700">Digest: {error.digest}</p> : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button onClick={reset} variant="outline" size="sm">
             <RefreshCw className="size-4" /> Tentar de novo

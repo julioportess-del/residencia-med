@@ -50,7 +50,10 @@ export const simuladoLiveRouter = router({
         take: input.numeroQuestoes * 3,
         select: { id: true },
       })
-      const questaoIds = candidatas.sort(() => Math.random() - 0.5).slice(0, input.numeroQuestoes).map((q) => q.id)
+      const questaoIds = candidatas
+        .sort(() => Math.random() - 0.5)
+        .slice(0, input.numeroQuestoes)
+        .map((q) => q.id)
 
       // Garante código único
       let codigo = gerarCodigoSala()

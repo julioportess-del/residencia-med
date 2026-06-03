@@ -44,7 +44,7 @@ export async function classificarTema(input: {
     .join('\n')
 
   const match = texto.match(/```json\s*([\s\S]*?)```/) ?? texto.match(/\[[\s\S]*\]/)
-  const raw = match ? (Array.isArray(match) ? match[1] ?? match[0] : match) : texto
+  const raw = match ? (Array.isArray(match) ? (match[1] ?? match[0]) : match) : texto
   const parsed = ClassificacaoSchema.parse(JSON.parse(typeof raw === 'string' ? raw : ''))
 
   await setCache(chave, parsed, 60 * 60 * 24 * 30)

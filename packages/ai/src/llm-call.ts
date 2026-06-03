@@ -29,10 +29,12 @@ export function calcularCusto(
   outputTokens: number,
   cacheHit = false,
 ): number {
-  const tabela = (PRECO_USD_1M as Record<string, { input: number; output: number; cached: number }>)[modelo]
+  const tabela = (
+    PRECO_USD_1M as Record<string, { input: number; output: number; cached: number }>
+  )[modelo]
   if (!tabela) return 0
   const inputPreco = cacheHit ? tabela.cached : tabela.input
-  return ((inputTokens * inputPreco) + (outputTokens * tabela.output)) / 1_000_000
+  return (inputTokens * inputPreco + outputTokens * tabela.output) / 1_000_000
 }
 
 export async function registrarLLMCall(m: LLMCallMetricas): Promise<void> {

@@ -49,7 +49,10 @@ export function AdminDashboard() {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
-                  data={Object.entries(distribuicaoPlanos).map(([nome, value]) => ({ nome, value }))}
+                  data={Object.entries(distribuicaoPlanos).map(([nome, value]) => ({
+                    nome,
+                    value,
+                  }))}
                   dataKey="value"
                   nameKey="nome"
                   cx="50%"

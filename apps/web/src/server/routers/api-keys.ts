@@ -8,7 +8,10 @@ const procedureAdminOrg = procedureProtegida.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Você não pertence a uma organização' })
   }
   if (ctx.user.papelOrg !== 'ADMIN') {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Apenas administradores podem gerenciar chaves' })
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Apenas administradores podem gerenciar chaves',
+    })
   }
   return next({ ctx: { ...ctx, organizationId: ctx.user.organizationId } })
 })

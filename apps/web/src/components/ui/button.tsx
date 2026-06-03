@@ -27,8 +27,7 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
   loading?: boolean
 }
@@ -40,11 +39,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // o filho — geralmente Link — gerenciar estado de loading).
     if (asChild) {
       return (
-        <Slot
-          ref={ref}
-          className={cn(buttonVariants({ variant, size }), className)}
-          {...props}
-        >
+        <Slot ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props}>
           {children}
         </Slot>
       )

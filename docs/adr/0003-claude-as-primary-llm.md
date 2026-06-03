@@ -6,6 +6,7 @@
 ## Contexto
 
 Precisamos de:
+
 1. Explicar erro de questao com raciocinio clinico (caso clinico longo + 5 alternativas + guideline)
 2. Gerar questoes sinteticas no estilo de uma banca
 3. Classificar tema de questao (zero-shot)
@@ -58,16 +59,17 @@ gerarEmbedding(texto: string): Promise<number[]>
 Chave de cache: `sha256({funcao, args, modelo, versaoPrompt})`.
 
 Duas camadas:
+
 1. Redis (TTL 24h) — hot cache
 2. Postgres `LLMCall` table — permanente, util para audit + custo
 
 ### Custo por usuario (alvo)
 
-| Plano | Tokens IA/mes | Custo aproximado |
-|---|---|---|
-| FREE | 0 (sem IA) | $0 |
-| PRO | 50 explicacoes (~500k tokens com cache hit 80%) | ~$0.30/mes |
-| PREMIUM | 200 explicacoes + 20 questoes geradas | ~$1.50/mes |
+| Plano   | Tokens IA/mes                                   | Custo aproximado |
+| ------- | ----------------------------------------------- | ---------------- |
+| FREE    | 0 (sem IA)                                      | $0               |
+| PRO     | 50 explicacoes (~500k tokens com cache hit 80%) | ~$0.30/mes       |
+| PREMIUM | 200 explicacoes + 20 questoes geradas           | ~$1.50/mes       |
 
 Margem confortavel a $19/$39.
 

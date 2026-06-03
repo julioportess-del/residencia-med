@@ -33,13 +33,12 @@ export default function HomeScreen() {
     )
   }
 
-  const nome =
-    (user?.user_metadata?.name as string | undefined) ??
-    user?.email?.split('@')[0] ??
-    ''
+  const nome = (user?.user_metadata?.name as string | undefined) ?? user?.email?.split('@')[0] ?? ''
 
   return (
-    <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
+    <ScrollView
+      contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}
+    >
       <View>
         <Text style={styles.saudacao}>Olá{nome ? `, ${nome}` : ''} 👋</Text>
         <Text style={styles.subSaudacao}>Pronto para mais uma sessão?</Text>
@@ -51,7 +50,8 @@ export default function HomeScreen() {
             <View>
               <Badge variant="warning">Revisão</Badge>
               <Text style={styles.cardLabel}>
-                {revisao.data.vencidos} {revisao.data.vencidos === 1 ? 'item vencido' : 'itens vencidos'}
+                {revisao.data.vencidos}{' '}
+                {revisao.data.vencidos === 1 ? 'item vencido' : 'itens vencidos'}
               </Text>
             </View>
             <Button onPress={() => router.push('/revisao')} size="sm">
@@ -106,11 +106,7 @@ function Kpi({
   return (
     <View style={[layout.card, styles.kpi]}>
       <Text style={styles.kpiLabel}>{label}</Text>
-      {loading ? (
-        <ActivityIndicator size="small" />
-      ) : (
-        <Text style={styles.kpiValor}>{valor}</Text>
-      )}
+      {loading ? <ActivityIndicator size="small" /> : <Text style={styles.kpiValor}>{valor}</Text>}
     </View>
   )
 }

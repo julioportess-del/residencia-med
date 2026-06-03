@@ -38,10 +38,7 @@ export const anthropic = clienteProxy(
   'Anthropic',
 )
 
-export const openai = clienteProxy(
-  OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY }) : null,
-  'OpenAI',
-)
+export const openai = clienteProxy(OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY }) : null, 'OpenAI')
 
 export const MODELO_ANTHROPIC = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
 export const MODELO_EMBEDDING = process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small'

@@ -42,10 +42,7 @@ export function PushOptIn() {
     }
     setCarregando(true)
     try {
-      const perm =
-        permissao === 'granted'
-          ? 'granted'
-          : await Notification.requestPermission()
+      const perm = permissao === 'granted' ? 'granted' : await Notification.requestPermission()
       setPermissao(perm)
       if (perm !== 'granted') {
         toast.error('Permissão negada — habilite nas configurações do navegador.')
@@ -106,7 +103,13 @@ export function PushOptIn() {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={ativar} loading={carregando} disabled={!podeAtivar}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={ativar}
+      loading={carregando}
+      disabled={!podeAtivar}
+    >
       <Bell className="size-4" />
       Ativar notificações
     </Button>

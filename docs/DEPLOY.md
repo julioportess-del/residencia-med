@@ -15,6 +15,7 @@ Depois de criar as contas (links abaixo), rode:
 ```
 
 O wizard:
+
 - Pergunta cada chave em sequência (1 por serviço)
 - Valida cada uma com uma chamada de teste
 - Grava no `.env` local
@@ -122,6 +123,7 @@ eas submit
 ```
 
 Configure no `eas.json`:
+
 - `EXPO_PUBLIC_API_URL=https://SEU-DOMINIO`
 - `EXPO_PUBLIC_SUPABASE_URL=...`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY=...`
@@ -152,15 +154,15 @@ preview deployment.
 
 ## Custo estimado mensal
 
-| Serviço | Free | Após escala |
-|---|---|---|
-| Vercel Hobby | 100GB BW | até ~1k MAU |
-| Neon Free | 0.5GB | até ~100 users; Launch $19/mo a partir disso |
-| Upstash | 10k cmds/dia | até ~1k users |
-| Supabase | 50k MAU | suficiente pra fase early |
-| Anthropic | pay-per-use | ~$0.50 por user PRO |
-| Stripe | 4.99% transações | proporcional |
-| Resend | 100/dia free | $20/mo a partir de 50k |
+| Serviço      | Free             | Após escala                                  |
+| ------------ | ---------------- | -------------------------------------------- |
+| Vercel Hobby | 100GB BW         | até ~1k MAU                                  |
+| Neon Free    | 0.5GB            | até ~100 users; Launch $19/mo a partir disso |
+| Upstash      | 10k cmds/dia     | até ~1k users                                |
+| Supabase     | 50k MAU          | suficiente pra fase early                    |
+| Anthropic    | pay-per-use      | ~$0.50 por user PRO                          |
+| Stripe       | 4.99% transações | proporcional                                 |
+| Resend       | 100/dia free     | $20/mo a partir de 50k                       |
 
 **Total inicial:** $0 até ~500 usuários. ~$50/mês até ~5k.
 

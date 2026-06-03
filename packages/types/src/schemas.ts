@@ -41,9 +41,7 @@ export const OnboardingInput = z.object({
     message: 'Data da prova deve ser futura',
   }),
   cargaHorariaSemanal: z.number().int().min(2).max(80),
-  autoavaliacao: z
-    .record(z.string(), z.number().int().min(1).max(5))
-    .default({}),
+  autoavaliacao: z.record(z.string(), z.number().int().min(1).max(5)).default({}),
 })
 export type OnboardingInput = z.infer<typeof OnboardingInput>
 

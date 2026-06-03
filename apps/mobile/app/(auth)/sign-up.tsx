@@ -109,7 +109,11 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   box: { flex: 1, padding: espacamento.lg, justifyContent: 'center', gap: espacamento.md },
   titulo: { fontSize: fontes.size['3xl'], fontWeight: fontes.weight.bold, color: cores.foreground },
-  subtitulo: { fontSize: fontes.size.md, color: cores.mutedForeground, marginBottom: espacamento.md },
+  subtitulo: {
+    fontSize: fontes.size.md,
+    color: cores.mutedForeground,
+    marginBottom: espacamento.md,
+  },
   campo: { gap: espacamento.xs },
   label: { fontSize: fontes.size.sm, fontWeight: fontes.weight.medium, color: cores.foreground },
   input: {
@@ -120,5 +124,10 @@ const styles = StyleSheet.create({
     fontSize: fontes.size.md,
     backgroundColor: '#fff',
   },
-  link: { textAlign: 'center', color: cores.primary, fontSize: fontes.size.sm, marginTop: espacamento.md },
+  link: {
+    textAlign: 'center',
+    color: cores.primary,
+    fontSize: fontes.size.sm,
+    marginTop: espacamento.md,
+  },
 })

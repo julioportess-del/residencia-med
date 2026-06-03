@@ -6,10 +6,7 @@ import { OnboardingFlow } from './_components/onboarding-flow'
 export default async function OnboardingPage() {
   const user = await exigirUser()
   const completo = Boolean(
-    user.bancasAlvo.length > 0 &&
-      user.dataProva &&
-      user.cargaHorariaSemanal &&
-      user.metaResidencia,
+    user.bancasAlvo.length > 0 && user.dataProva && user.cargaHorariaSemanal && user.metaResidencia,
   )
   if (completo) redirect('/dashboard')
 

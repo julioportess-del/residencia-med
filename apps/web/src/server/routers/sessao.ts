@@ -26,7 +26,8 @@ export const sessaoRouter = router({
     }
 
     const total = await ctx.prisma.questao.count({ where })
-    if (total === 0) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Nenhuma questao com esses filtros' })
+    if (total === 0)
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Nenhuma questao com esses filtros' })
 
     const candidatas = await ctx.prisma.questao.findMany({
       where,

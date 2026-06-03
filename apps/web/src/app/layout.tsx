@@ -50,8 +50,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Residência Med',
-    description:
-      'Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e IA.',
+    description: 'Análise de 10 anos da sua banca, plano adaptativo, repetição espaçada e IA.',
   },
   robots: {
     index: true,

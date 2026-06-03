@@ -3,11 +3,7 @@ import { prisma } from '@residencia-med/db'
 import { exigirUser } from '@/lib/auth'
 import { SimuladoRunner } from './_components/simulado-runner'
 
-export default async function SimuladoExecPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function SimuladoExecPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const user = await exigirUser()
 

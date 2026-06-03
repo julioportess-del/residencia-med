@@ -63,7 +63,12 @@ export function MentorChat({ conversaId }: { conversaId: string }) {
         const { done, value } = await reader.read()
         if (done) break
         acumulado += decoder.decode(value, { stream: true })
-        setStreaming({ id: 'streaming-temp', papel: 'ASSISTENTE', conteudo: acumulado, pendente: true })
+        setStreaming({
+          id: 'streaming-temp',
+          papel: 'ASSISTENTE',
+          conteudo: acumulado,
+          pendente: true,
+        })
       }
       // Stream completo: invalida query para puxar do banco
       await utils.mentor.detalhe.invalidate({ conversaId })
@@ -132,7 +137,8 @@ export function MentorChat({ conversaId }: { conversaId: string }) {
           </Button>
         </div>
         <p className="mt-1 text-[10px] text-muted-foreground">
-          Conteúdo gerado por IA. Sempre confirme com a diretriz citada antes de aplicar clinicamente.
+          Conteúdo gerado por IA. Sempre confirme com a diretriz citada antes de aplicar
+          clinicamente.
         </p>
       </form>
     </div>
@@ -159,7 +165,9 @@ function Mensagem({ m }: { m: MensagemLocal }) {
       >
         <Conteudo texto={m.conteudo} />
         {m.pendente && !m.conteudo && <span className="opacity-50">Pensando...</span>}
-        {m.pendente && m.conteudo && <span className="ml-1 inline-block size-2 animate-pulse rounded-full bg-current" />}
+        {m.pendente && m.conteudo && (
+          <span className="ml-1 inline-block size-2 animate-pulse rounded-full bg-current" />
+        )}
       </div>
     </div>
   )
@@ -172,8 +180,18 @@ function Conteudo({ texto }: { texto: string }) {
     <>
       {blocos.map((b, i) => {
         const t = b.trim()
-        if (t.startsWith('## ')) return <h3 key={i} className="font-semibold mt-2 first:mt-0">{t.slice(3)}</h3>
-        if (t.startsWith('### ')) return <h4 key={i} className="font-semibold text-xs mt-2 first:mt-0">{t.slice(4)}</h4>
+        if (t.startsWith('## '))
+          return (
+            <h3 key={i} className="font-semibold mt-2 first:mt-0">
+              {t.slice(3)}
+            </h3>
+          )
+        if (t.startsWith('### '))
+          return (
+            <h4 key={i} className="font-semibold text-xs mt-2 first:mt-0">
+              {t.slice(4)}
+            </h4>
+          )
         if (t.startsWith('- ')) {
           return (
             <ul key={i} className="list-disc pl-4 my-1 space-y-0.5">

@@ -45,9 +45,13 @@ export async function limparFila(): Promise<void> {
  * Estrategia: server-wins. Tentamos enviar; se 4xx (questao invalida, ja respondida),
  * descartamos local. Se 5xx, mantemos pra retentar.
  */
-export type Sincronizador = (r: RespostaPendente) => Promise<{ enviado: boolean; persistente: boolean }>
+export type Sincronizador = (
+  r: RespostaPendente,
+) => Promise<{ enviado: boolean; persistente: boolean }>
 
-export async function sincronizarFila(env: Sincronizador): Promise<{ enviadas: number; pendentes: number }> {
+export async function sincronizarFila(
+  env: Sincronizador,
+): Promise<{ enviadas: number; pendentes: number }> {
   const atual = await listarFila()
   const sucessos: string[] = []
   const descartar: string[] = []

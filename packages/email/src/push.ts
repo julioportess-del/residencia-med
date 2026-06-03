@@ -48,10 +48,7 @@ export type PushResultado = {
  * Envia uma push para uma única subscription. Retorna {ok, expirada} —
  * caller deve remover do banco quando expirada=true (404/410).
  */
-export async function enviarPush(
-  sub: PushSubInfo,
-  payload: PushPayload,
-): Promise<PushResultado> {
+export async function enviarPush(sub: PushSubInfo, payload: PushPayload): Promise<PushResultado> {
   if (!configurar()) {
     return { ok: false, motivo: 'VAPID não configurado (modo demo)' }
   }

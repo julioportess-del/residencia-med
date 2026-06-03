@@ -80,7 +80,11 @@ export function DashboardClient() {
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={resumo.ultimos7}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                <XAxis dataKey="dia" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
+                <XAxis
+                  dataKey="dia"
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v: string) => v.slice(5)}
+                />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
                 <Bar dataKey="total" fill="#94a3b8" name="Total" radius={[4, 4, 0, 0]} />
@@ -100,7 +104,9 @@ export function DashboardClient() {
             {r2 ? (
               <Skeleton className="h-64" />
             ) : !porEsp || porEsp.length === 0 ? (
-              <EstadoVazio>Responda algumas questões para ver seu desempenho por especialidade.</EstadoVazio>
+              <EstadoVazio>
+                Responda algumas questões para ver seu desempenho por especialidade.
+              </EstadoVazio>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -132,7 +138,9 @@ export function DashboardClient() {
             {r3 ? (
               <Skeleton className="h-40" />
             ) : !pf || (pf.fortes.length === 0 && pf.fracos.length === 0) ? (
-              <EstadoVazio>Responda mais questões para revelar seus pontos fortes e fracos.</EstadoVazio>
+              <EstadoVazio>
+                Responda mais questões para revelar seus pontos fortes e fracos.
+              </EstadoVazio>
             ) : (
               <>
                 <Lista titulo="Mais fortes" itens={pf.fortes} variant="success" />
@@ -186,21 +194,16 @@ function ComparacaoPares({
   if (d.totalPares < 5) {
     return (
       <EstadoVazio>
-        Ainda não há candidatos suficientes da {d.bancaAlvo} para uma comparação anônima
-        (precisamos de pelo menos 5).
+        Ainda não há candidatos suficientes da {d.bancaAlvo} para uma comparação anônima (precisamos
+        de pelo menos 5).
       </EstadoVazio>
     )
   }
-  if (
-    d.minhaTaxa === null ||
-    d.percentil === null ||
-    d.mediaPares === null ||
-    d.quartis === null
-  ) {
+  if (d.minhaTaxa === null || d.percentil === null || d.mediaPares === null || d.quartis === null) {
     return (
       <EstadoVazio>
-        Responda pelo menos 10 questões para se comparar aos {d.totalPares} colegas da{' '}
-        {d.bancaAlvo}.
+        Responda pelo menos 10 questões para se comparar aos {d.totalPares} colegas da {d.bancaAlvo}
+        .
       </EstadoVazio>
     )
   }
@@ -252,7 +255,11 @@ function ComparacaoPares({
 
 function Stat({ label, valor, destaque }: { label: string; valor: string; destaque?: boolean }) {
   return (
-    <div className={destaque ? 'rounded-lg border-2 border-primary bg-primary/5 p-3' : 'rounded-lg border p-3'}>
+    <div
+      className={
+        destaque ? 'rounded-lg border-2 border-primary bg-primary/5 p-3' : 'rounded-lg border p-3'
+      }
+    >
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-1 text-xl font-bold tabular-nums">{valor}</div>
     </div>

@@ -57,7 +57,9 @@ const credenciais = [
 export default function SetupPage() {
   const valida = (chave: string) => {
     const v = process.env[chave]
-    return Boolean(v && !v.includes('placeholder') && !v.startsWith('sk_test_p') && !v.startsWith('pk_test_p'))
+    return Boolean(
+      v && !v.includes('placeholder') && !v.startsWith('sk_test_p') && !v.startsWith('pk_test_p'),
+    )
   }
 
   return (
@@ -69,9 +71,9 @@ export default function SetupPage() {
         </div>
         <h1 className="text-4xl font-bold tracking-tight">Bem-vindo ao Residência Med</h1>
         <p className="mt-3 text-lg text-muted-foreground">
-          A aplicação já está no ar, mas precisa de credenciais externas para liberar
-          autenticação, banco de dados e IA. Todas têm plano gratuito instantâneo.
-          Tempo total estimado: 15 minutos.
+          A aplicação já está no ar, mas precisa de credenciais externas para liberar autenticação,
+          banco de dados e IA. Todas têm plano gratuito instantâneo. Tempo total estimado: 15
+          minutos.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -89,7 +91,11 @@ export default function SetupPage() {
                       : 'flex size-9 shrink-0 items-center justify-center rounded-full bg-rose-100'
                   }
                 >
-                  {ok ? <Check className="size-4 text-emerald-600" /> : <X className="size-4 text-rose-600" />}
+                  {ok ? (
+                    <Check className="size-4 text-emerald-600" />
+                  ) : (
+                    <X className="size-4 text-rose-600" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">

@@ -51,9 +51,7 @@ export function ResultadoSimulado({ sessaoId }: { sessaoId: string }) {
                 >
                   {r.questao.enunciado.slice(0, 100)}...
                 </Link>
-                <span className="text-xs text-muted-foreground">
-                  {r.questao.banca.codigo}
-                </span>
+                <span className="text-xs text-muted-foreground">{r.questao.banca.codigo}</span>
               </li>
             ))}
           </ul>

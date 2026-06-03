@@ -5,24 +5,22 @@ export const runtime = 'edge'
 
 export function GET() {
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #1d4ed8, #1e40af)',
-          color: '#fff',
-          fontSize: 320,
-          fontWeight: 900,
-          fontFamily: 'system-ui',
-        }}
-      >
-        R
-      </div>
-    ),
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1d4ed8, #1e40af)',
+        color: '#fff',
+        fontSize: 320,
+        fontWeight: 900,
+        fontFamily: 'system-ui',
+      }}
+    >
+      R
+    </div>,
     { width: 512, height: 512 },
   )
 }

@@ -11,13 +11,11 @@ export function RegistrarSW() {
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return
 
-    navigator.serviceWorker
-      .register('/sw.js', { scope: '/' })
-      .catch((e) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('[sw] falha ao registrar', e)
-        }
-      })
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((e) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[sw] falha ao registrar', e)
+      }
+    })
   }, [])
 
   return null

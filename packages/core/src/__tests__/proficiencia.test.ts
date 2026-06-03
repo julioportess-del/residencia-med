@@ -26,10 +26,7 @@ describe('calcularProficiencia', () => {
   })
 
   it('acertar fácil tem peso menor que difícil', () => {
-    const apenasFacilCerto = calcularProficiencia([
-      r(true, 'FACIL', 'a'),
-      r(false, 'DIFICIL', 'a'),
-    ])
+    const apenasFacilCerto = calcularProficiencia([r(true, 'FACIL', 'a'), r(false, 'DIFICIL', 'a')])
     const apenasDificilCerto = calcularProficiencia([
       r(false, 'FACIL', 'a'),
       r(true, 'DIFICIL', 'a'),

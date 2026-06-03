@@ -29,9 +29,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true })
   } catch (e) {
     console.error(`[stripe] erro processando ${evento.type}`, e)
-    return NextResponse.json(
-      { error: 'Erro ao processar evento, retentando' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Erro ao processar evento, retentando' }, { status: 500 })
   }
 }

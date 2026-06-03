@@ -60,7 +60,9 @@ export default function ContaScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}>
+    <ScrollView
+      contentContainerStyle={[layout.scrollContent, { paddingBottom: espacamento['2xl'] }]}
+    >
       <Card>
         <CardTitle>{user?.email ?? 'Conta'}</CardTitle>
         <CardDescription>Plano, sincronização e logout.</CardDescription>
@@ -82,7 +84,8 @@ export default function ContaScreen() {
       <Card>
         <CardTitle>Sincronização offline</CardTitle>
         <CardDescription>
-          Respostas feitas sem internet ficam em fila local. Sincronize manualmente a qualquer momento.
+          Respostas feitas sem internet ficam em fila local. Sincronize manualmente a qualquer
+          momento.
         </CardDescription>
         <View style={{ flexDirection: 'row', gap: espacamento.sm }}>
           <Button variant="outline" size="sm" onPress={verificarPendentes}>

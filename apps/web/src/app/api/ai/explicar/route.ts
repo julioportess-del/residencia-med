@@ -21,7 +21,10 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null)
   const parsed = InputSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Invalid input', details: parsed.error.flatten() },
+      { status: 400 },
+    )
   }
 
   if (!ANTHROPIC_HABILITADO) {

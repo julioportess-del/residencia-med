@@ -78,7 +78,9 @@ export const contribuicaoRouter = router({
 
       // Anti-duplicate: hash do enunciado
       const hash = createHash('sha256')
-        .update(((input.vignette ?? '') + input.enunciado).toLowerCase().replace(/\s+/g, ' ').trim())
+        .update(
+          ((input.vignette ?? '') + input.enunciado).toLowerCase().replace(/\s+/g, ' ').trim(),
+        )
         .digest('hex')
 
       const ja = await ctx.prisma.questao.findUnique({ where: { hash } })
@@ -142,9 +144,11 @@ export const contribuicaoRouter = router({
             data: {
               status: novoStatus,
               scoreIA: resultado.score,
-              motivoIA: resultado.motivo + (resultado.problemas.length > 0
-                ? `\n\nProblemas: ${resultado.problemas.join('; ')}`
-                : ''),
+              motivoIA:
+                resultado.motivo +
+                (resultado.problemas.length > 0
+                  ? `\n\nProblemas: ${resultado.problemas.join('; ')}`
+                  : ''),
             },
           })
           await criarNotificacao({
@@ -192,7 +196,9 @@ export const contribuicaoRouter = router({
     .input(
       z
         .object({
-          status: z.enum(['PENDENTE_IA', 'PENDENTE_REVISAO', 'APROVADA', 'REJEITADA', 'REJEITADA_IA']).optional(),
+          status: z
+            .enum(['PENDENTE_IA', 'PENDENTE_REVISAO', 'APROVADA', 'REJEITADA', 'REJEITADA_IA'])
+            .optional(),
         })
         .default({}),
     )
@@ -223,19 +229,27 @@ export const contribuicaoRouter = router({
     }),
 
   aprovar: procedureAdminGlobal
-    .input(z.object({ id: z.string().cuid(), dificuldade: z.enum(['FACIL', 'MEDIO', 'DIFICIL', 'MUITO_DIFICIL']) }))
+    .input(
+      z.object({
+        id: z.string().cuid(),
+        dificuldade: z.enum(['FACIL', 'MEDIO', 'DIFICIL', 'MUITO_DIFICIL']),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const s = await ctx.prisma.submissaoQuestao.findUnique({
         where: { id: input.id },
         include: { banca: true },
       })
       if (!s) throw new TRPCError({ code: 'NOT_FOUND' })
-      if (s.status === 'APROVADA') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Já aprovada' })
+      if (s.status === 'APROVADA')
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Já aprovada' })
 
       type AltPayload = { letra: string; texto: string; correta?: boolean; explicacao?: string }
       const alternativas = s.alternativasJson as unknown as AltPayload[]
       const hash = createHash('sha256')
-        .update(((s.enunciadoVignette ?? '') + s.enunciado).toLowerCase().replace(/\s+/g, ' ').trim())
+        .update(
+          ((s.enunciadoVignette ?? '') + s.enunciado).toLowerCase().replace(/\s+/g, ' ').trim(),
+        )
         .digest('hex')
 
       // Garantir Prova

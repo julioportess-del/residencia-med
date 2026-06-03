@@ -2,10 +2,7 @@ import Link from 'next/link'
 import { Check, Sparkles } from 'lucide-react'
 import { PLANOS_B2C, precoFormatado } from '@residencia-med/billing/plans'
 import { authHabilitado } from '@/lib/flags'
-import {
-  PrecosUpgradeButton,
-  PrecosUpgradeButtonDemo,
-} from './_components/upgrade-button'
+import { PrecosUpgradeButton, PrecosUpgradeButtonDemo } from './_components/upgrade-button'
 
 export const metadata = { title: 'Preços' }
 
@@ -52,14 +49,18 @@ export default function PrecosPage() {
                 <h2 className="text-2xl font-bold">{p.nome}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{p.descricao}</p>
                 <div className="mt-6">
-                  <span className="text-4xl font-bold">{precoFormatado(p.precoMensalCentavos)}</span>
+                  <span className="text-4xl font-bold">
+                    {precoFormatado(p.precoMensalCentavos)}
+                  </span>
                   {p.precoMensalCentavos > 0 && (
                     <span className="text-muted-foreground"> /mês</span>
                   )}
                 </div>
                 {p.precoAnualCentavos > 0 && (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    ou {precoFormatado(p.precoAnualCentavos)} no anual ({Math.round((1 - p.precoAnualCentavos / (p.precoMensalCentavos * 12)) * 100)}% off)
+                    ou {precoFormatado(p.precoAnualCentavos)} no anual (
+                    {Math.round((1 - p.precoAnualCentavos / (p.precoMensalCentavos * 12)) * 100)}%
+                    off)
                   </p>
                 )}
 

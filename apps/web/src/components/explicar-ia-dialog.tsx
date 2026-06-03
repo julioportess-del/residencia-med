@@ -73,7 +73,9 @@ export function ExplicarComIA({ questaoId, alternativaEscolhida, disabled }: Pro
           </DialogHeader>
           <div className="prose prose-sm max-w-none max-h-[60vh] overflow-y-auto whitespace-pre-line">
             {texto || (gerando ? 'Pensando...' : 'Aguarde')}
-            {gerando && <span className="ml-1 inline-block size-2 animate-pulse rounded-full bg-primary" />}
+            {gerando && (
+              <span className="ml-1 inline-block size-2 animate-pulse rounded-full bg-primary" />
+            )}
           </div>
         </DialogContent>
       </Dialog>

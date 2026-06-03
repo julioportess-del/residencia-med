@@ -57,18 +57,18 @@ Há `apps/escriba/vercel.json` já pronto com os comandos de build do monorepo.
 
 ### Variáveis de ambiente na Vercel
 
-| Variável | Valor | Secreto |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL do Supabase | não |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key | não |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role key | **sim** |
-| `DATABASE_URL_CLINICO` | connection pooler (6543) | **sim** |
-| `DIRECT_URL_CLINICO` | direct connection (5432) | **sim** |
-| `ANTHROPIC_API_KEY` | chave Anthropic | **sim** |
-| `OPENAI_API_KEY` | chave OpenAI | **sim** |
-| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` (opcional) | não |
-| `OPENAI_TRANSCRIBE_MODEL` | `whisper-1` (opcional) | não |
-| `NEXT_PUBLIC_APP_URL` | URL final (ex.: `https://escriba.vercel.app`) | não |
+| Variável                        | Valor                                         | Secreto |
+| ------------------------------- | --------------------------------------------- | ------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Project URL do Supabase                       | não     |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key                                      | não     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | service_role key                              | **sim** |
+| `DATABASE_URL_CLINICO`          | connection pooler (6543)                      | **sim** |
+| `DIRECT_URL_CLINICO`            | direct connection (5432)                      | **sim** |
+| `ANTHROPIC_API_KEY`             | chave Anthropic                               | **sim** |
+| `OPENAI_API_KEY`                | chave OpenAI                                  | **sim** |
+| `ANTHROPIC_MODEL`               | `claude-sonnet-4-6` (opcional)                | não     |
+| `OPENAI_TRANSCRIBE_MODEL`       | `whisper-1` (opcional)                        | não     |
+| `NEXT_PUBLIC_APP_URL`           | URL final (ex.: `https://escriba.vercel.app`) | não     |
 
 > ❌ **NÃO** defina `DEV_USER_EMAIL` em produção. Em `NODE_ENV=production` o bypass de
 > dev é ignorado por código, mas não configure mesmo assim. Login real é obrigatório.

@@ -98,9 +98,7 @@ export async function enqueueGerarPlano(payload: JobGerarPlano): Promise<void> {
   }
 }
 
-export async function enqueueRecomputarIncidencia(
-  payload: JobRecomputarIncidencia,
-): Promise<void> {
+export async function enqueueRecomputarIncidencia(payload: JobRecomputarIncidencia): Promise<void> {
   if (!REDIS_HABILITADO) return
   try {
     await getFilaIncidencia().add('recomputar-incidencia', payload, {

@@ -51,6 +51,9 @@ apps/mobile/.expo/
 apps/mobile/ios/
 apps/mobile/android/
 
+# Agentes (worktrees e artefatos locais do Claude Code)
+.claude/
+
 # Misc
 *.pem
 .vercel/

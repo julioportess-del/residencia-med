@@ -92,11 +92,7 @@ export const experimentosRouter = router({
         },
       })
       if (!atrib) {
-        const variante = escolherVariante(
-          exp.chave,
-          ctx.userId,
-          exp.variantesJson as Variante[],
-        )
+        const variante = escolherVariante(exp.chave, ctx.userId, exp.variantesJson as Variante[])
         atrib = await ctx.prisma.atribuicaoExperimento.create({
           data: { experimentoId: exp.id, userId: ctx.userId, variante },
         })

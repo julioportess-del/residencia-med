@@ -98,10 +98,7 @@ export function calcularResultados(
     conversoesPorVariante.get(e.variante)!.add(e.userId)
   }
 
-  const resultado: Record<
-    string,
-    { visitantes: number; conversoes: number; taxaPct: number }
-  > = {}
+  const resultado: Record<string, { visitantes: number; conversoes: number; taxaPct: number }> = {}
   for (const [variante, visitantes] of visitantesPorVariante) {
     const conversoes = conversoesPorVariante.get(variante)?.size ?? 0
     const taxaPct = visitantes.size > 0 ? (conversoes / visitantes.size) * 100 : 0

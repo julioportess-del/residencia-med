@@ -13,17 +13,17 @@ App React Native compartilhando API com o web.
 
 ## Telas
 
-| Rota | Funcao |
-|---|---|
-| `/(auth)/sign-in` | Login com email/senha (Supabase) |
-| `/(auth)/sign-up` | Cadastro + (opcional) confirmacao por email |
-| `/(app)/index` | Home com KPIs, streak, alerta de revisao vencida |
-| `/(app)/questoes` | Lista do banco com filtros |
-| `/(app)/questoes/[id]` | Responder questao + correcao + offline queue |
-| `/(app)/simulado/index` | Configurar simulado |
-| `/(app)/simulado/[id]` | Executar simulado cronometrado |
-| `/(app)/revisao` | Items SM-2 vencidos hoje |
-| `/(app)/conta` | Plano, uso, sincronizar fila offline, sair |
+| Rota                    | Funcao                                           |
+| ----------------------- | ------------------------------------------------ |
+| `/(auth)/sign-in`       | Login com email/senha (Supabase)                 |
+| `/(auth)/sign-up`       | Cadastro + (opcional) confirmacao por email      |
+| `/(app)/index`          | Home com KPIs, streak, alerta de revisao vencida |
+| `/(app)/questoes`       | Lista do banco com filtros                       |
+| `/(app)/questoes/[id]`  | Responder questao + correcao + offline queue     |
+| `/(app)/simulado/index` | Configurar simulado                              |
+| `/(app)/simulado/[id]`  | Executar simulado cronometrado                   |
+| `/(app)/revisao`        | Items SM-2 vencidos hoje                         |
+| `/(app)/conta`          | Plano, uso, sincronizar fila offline, sair       |
 
 ## Sync offline
 
@@ -48,6 +48,7 @@ pnpm android   # requer Android SDK
 ```
 
 A API web precisa estar rodando em paralelo:
+
 ```bash
 pnpm --filter @residencia-med/web dev
 ```

@@ -78,10 +78,7 @@ function CartaoAssinatura({ org }: { org: Org }) {
         <div className="grid gap-3 sm:grid-cols-3">
           <Stat label="Plano" valor={org.plano} />
           <Stat label="Seats contratados" valor={org.seats.toString()} />
-          <Stat
-            label="Status"
-            valor={org.assinatura?.status ?? 'Sem assinatura'}
-          />
+          <Stat label="Status" valor={org.assinatura?.status ?? 'Sem assinatura'} />
         </div>
         {org.assinatura?.validaAte && (
           <p className="text-sm text-muted-foreground">
@@ -143,10 +140,7 @@ function DashboardAgregado() {
               <Stat label="Membros" valor={dash.data.usuariosTotal.toString()} />
               <Stat label="Ativos (30d)" valor={dash.data.ativos30d.toString()} />
               <Stat label="Respostas (30d)" valor={dash.data.respostasMes.toString()} />
-              <Stat
-                label="Taxa média"
-                valor={`${Math.round(dash.data.taxaMedia * 100)}%`}
-              />
+              <Stat label="Taxa média" valor={`${Math.round(dash.data.taxaMedia * 100)}%`} />
             </div>
             {dash.data.temasFracos.length > 0 && (
               <div className="mt-4">

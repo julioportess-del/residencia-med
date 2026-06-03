@@ -30,10 +30,7 @@ export async function GET() {
   try {
     user = await garantirUser(authUser.id, authUser.email)
   } catch {
-    return NextResponse.json(
-      { error: 'Banco indisponível.' },
-      { status: 503 },
-    )
+    return NextResponse.json({ error: 'Banco indisponível.' }, { status: 503 })
   }
 
   let itens
@@ -96,7 +93,12 @@ type QuestaoForExport = {
   ano: number
   dificuldade: string
   banca: { codigo: string }
-  alternativas: Array<{ letra: string; texto: string; correta: boolean; explicacaoErro: string | null }>
+  alternativas: Array<{
+    letra: string
+    texto: string
+    correta: boolean
+    explicacaoErro: string | null
+  }>
   temas: Array<{ tema: { nome: string; codigo: string } }>
 }
 

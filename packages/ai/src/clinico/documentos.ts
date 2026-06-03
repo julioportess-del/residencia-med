@@ -114,15 +114,10 @@ export function renderizarSolicitacaoExames(e: EstruturaClinica, ctx: ContextoDo
 /** Carta de encaminhamento com resumo clinico e CID sugerido. */
 export function renderizarEncaminhamento(e: EstruturaClinica, ctx: ContextoDocumento): string {
   const destinos = e.plano.encaminhamentos ?? []
-  const destino =
-    destinos.length > 0 ? destinos.join('; ') : '(especialidade/serviço a definir)'
+  const destino = destinos.length > 0 ? destinos.join('; ') : '(especialidade/serviço a definir)'
   const resumo =
     e.narrativaCorrida?.trim() ||
-    [
-      e.subjetivo.queixaPrincipal,
-      e.subjetivo.historiaDoencaAtual,
-      e.avaliacao.raciocinioClinico,
-    ]
+    [e.subjetivo.queixaPrincipal, e.subjetivo.historiaDoencaAtual, e.avaliacao.raciocinioClinico]
       .filter(Boolean)
       .join(' ')
   const cid = listaCid(e)
@@ -143,10 +138,7 @@ export function renderizarEncaminhamento(e: EstruturaClinica, ctx: ContextoDocum
 }
 
 /** Orientacoes em linguagem acessivel para o paciente levar para casa. */
-export function renderizarOrientacoesPaciente(
-  e: EstruturaClinica,
-  ctx: ContextoDocumento,
-): string {
+export function renderizarOrientacoesPaciente(e: EstruturaClinica, ctx: ContextoDocumento): string {
   const orientacoes = e.plano.orientacoes ?? []
   const alertas = e.plano.sinaisDeAlerta ?? []
   const blocos: string[] = [`ORIENTAÇÕES PARA O PACIENTE (${ctx.pacienteIniciais})`, '']
@@ -161,11 +153,7 @@ export function renderizarOrientacoesPaciente(
     blocos.push(`Retorno: ${e.plano.retorno.trim()}`, '')
   }
   if (alertas.length > 0) {
-    blocos.push(
-      'Procure atendimento se apresentar:',
-      alertas.map((a) => `• ${a}`).join('\n'),
-      '',
-    )
+    blocos.push('Procure atendimento se apresentar:', alertas.map((a) => `• ${a}`).join('\n'), '')
   }
   if (blocos.length === 2) {
     blocos.push('(Sem orientações específicas registradas. Adicione manualmente.)')

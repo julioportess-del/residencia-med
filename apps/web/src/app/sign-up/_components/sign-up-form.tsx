@@ -53,8 +53,8 @@ export function SignUpForm() {
       <div className="mt-6 rounded-md border bg-muted/40 p-4 text-sm">
         <p className="font-medium">Confirme seu e-mail</p>
         <p className="mt-1 text-muted-foreground">
-          Enviamos um link de confirmação para <span className="font-medium">{email}</span>.
-          Abra o e-mail e clique no link para ativar sua conta.
+          Enviamos um link de confirmação para <span className="font-medium">{email}</span>. Abra o
+          e-mail e clique no link para ativar sua conta.
         </p>
       </div>
     )

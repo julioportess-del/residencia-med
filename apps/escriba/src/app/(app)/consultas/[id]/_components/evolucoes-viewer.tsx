@@ -41,8 +41,7 @@ export function EvolucoesViewer({ consultaId, evolucoes, revisado }: EvolucoesVi
   // Versão editada local por evolução (otimista após salvar).
   const [editadosLocais, setEditadosLocais] = useState<Record<string, string>>({})
 
-  const atual: EvolucaoItem | undefined =
-    ordenadas.find((e) => e.modelo === ativo) ?? ordenadas[0]
+  const atual: EvolucaoItem | undefined = ordenadas.find((e) => e.modelo === ativo) ?? ordenadas[0]
   if (!atual) return null
   const evolucaoAtual = atual
 
@@ -187,8 +186,8 @@ export function EvolucoesViewer({ consultaId, evolucoes, revisado }: EvolucoesVi
 
       {!estaRevisado ? (
         <p className="text-xs text-muted-foreground">
-          Conteúdo gerado por IA a partir da transcrição. Revise e edite antes de usar no
-          prontuário — CID e condutas são sugestões.
+          Conteúdo gerado por IA a partir da transcrição. Revise e edite antes de usar no prontuário
+          — CID e condutas são sugestões.
         </p>
       ) : null}
     </div>

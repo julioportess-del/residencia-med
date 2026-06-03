@@ -7,6 +7,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 ## Turno 1 — Fundacao (este turno)
 
 **Entregue:**
+
 - Monorepo pnpm + Turborepo configurado
 - Documentos: ARCHITECTURE, DATA-MODEL, ROADMAP, 5 ADRs
 - Schema Prisma completo com 18 modelos e 11 enums
@@ -17,6 +18,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 - .env.example completo
 
 **Criterio de pronto:**
+
 - `pnpm install` funciona
 - `pnpm build` passa em todos os pacotes
 - `pnpm db:migrate` cria schema do zero
@@ -29,6 +31,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 **Objetivo:** estudante consegue se cadastrar, escolher banca, responder questoes, ver dashboard.
 
 **Entregas:**
+
 1. Onboarding multi-step:
    - Banca alvo (selecao multi)
    - Data da prova
@@ -58,6 +61,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
    - 5 guidelines exemplo
 
 **Tecnologia:**
+
 - tRPC + TanStack Query
 - shadcn/ui componentes (Button, Card, Dialog, Tabs, Form, Toast)
 - React Hook Form + Zod
@@ -65,11 +69,13 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 - next-safe-action para server actions
 
 **Testes:**
+
 - Vitest unit em packages/core (motor de analise, calculo de incidencia)
 - Vitest integration em queries Prisma
 - Playwright E2E: fluxo completo onboarding -> responder questao -> dashboard
 
 **Criterio de pronto:**
+
 - Usuario sem conta consegue ver landing, cadastrar (Clerk dev), completar onboarding, responder 10 questoes em simulado, ver dashboard
 - 80%+ cobertura em packages/core
 - Lighthouse: LCP <2.5s, INP <200ms na home
@@ -81,6 +87,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 **Objetivo:** plataforma vira inteligente. Erros recebem explicacao customizada; revisao acontece nos momentos certos.
 
 **Entregas:**
+
 1. packages/ai funcional:
    - `explicarErro(questao, alternativaErrada)` com Claude + prompt caching
    - `gerarQuestaoSimilar(questao, banca)` com structured output
@@ -107,11 +114,13 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
    - Botao "Explicar mais com IA" -> stream Claude
 
 **Testes:**
+
 - Mock de LLM em testes unit
 - Integration test com cassette (replay de chamadas reais)
 - Verificacao de cache hit ratio em staging
 
 **Criterio de pronto:**
+
 - Cache hit ratio >70% apos primeira semana
 - Custo IA por usuario ativo <$0.50/mes (free tier limites)
 - Latencia p95 de explicacao streaming: primeiro token <800ms
@@ -124,6 +133,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 **Objetivo:** monetizar. Tres planos B2C + tier B2B.
 
 **Entregas:**
+
 1. Auth completa via Clerk:
    - Sign up / sign in
    - Login social (Google)
@@ -152,11 +162,13 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
    - Visualizar feedback
 
 **Testes:**
+
 - Webhook fixtures Stripe
 - Test de cada transicao de plano
 - Tenant isolation (usuario A nao ve dado de B)
 
 **Criterio de pronto:**
+
 - Usuario consegue assinar, pagar, ser cancelado, retomar
 - Multi-tenant verificado por test
 - Compliance LGPD: usuario pode deletar conta + dados
@@ -168,6 +180,7 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
 **Objetivo:** mesmo produto na palma da mao, com sync.
 
 **Entregas:**
+
 1. Expo (React Native) + EAS:
    - iOS + Android
    - Auth via Clerk (mesmo backend)
@@ -191,10 +204,12 @@ Plano de entrega em 5 turnos. Cada turno termina com codigo rodando, testado e m
    - Animacoes em RN Reanimated
 
 **Testes:**
+
 - Detox E2E em iOS e Android
 - Snapshot de telas principais
 
 **Criterio de pronto:**
+
 - App publicado em TestFlight + Play Console internal
 - Crash-free rate >99%
 - 80%+ feature parity com web (excluindo admin)

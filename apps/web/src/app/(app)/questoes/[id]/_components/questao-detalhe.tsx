@@ -93,7 +93,9 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
     })
   }
 
-  const min = Math.floor(tempoSegundos / 60).toString().padStart(2, '0')
+  const min = Math.floor(tempoSegundos / 60)
+    .toString()
+    .padStart(2, '0')
   const seg = (tempoSegundos % 60).toString().padStart(2, '0')
 
   return (
@@ -203,11 +205,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
           >
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 font-semibold">
-                {correta ? (
-                  <Check className="text-emerald-600" />
-                ) : (
-                  <X className="text-rose-600" />
-                )}
+                {correta ? <Check className="text-emerald-600" /> : <X className="text-rose-600" />}
                 {correta
                   ? 'Resposta correta!'
                   : `Errou. O gabarito era ${respondida.gabaritoLetra}.`}
