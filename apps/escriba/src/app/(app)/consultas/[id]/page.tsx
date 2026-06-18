@@ -14,6 +14,7 @@ import { TIPO_CONSULTA_LABEL, STATUS_CONSULTA_LABEL } from '@/lib/rotulos'
 import { type EvolucaoItem } from './_components/evolucoes-viewer'
 import { ConsultaConteudo } from './_components/consulta-conteudo'
 import { ProcessandoPoll } from './_components/processando-poll'
+import { ReestruturarBotao } from './_components/reestruturar-botao'
 import { ConsultaAnexos, type AnexoHistorico } from './_components/consulta-anexos'
 
 export const dynamic = 'force-dynamic'
@@ -36,12 +37,14 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
           dadosEstruturados: true,
         },
       },
+      transcricao: { select: { id: true } },
     },
   })
   if (!consulta) notFound()
   if (consulta.status === 'GRAVANDO') redirect(`/consultas/${consulta.id}/gravar`)
 
   const processando = consulta.status === 'TRANSCREVENDO' || consulta.status === 'ESTRUTURANDO'
+  const temTranscricao = Boolean(consulta.transcricao)
   const evolucoes: EvolucaoItem[] = consulta.evolucoes.map((e) => ({
     id: e.id,
     modelo: e.modelo as Modelo,
@@ -91,13 +94,21 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
         </CardHeader>
         <CardContent>
           {processando ? (
-            <ProcessandoPoll rotulo={STATUS_CONSULTA_LABEL[consulta.status] ?? 'Processando'} />
+            <ProcessandoPoll
+              rotulo={STATUS_CONSULTA_LABEL[consulta.status] ?? 'Processando'}
+              consultaId={consulta.id}
+            />
           ) : evolucoes.length > 0 ? (
             <ConsultaConteudo
               consultaId={consulta.id}
               evolucoes={evolucoes}
               revisado={consulta.status === 'REVISADO'}
               documentosDisponiveis={docsDisponiveis}
+            />
+          ) : temTranscricao ? (
+            <ReestruturarBotao
+              consultaId={consulta.id}
+              mensagem="A evolução ainda não foi gerada (a anterior pode ter expirado). A transcrição está salva — gere novamente."
             />
           ) : (
             <p className="text-sm text-muted-foreground">

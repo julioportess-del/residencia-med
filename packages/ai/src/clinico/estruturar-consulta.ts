@@ -8,6 +8,12 @@ import {
 } from './prompt-estruturar'
 
 const MAX_TOKENS = 4096
+// Modelo da estruturação (override por env). Sonnet por padrão; pode-se trocar
+// por um modelo mais rápido (ex.: Haiku) para caber no limite de tempo serverless.
+const MODELO_ESTRUTURAR = process.env.ESTRUTURAR_MODEL ?? MODELO_ANTHROPIC
+// Timeout da chamada, abaixo do maxDuration da rota (60s no Hobby): garante que a
+// rota SEMPRE conclui dentro da janela e nunca deixa a consulta presa em ESTRUTURANDO.
+const TIMEOUT_MS = Number(process.env.ESTRUTURAR_TIMEOUT_MS ?? 50_000)
 
 export class EstruturacaoInvalidaError extends Error {
   constructor(detalhe: string) {
@@ -77,21 +83,26 @@ export async function estruturarConsulta(
       especialidade: contexto?.especialidade ?? null,
       instrucoesMedico: contexto?.instrucoesMedico ?? null,
     },
-    modelo: MODELO_ANTHROPIC,
+    modelo: MODELO_ESTRUTURAR,
     versaoPrompt: VERSAO_PROMPT_ESTRUTURAR,
   })
 
   const cacheado = await getCache<EstruturaClinica>(chave)
   if (cacheado) return cacheado
 
-  const resposta = await anthropic.messages.create({
-    model: MODELO_ANTHROPIC,
-    max_tokens: MAX_TOKENS,
-    system: SYSTEM_ESTRUTURAR,
-    // Sem prefill de assistant: modelos novos (Claude 4+) nao aceitam prefill;
-    // o SYSTEM_ESTRUTURAR ja instrui saida JSON e extrairJson isola o objeto.
-    messages: [{ role: 'user', content: montarMensagemUsuario(textoLimpo, contexto) }],
-  })
+  const resposta = await anthropic.messages.create(
+    {
+      model: MODELO_ESTRUTURAR,
+      max_tokens: MAX_TOKENS,
+      system: SYSTEM_ESTRUTURAR,
+      // Sem prefill de assistant: modelos novos (Claude 4+) nao aceitam prefill;
+      // o SYSTEM_ESTRUTURAR ja instrui saida JSON e extrairJson isola o objeto.
+      messages: [{ role: 'user', content: montarMensagemUsuario(textoLimpo, contexto) }],
+    },
+    // Timeout abaixo do limite serverless + sem retries (cada retry custaria outra
+    // janela inteira). Em estouro, lanca e a rota trata como falha recuperavel.
+    { timeout: TIMEOUT_MS, maxRetries: 0 },
+  )
 
   const bruto = resposta.content.map((bloco) => (bloco.type === 'text' ? bloco.text : '')).join('')
 

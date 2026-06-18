@@ -112,17 +112,28 @@ export async function POST(req: Request, { params }: Contexto) {
       '[estruturar] falha:',
       erro instanceof Error ? `${erro.name}: ${erro.message}` : String(erro),
     )
+    // A transcrição já está salva. Deixa a consulta como RASCUNHO (recuperável):
+    // o médico pode "Gerar evolução novamente" sem regravar. NUNCA volta a GRAVANDO.
     await prismaClinico.consulta
-      .update({ where: { id: consulta.id }, data: { status: 'GRAVANDO' } })
+      .update({ where: { id: consulta.id }, data: { status: 'RASCUNHO' } })
       .catch(() => undefined)
 
     if (erro instanceof EstruturacaoInvalidaError) {
       return erroJson(erro.message, 422)
     }
+    const ehTimeout =
+      erro instanceof Error &&
+      (erro.name === 'APIConnectionTimeoutError' || /timeout|timed out/i.test(erro.message))
+    if (ehTimeout) {
+      return erroJson(
+        'A geração demorou mais que o limite do servidor. A transcrição foi salva — toque em "Gerar evolução novamente".',
+        504,
+      )
+    }
     const mensagem =
       erro instanceof Error && erro.name === 'IAIndisponivelError'
         ? erro.message
-        : 'Falha ao estruturar a consulta. Tente novamente.'
+        : 'Falha ao estruturar a consulta. A transcrição foi salva — tente gerar novamente.'
     return erroJson(mensagem, 500)
   }
 }
