@@ -1,4 +1,4 @@
-import { anthropic, MODELO_ANTHROPIC } from '../clients'
+import { anthropic } from '../clients'
 import { chaveCacheLLM, getCache, setCache } from '../cache'
 import { estruturaClinicaSchema, type EstruturaClinica } from './tipos'
 import {
@@ -8,9 +8,11 @@ import {
 } from './prompt-estruturar'
 
 const MAX_TOKENS = 4096
-// Modelo da estruturação (override por env). Sonnet por padrão; pode-se trocar
-// por um modelo mais rápido (ex.: Haiku) para caber no limite de tempo serverless.
-const MODELO_ESTRUTURAR = process.env.ESTRUTURAR_MODEL ?? MODELO_ANTHROPIC
+// Modelo da estruturação. Haiku por padrão: ~2-3x mais rápido que Sonnet, cabe
+// no limite de 60s do Vercel Hobby mesmo em consultas longas, e mais barato. A
+// saída passa por revisão médica obrigatória (RASCUNHO). Override por env p/
+// voltar ao Sonnet (ex.: ESTRUTURAR_MODEL=claude-sonnet-4-6) num plano Pro.
+const MODELO_ESTRUTURAR = process.env.ESTRUTURAR_MODEL ?? 'claude-haiku-4-5-20251001'
 // Timeout da chamada, abaixo do maxDuration da rota (60s no Hobby): garante que a
 // rota SEMPRE conclui dentro da janela e nunca deixa a consulta presa em ESTRUTURANDO.
 const TIMEOUT_MS = Number(process.env.ESTRUTURAR_TIMEOUT_MS ?? 50_000)
