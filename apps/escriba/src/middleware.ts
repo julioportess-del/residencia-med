@@ -10,6 +10,7 @@ const DEV_USER_EMAIL =
   process.env.NODE_ENV !== 'production' ? process.env.DEV_USER_EMAIL?.trim() || null : null
 
 const PUBLIC_PATHS = [
+  '/', // landing page pública (logados são redirecionados para /dashboard na página)
   '/sign-in',
   '/cadastro',
   '/recuperar-senha',

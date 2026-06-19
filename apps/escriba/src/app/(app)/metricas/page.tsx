@@ -77,6 +77,26 @@ export default async function MetricasPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Custo de IA (estimado)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          <p className="text-2xl font-semibold tracking-tight">
+            {m.custoEstimadoBrl.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {m.custoEstimadoMesBrl.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+            neste mês · ~{(0.3).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por
+            consulta
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            Estimativa com a stack atual (transcrição gpt-4o-mini + estruturação Haiku). A medição
+            precisa por token é um próximo passo.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Consultas por tipo</CardTitle>
         </CardHeader>
         <CardContent>

@@ -7,6 +7,11 @@ import { prismaClinico } from '@residencia-med/db-clinico'
  */
 const MINUTOS_ECONOMIZADOS_POR_CONSULTA = 8
 
+// Estimativa de custo de IA por consulta processada com a stack atual
+// (gpt-4o-mini-transcribe + estruturacao Haiku 4.5). Valor medio conservador em
+// R$ — NAO e medicao por token (isso e um proximo passo). Override por env.
+const CUSTO_ESTIMADO_POR_CONSULTA_BRL = Number(process.env.CUSTO_ESTIMADO_CONSULTA_BRL ?? 0.3)
+
 const STATUS_PROCESSADO = ['RASCUNHO', 'REVISADO'] as const
 
 export interface MetricasProdutividade {
@@ -18,6 +23,9 @@ export interface MetricasProdutividade {
   // Recorte do mes corrente
   consultasProcessadasMes: number
   minutosEconomizadosMes: number
+  // Custo de IA estimado (R$) — total e no mes
+  custoEstimadoBrl: number
+  custoEstimadoMesBrl: number
   // Distribuicao por tipo (apenas processadas), ordenada desc
   porTipo: Array<{ tipo: string; total: number }>
 }
@@ -72,6 +80,8 @@ export async function obterMetricas(usuarioAuthId: string): Promise<MetricasProd
     minutosEconomizados: consultasProcessadas * MINUTOS_ECONOMIZADOS_POR_CONSULTA,
     consultasProcessadasMes,
     minutosEconomizadosMes: consultasProcessadasMes * MINUTOS_ECONOMIZADOS_POR_CONSULTA,
+    custoEstimadoBrl: consultasProcessadas * CUSTO_ESTIMADO_POR_CONSULTA_BRL,
+    custoEstimadoMesBrl: consultasProcessadasMes * CUSTO_ESTIMADO_POR_CONSULTA_BRL,
     porTipo,
   }
 }
