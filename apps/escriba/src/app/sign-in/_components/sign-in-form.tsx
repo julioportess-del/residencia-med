@@ -29,7 +29,7 @@ export function SignInForm() {
         setErro('E-mail ou senha incorretos.')
         return
       }
-      router.replace('/consultas')
+      router.replace('/dashboard')
       router.refresh()
     } catch {
       setErro('Não foi possível entrar agora. Tente novamente.')

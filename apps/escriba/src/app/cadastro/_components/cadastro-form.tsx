@@ -51,7 +51,7 @@ export function CadastroForm() {
 
       // Sessão já criada (confirmação de e-mail desativada) → entra direto.
       if (data.session) {
-        router.replace('/consultas')
+        router.replace('/dashboard')
         router.refresh()
         return
       }
