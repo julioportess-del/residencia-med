@@ -4,11 +4,13 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
+import { Dialog } from '@/components/ui/dialog'
+import { Alert } from '@/components/ui/alert'
 import { excluirPaciente } from '@/server/actions'
 
 export function ExcluirPacienteBotao({ pacienteId }: { pacienteId: string }) {
   const router = useRouter()
-  const [confirmando, setConfirmando] = useState(false)
+  const [aberto, setAberto] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, iniciar] = useTransition()
 
@@ -25,36 +27,41 @@ export function ExcluirPacienteBotao({ pacienteId }: { pacienteId: string }) {
     })
   }
 
-  if (!confirmando) {
-    return (
-      <Button variant="outline" size="sm" onClick={() => setConfirmando(true)}>
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setAberto(true)}>
         <Trash2 className="mr-2 h-4 w-4" />
         Excluir
       </Button>
-    )
-  }
 
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setConfirmando(false)}
-          disabled={pendente}
-        >
-          Cancelar
-        </Button>
-        <Button
-          size="sm"
-          onClick={excluir}
-          loading={pendente}
-          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-        >
-          Confirmar exclusão
-        </Button>
-      </div>
-      {erro ? <p className="text-xs text-destructive">{erro}</p> : null}
-    </div>
+      <Dialog
+        aberto={aberto}
+        onFechar={() => setAberto(false)}
+        titulo="Excluir paciente?"
+        descricao="O cadastro será removido. As consultas vinculadas são mantidas, apenas desvinculadas."
+        rodape={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAberto(false)}
+              disabled={pendente}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              loading={pendente}
+              onClick={excluir}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </Button>
+          </>
+        }
+      >
+        {erro ? <Alert variant="destructive">{erro}</Alert> : null}
+      </Dialog>
+    </>
   )
 }

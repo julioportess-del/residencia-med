@@ -8,6 +8,7 @@ import { Button } from '@residencia-med/ui'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
+import { Alert } from '@/components/ui/alert'
 import { TIPO_CONSULTA_LABEL } from '@/lib/rotulos'
 import { TIPO_CONSULTA_VALORES, novaConsultaSchema } from '@/lib/validacao'
 import { criarConsulta } from '@/server/actions'
@@ -138,11 +139,7 @@ export function NovaConsultaForm({
         </span>
       </label>
 
-      {erro ? (
-        <p role="alert" className="text-sm text-destructive">
-          {erro}
-        </p>
-      ) : null}
+      {erro ? <Alert variant="destructive">{erro}</Alert> : null}
 
       <Button type="submit" size="lg" className="w-full" loading={pendente}>
         Iniciar consulta

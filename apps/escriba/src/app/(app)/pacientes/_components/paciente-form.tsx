@@ -6,6 +6,7 @@ import { ShieldAlert, X, Plus } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Alert } from '@/components/ui/alert'
 import { criarPaciente, atualizarPaciente } from '@/server/actions'
 import { pacienteSchema, type PacienteInput } from '@/lib/validacao'
 
@@ -272,11 +273,7 @@ export function PacienteForm({ pacienteId, inicial }: PacienteFormProps) {
         </label>
       ) : null}
 
-      {erro ? (
-        <p role="alert" className="text-sm text-destructive">
-          {erro}
-        </p>
-      ) : null}
+      {erro ? <Alert variant="destructive">{erro}</Alert> : null}
 
       <div className="flex gap-3">
         <Button type="submit" size="lg" loading={pendente}>
