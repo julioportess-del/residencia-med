@@ -34,6 +34,8 @@ export const novaConsultaSchema = z.object({
   consentimentoConfirmado: z.literal(true, {
     errorMap: () => ({ message: 'O consentimento do paciente é obrigatório.' }),
   }),
+  // Vínculo OPT-IN a um cadastro de paciente (quando o médico ativou).
+  pacienteId: z.string().trim().min(1).optional(),
 })
 
 export type NovaConsultaInput = z.infer<typeof novaConsultaSchema>
@@ -54,6 +56,8 @@ export const preferenciasSchema = z.object({
     .optional()
     .or(z.literal('')),
   formatoPadrao: z.enum(MODELO_EVOLUCAO_VALORES),
+  // Opt-in do médico para cadastro de pacientes identificáveis (LGPD).
+  cadastroPacientesAtivo: z.boolean().optional().default(false),
 })
 
 export type PreferenciasInput = z.infer<typeof preferenciasSchema>

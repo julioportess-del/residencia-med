@@ -4,12 +4,14 @@ export interface PreferenciasMedico {
   especialidade: string
   instrucoesCustom: string
   formatoPadrao: 'SOAP' | 'CORRIDA' | 'UBS'
+  cadastroPacientesAtivo: boolean
 }
 
 const PADRAO: PreferenciasMedico = {
   especialidade: '',
   instrucoesCustom: '',
   formatoPadrao: 'SOAP',
+  cadastroPacientesAtivo: false,
 }
 
 /**
@@ -25,5 +27,6 @@ export async function obterPreferencias(usuarioAuthId: string): Promise<Preferen
     especialidade: pref.especialidade ?? '',
     instrucoesCustom: pref.instrucoesCustom ?? '',
     formatoPadrao: pref.formatoPadrao as PreferenciasMedico['formatoPadrao'],
+    cadastroPacientesAtivo: pref.cadastroPacientesAtivo,
   }
 }

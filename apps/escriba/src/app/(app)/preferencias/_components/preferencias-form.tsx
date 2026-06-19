@@ -19,6 +19,9 @@ export function PreferenciasForm({ inicial }: PreferenciasFormProps) {
   const [formatoPadrao, setFormatoPadrao] = useState<PreferenciasMedico['formatoPadrao']>(
     inicial.formatoPadrao,
   )
+  const [cadastroPacientesAtivo, setCadastroPacientesAtivo] = useState(
+    inicial.cadastroPacientesAtivo,
+  )
   const [erro, setErro] = useState<string | null>(null)
   const [salvo, setSalvo] = useState(false)
   const [salvando, iniciarSalvar] = useTransition()
@@ -27,7 +30,12 @@ export function PreferenciasForm({ inicial }: PreferenciasFormProps) {
     setErro(null)
     setSalvo(false)
     iniciarSalvar(async () => {
-      const res = await salvarPreferencias({ especialidade, instrucoesCustom, formatoPadrao })
+      const res = await salvarPreferencias({
+        especialidade,
+        instrucoesCustom,
+        formatoPadrao,
+        cadastroPacientesAtivo,
+      })
       if (res.ok) {
         setSalvo(true)
         setTimeout(() => setSalvo(false), 2500)
@@ -94,6 +102,26 @@ export function PreferenciasForm({ inicial }: PreferenciasFormProps) {
             </button>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="space-y-2 rounded-xl border border-border bg-muted/30 p-4">
+        <legend className="px-1 text-sm font-medium">Cadastro de pacientes (opcional)</legend>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Por padrão, o Escriba registra apenas o nome/iniciais informado na consulta (minimização
+          de dados). Ao ativar, você poderá manter um <strong>cadastro completo do paciente</strong>{' '}
+          (nome, CPF, contato, histórico clínico) e o prontuário unificado. Você é o{' '}
+          <strong>controlador</strong> desses dados sob a LGPD e declara ter base legal ou
+          consentimento para tratá-los.
+        </p>
+        <label className="flex cursor-pointer items-center gap-3 pt-1">
+          <input
+            type="checkbox"
+            checked={cadastroPacientesAtivo}
+            onChange={(e) => setCadastroPacientesAtivo(e.target.checked)}
+            className="h-4 w-4 rounded border-input accent-primary"
+          />
+          <span className="text-sm">Ativar cadastro de pacientes e prontuário unificado</span>
+        </label>
       </fieldset>
 
       {erro ? (

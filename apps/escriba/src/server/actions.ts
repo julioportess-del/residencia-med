@@ -127,11 +127,23 @@ export async function salvarPreferencias(entrada: PreferenciasInput): Promise<Re
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
   }
 
-  const { especialidade, instrucoesCustom, formatoPadrao } = analise.data
+  const { especialidade, instrucoesCustom, formatoPadrao, cadastroPacientesAtivo } = analise.data
+
+  // Registra a data de aceite no PRIMEIRO opt-in e a preserva depois (auditoria LGPD).
+  const atual = await prismaClinico.preferenciasMedico.findUnique({
+    where: { usuarioAuthId: user.id },
+    select: { cadastroPacientesAceiteEm: true },
+  })
+  const aceiteEm = cadastroPacientesAtivo
+    ? (atual?.cadastroPacientesAceiteEm ?? new Date())
+    : (atual?.cadastroPacientesAceiteEm ?? null)
+
   const dados = {
     especialidade: especialidade?.trim() ? especialidade.trim() : null,
     instrucoesCustom: instrucoesCustom?.trim() ? instrucoesCustom.trim() : null,
     formatoPadrao,
+    cadastroPacientesAtivo: Boolean(cadastroPacientesAtivo),
+    cadastroPacientesAceiteEm: aceiteEm,
   }
 
   await prismaClinico.preferenciasMedico.upsert({
