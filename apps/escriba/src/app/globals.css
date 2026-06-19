@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "@residencia-med/ui/styles.css";
+@import 'tailwindcss';
+@import '@residencia-med/ui/styles.css';
 
 /*
  * Escriba — identidade visual propria (nao herda a marca da plataforma de estudos).
@@ -83,5 +83,45 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+}
+
+/* Microinterações — fade-in suave e waveform animada do painel de login. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wave-pulse {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-wave {
+  transform-origin: center;
+  animation: wave-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-wave {
+    animation: none;
   }
 }

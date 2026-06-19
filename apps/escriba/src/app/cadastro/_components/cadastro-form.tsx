@@ -6,6 +6,7 @@ import { MailCheck } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { GoogleButton } from '@/components/auth/google-button'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import { cadastroSchema } from '@/lib/validacao'
 
@@ -81,67 +82,77 @@ export function CadastroForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <div className="space-y-1.5">
-        <Label htmlFor="nome">Nome</Label>
-        <Input
-          id="nome"
-          autoComplete="name"
-          required
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder="Dra. Vanessa"
-        />
+    <div className="space-y-5">
+      <GoogleButton rotulo="Cadastrar com Google" />
+
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">ou</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="email">E-mail</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="voce@exemplo.com"
-        />
-      </div>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        <div className="space-y-1.5">
+          <Label htmlFor="nome">Nome</Label>
+          <Input
+            id="nome"
+            autoComplete="name"
+            required
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Dra. Vanessa"
+          />
+        </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="senha">Senha</Label>
-        <Input
-          id="senha"
-          type="password"
-          autoComplete="new-password"
-          required
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          placeholder="Mínimo 8 caracteres"
-        />
-      </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">E-mail</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="voce@exemplo.com"
+          />
+        </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="confirmarSenha">Confirmar senha</Label>
-        <Input
-          id="confirmarSenha"
-          type="password"
-          autoComplete="new-password"
-          required
-          value={confirmarSenha}
-          onChange={(e) => setConfirmarSenha(e.target.value)}
-          placeholder="Repita a senha"
-        />
-      </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="senha">Senha</Label>
+          <Input
+            id="senha"
+            type="password"
+            autoComplete="new-password"
+            required
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            placeholder="Mínimo 8 caracteres"
+          />
+        </div>
 
-      {erro ? (
-        <p role="alert" className="text-sm text-destructive">
-          {erro}
-        </p>
-      ) : null}
+        <div className="space-y-1.5">
+          <Label htmlFor="confirmarSenha">Confirmar senha</Label>
+          <Input
+            id="confirmarSenha"
+            type="password"
+            autoComplete="new-password"
+            required
+            value={confirmarSenha}
+            onChange={(e) => setConfirmarSenha(e.target.value)}
+            placeholder="Repita a senha"
+          />
+        </div>
 
-      <Button type="submit" size="lg" className="w-full" loading={carregando}>
-        Criar conta
-      </Button>
-    </form>
+        {erro ? (
+          <p role="alert" className="text-sm text-destructive">
+            {erro}
+          </p>
+        ) : null}
+
+        <Button type="submit" size="lg" className="w-full" loading={carregando}>
+          Criar conta
+        </Button>
+      </form>
+    </div>
   )
 }
