@@ -12,13 +12,37 @@ import { exigirUsuario } from '@/lib/auth'
 import {
   novaConsultaSchema,
   preferenciasSchema,
+  pacienteSchema,
   type NovaConsultaInput,
   type PreferenciasInput,
+  type PacienteInput,
 } from '@/lib/validacao'
 
 export type ResultadoCriarConsulta = { ok: true; id: string } | { ok: false; erro: string }
 
 export type ResultadoAcao = { ok: true } | { ok: false; erro: string }
+
+export type ResultadoCriarPaciente = { ok: true; id: string } | { ok: false; erro: string }
+
+/** Garante que o médico ativou o cadastro de pacientes (opt-in LGPD). */
+async function exigirCadastroAtivo(usuarioAuthId: string): Promise<boolean> {
+  const pref = await prismaClinico.preferenciasMedico.findUnique({
+    where: { usuarioAuthId },
+    select: { cadastroPacientesAtivo: true },
+  })
+  return Boolean(pref?.cadastroPacientesAtivo)
+}
+
+function dataDeTexto(valor?: string): Date | null {
+  if (!valor) return null
+  const d = new Date(`${valor}T00:00:00`)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+function limpo(valor?: string): string | null {
+  const t = valor?.trim()
+  return t ? t : null
+}
 
 const TAMANHO_MAXIMO_EVOLUCAO = 20_000
 
@@ -31,12 +55,26 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
   }
 
-  const { pacienteIniciais, tipoConsulta } = analise.data
+  const { pacienteIniciais, tipoConsulta, pacienteId } = analise.data
+
+  // Vínculo opcional a um paciente cadastrado — valida posse (multi-tenant).
+  let vinculoId: string | null = null
+  let iniciais = pacienteIniciais.trim()
+  if (pacienteId) {
+    const paciente = await prismaClinico.paciente.findFirst({
+      where: { id: pacienteId, usuarioAuthId: user.id, excluidoEm: null },
+      select: { id: true, nomeCompleto: true },
+    })
+    if (!paciente) return { ok: false, erro: 'Paciente não encontrado.' }
+    vinculoId = paciente.id
+    iniciais = paciente.nomeCompleto
+  }
 
   const consulta = await prismaClinico.consulta.create({
     data: {
       usuarioAuthId: user.id,
-      pacienteIniciais: pacienteIniciais.trim(),
+      pacienteIniciais: iniciais,
+      pacienteId: vinculoId,
       tipoConsulta,
       status: 'GRAVANDO',
       consentimentoConfirmado: true,
@@ -50,6 +88,96 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
   })
 
   return { ok: true, id: consulta.id }
+}
+
+/** Cria um paciente (opt-in). Exige cadastro ativo + consentimento. Multi-tenant. */
+export async function criarPaciente(entrada: PacienteInput): Promise<ResultadoCriarPaciente> {
+  const user = await exigirUsuario()
+  if (!(await exigirCadastroAtivo(user.id))) {
+    return { ok: false, erro: 'Ative o cadastro de pacientes nas Preferências primeiro.' }
+  }
+  const analise = pacienteSchema.safeParse(entrada)
+  if (!analise.success) {
+    return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
+  }
+  const d = analise.data
+  if (!d.consentimentoCadastro) {
+    return { ok: false, erro: 'Confirme o consentimento do paciente para registrar os dados.' }
+  }
+
+  const paciente = await prismaClinico.paciente.create({
+    data: {
+      usuarioAuthId: user.id,
+      nomeCompleto: d.nomeCompleto.trim(),
+      dataNascimento: dataDeTexto(d.dataNascimento),
+      cpf: limpo(d.cpf),
+      email: limpo(d.email),
+      telefone: limpo(d.telefone),
+      endereco: limpo(d.endereco),
+      alergias: d.alergias,
+      medicamentos: d.medicamentos,
+      condicoesCronicas: d.condicoesCronicas,
+      antecedentes: limpo(d.antecedentes),
+      consentimentoCadastro: true,
+      consentimentoEm: new Date(),
+    },
+    select: { id: true },
+  })
+  await prismaClinico.logAcesso.create({
+    data: { usuarioAuthId: user.id, acao: 'CRIAR_PACIENTE' },
+  })
+  revalidatePath('/pacientes')
+  return { ok: true, id: paciente.id }
+}
+
+/** Atualiza os dados de um paciente. Multi-tenant. Preserva o consentimento. */
+export async function atualizarPaciente(
+  id: string,
+  entrada: PacienteInput,
+): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+  const analise = pacienteSchema.safeParse(entrada)
+  if (!analise.success) {
+    return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
+  }
+  const d = analise.data
+  const res = await prismaClinico.paciente.updateMany({
+    where: { id, usuarioAuthId: user.id, excluidoEm: null },
+    data: {
+      nomeCompleto: d.nomeCompleto.trim(),
+      dataNascimento: dataDeTexto(d.dataNascimento),
+      cpf: limpo(d.cpf),
+      email: limpo(d.email),
+      telefone: limpo(d.telefone),
+      endereco: limpo(d.endereco),
+      alergias: d.alergias,
+      medicamentos: d.medicamentos,
+      condicoesCronicas: d.condicoesCronicas,
+      antecedentes: limpo(d.antecedentes),
+    },
+  })
+  if (res.count === 0) return { ok: false, erro: 'Paciente não encontrado.' }
+  await prismaClinico.logAcesso.create({
+    data: { usuarioAuthId: user.id, acao: 'EDITAR_PACIENTE' },
+  })
+  revalidatePath(`/pacientes/${id}`)
+  revalidatePath('/pacientes')
+  return { ok: true }
+}
+
+/** Exclui um paciente (soft-delete). As consultas vinculadas são desvinculadas. */
+export async function excluirPaciente(id: string): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+  const res = await prismaClinico.paciente.updateMany({
+    where: { id, usuarioAuthId: user.id, excluidoEm: null },
+    data: { excluidoEm: new Date() },
+  })
+  if (res.count === 0) return { ok: false, erro: 'Paciente não encontrado.' }
+  await prismaClinico.logAcesso.create({
+    data: { usuarioAuthId: user.id, acao: 'EXCLUIR_PACIENTE' },
+  })
+  revalidatePath('/pacientes')
+  return { ok: true }
 }
 
 /**

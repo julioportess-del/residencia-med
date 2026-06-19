@@ -62,6 +62,40 @@ export const preferenciasSchema = z.object({
 
 export type PreferenciasInput = z.infer<typeof preferenciasSchema>
 
+// Cadastro OPT-IN de paciente (dado sensível LGPD). Campos opcionais aceitam "".
+const listaTexto = z.array(z.string().trim().min(1).max(120)).max(40).optional().default([])
+
+export const pacienteSchema = z.object({
+  nomeCompleto: z
+    .string()
+    .trim()
+    .min(2, 'Informe o nome do paciente.')
+    .max(120, 'Nome muito longo (máx. 120).'),
+  dataNascimento: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida.')
+    .optional()
+    .or(z.literal('')),
+  cpf: z
+    .string()
+    .trim()
+    .max(14)
+    .regex(/^[\d.\-/]*$/, 'CPF deve conter apenas números.')
+    .optional()
+    .or(z.literal('')),
+  email: z.string().trim().email('E-mail inválido.').optional().or(z.literal('')),
+  telefone: z.string().trim().max(30).optional().or(z.literal('')),
+  endereco: z.string().trim().max(200).optional().or(z.literal('')),
+  alergias: listaTexto,
+  medicamentos: listaTexto,
+  condicoesCronicas: listaTexto,
+  antecedentes: z.string().trim().max(1000).optional().or(z.literal('')),
+  consentimentoCadastro: z.boolean(),
+})
+
+export type PacienteInput = z.infer<typeof pacienteSchema>
+
 const SENHA_MINIMA = 8
 
 export const cadastroSchema = z
