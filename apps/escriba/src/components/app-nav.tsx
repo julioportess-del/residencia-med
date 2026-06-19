@@ -28,15 +28,13 @@ interface ItemNav {
 const ITENS: ItemNav[] = [
   { href: '/dashboard', rotulo: 'Dashboard', icone: LayoutDashboard },
   { href: '/consultas', rotulo: 'Consultas', icone: Stethoscope },
+  { href: '/pacientes', rotulo: 'Pacientes', icone: Users },
   { href: '/assistente', rotulo: 'Assistente', icone: Sparkles },
   { href: '/metricas', rotulo: 'Métricas', icone: BarChart3 },
   { href: '/preferencias', rotulo: 'Preferências', icone: Settings2 },
 ]
 
-const ITENS_FUTUROS: ItemNav[] = [
-  { href: '#', rotulo: 'Pacientes', icone: Users, emBreve: true },
-  { href: '#', rotulo: 'Modelos', icone: FileText, emBreve: true },
-]
+const ITENS_FUTUROS: ItemNav[] = [{ href: '#', rotulo: 'Modelos', icone: FileText, emBreve: true }]
 
 function estaAtivo(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)

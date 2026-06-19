@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition, type FormEvent } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck, UserPlus } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,22 +12,46 @@ import { TIPO_CONSULTA_LABEL } from '@/lib/rotulos'
 import { TIPO_CONSULTA_VALORES, novaConsultaSchema } from '@/lib/validacao'
 import { criarConsulta } from '@/server/actions'
 
-export function NovaConsultaForm() {
+interface PacienteOpcao {
+  id: string
+  nomeCompleto: string
+}
+
+interface NovaConsultaFormProps {
+  cadastroAtivo: boolean
+  pacientes: PacienteOpcao[]
+  preSelecionadoId?: string
+}
+
+export function NovaConsultaForm({
+  cadastroAtivo,
+  pacientes,
+  preSelecionadoId,
+}: NovaConsultaFormProps) {
   const router = useRouter()
   const [pendente, iniciarTransicao] = useTransition()
+  const [pacienteId, setPacienteId] = useState(preSelecionadoId ?? '')
   const [iniciais, setIniciais] = useState('')
   const [tipo, setTipo] = useState<(typeof TIPO_CONSULTA_VALORES)[number]>('DEMANDA_ESPONTANEA')
   const [consentimento, setConsentimento] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
+  // Quando há paciente vinculado, as iniciais derivam do nome cadastrado.
+  const usandoPaciente = cadastroAtivo && pacienteId !== ''
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErro(null)
 
+    const nomePaciente = usandoPaciente
+      ? (pacientes.find((p) => p.id === pacienteId)?.nomeCompleto ?? '')
+      : iniciais
+
     const analise = novaConsultaSchema.safeParse({
-      pacienteIniciais: iniciais,
+      pacienteIniciais: nomePaciente,
       tipoConsulta: tipo,
       consentimentoConfirmado: consentimento,
+      ...(usandoPaciente ? { pacienteId } : {}),
     })
     if (!analise.success) {
       setErro(analise.error.issues[0]?.message ?? 'Verifique os campos.')
@@ -45,22 +70,47 @@ export function NovaConsultaForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
-      <div className="space-y-1.5">
-        <Label htmlFor="iniciais">Nome do paciente</Label>
-        <Input
-          id="iniciais"
-          value={iniciais}
-          onChange={(e) => setIniciais(e.target.value)}
-          placeholder="Ex.: Maria Silva (ou apenas iniciais)"
-          autoComplete="off"
-          maxLength={120}
-          required
-        />
-        <p className="text-xs text-muted-foreground">
-          Nome completo ou iniciais. Não registre CPF, RG ou outros números. Os dados ficam visíveis
-          apenas para você.
-        </p>
-      </div>
+      {cadastroAtivo ? (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="paciente">Paciente</Label>
+            <Link
+              href="/pacientes/novo"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              Cadastrar novo
+            </Link>
+          </div>
+          <Select id="paciente" value={pacienteId} onChange={(e) => setPacienteId(e.target.value)}>
+            <option value="">Digitar nome/iniciais (sem cadastro)</option>
+            {pacientes.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nomeCompleto}
+              </option>
+            ))}
+          </Select>
+        </div>
+      ) : null}
+
+      {!usandoPaciente ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="iniciais">Nome do paciente</Label>
+          <Input
+            id="iniciais"
+            value={iniciais}
+            onChange={(e) => setIniciais(e.target.value)}
+            placeholder="Ex.: Maria Silva (ou apenas iniciais)"
+            autoComplete="off"
+            maxLength={120}
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            Nome completo ou iniciais. Não registre CPF, RG ou outros números. Os dados ficam
+            visíveis apenas para você.
+          </p>
+        </div>
+      ) : null}
 
       <div className="space-y-1.5">
         <Label htmlFor="tipo">Tipo de consulta</Label>
