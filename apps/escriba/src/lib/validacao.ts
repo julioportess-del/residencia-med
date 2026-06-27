@@ -36,6 +36,8 @@ export const novaConsultaSchema = z.object({
   }),
   // Vínculo OPT-IN a um cadastro de paciente (quando o médico ativou).
   pacienteId: z.string().trim().min(1).optional(),
+  // Modelo de documento aplicado (guia a IA).
+  modeloId: z.string().trim().min(1).optional(),
 })
 
 export type NovaConsultaInput = z.infer<typeof novaConsultaSchema>
@@ -95,6 +97,30 @@ export const pacienteSchema = z.object({
 })
 
 export type PacienteInput = z.infer<typeof pacienteSchema>
+
+// Modelo de documento (template que guia a IA na estruturação).
+export const TIPO_DOC_MODELO_VALORES = [
+  'EVOLUCAO',
+  'RECEITUARIO',
+  'ATESTADO',
+  'SOLICITACAO_EXAMES',
+  'RESUMO',
+  'OUTRO',
+] as const
+
+export const modeloSchema = z.object({
+  nome: z.string().trim().min(2, 'Dê um nome ao modelo.').max(80, 'Nome muito longo.'),
+  especialidade: z.string().trim().max(80).optional().or(z.literal('')),
+  tipoDocumento: z.enum(TIPO_DOC_MODELO_VALORES).optional().default('EVOLUCAO'),
+  instrucoes: z
+    .string()
+    .trim()
+    .min(5, 'Descreva as instruções que a IA deve seguir.')
+    .max(2000, 'Instruções muito longas (máx. 2000).'),
+  formatoBase: z.enum(MODELO_EVOLUCAO_VALORES).optional().default('SOAP'),
+})
+
+export type ModeloInput = z.infer<typeof modeloSchema>
 
 const SENHA_MINIMA = 8
 

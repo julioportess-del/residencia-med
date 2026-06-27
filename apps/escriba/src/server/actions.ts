@@ -13,9 +13,11 @@ import {
   novaConsultaSchema,
   preferenciasSchema,
   pacienteSchema,
+  modeloSchema,
   type NovaConsultaInput,
   type PreferenciasInput,
   type PacienteInput,
+  type ModeloInput,
 } from '@/lib/validacao'
 
 export type ResultadoCriarConsulta = { ok: true; id: string } | { ok: false; erro: string }
@@ -55,7 +57,7 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
   }
 
-  const { pacienteIniciais, tipoConsulta, pacienteId } = analise.data
+  const { pacienteIniciais, tipoConsulta, pacienteId, modeloId } = analise.data
 
   // Vínculo opcional a um paciente cadastrado — valida posse (multi-tenant).
   let vinculoId: string | null = null
@@ -70,11 +72,27 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
     iniciais = paciente.nomeCompleto
   }
 
+  // Modelo opcional — próprio ou da plataforma.
+  let vinculoModeloId: string | null = null
+  if (modeloId) {
+    const modelo = await prismaClinico.modelo.findFirst({
+      where: {
+        id: modeloId,
+        excluidoEm: null,
+        OR: [{ usuarioAuthId: user.id }, { isPublico: true }],
+      },
+      select: { id: true },
+    })
+    if (!modelo) return { ok: false, erro: 'Modelo não encontrado.' }
+    vinculoModeloId = modelo.id
+  }
+
   const consulta = await prismaClinico.consulta.create({
     data: {
       usuarioAuthId: user.id,
       pacienteIniciais: iniciais,
       pacienteId: vinculoId,
+      modeloId: vinculoModeloId,
       tipoConsulta,
       status: 'GRAVANDO',
       consentimentoConfirmado: true,
@@ -82,6 +100,16 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
     },
     select: { id: true },
   })
+
+  // Contabiliza o uso do modelo.
+  if (vinculoModeloId) {
+    await prismaClinico.modelo
+      .update({
+        where: { id: vinculoModeloId },
+        data: { usosCount: { increment: 1 }, ultimoUsoEm: new Date() },
+      })
+      .catch(() => undefined)
+  }
 
   await prismaClinico.logAcesso.create({
     data: { usuarioAuthId: user.id, acao: 'CRIAR_CONSULTA', consultaId: consulta.id },
@@ -177,6 +205,110 @@ export async function excluirPaciente(id: string): Promise<ResultadoAcao> {
     data: { usuarioAuthId: user.id, acao: 'EXCLUIR_PACIENTE' },
   })
   revalidatePath('/pacientes')
+  return { ok: true }
+}
+
+export type ResultadoCriarModelo = { ok: true; id: string } | { ok: false; erro: string }
+
+/** Cria um modelo do médico (template que guia a IA). Multi-tenant. */
+export async function criarModelo(entrada: ModeloInput): Promise<ResultadoCriarModelo> {
+  const user = await exigirUsuario()
+  const analise = modeloSchema.safeParse(entrada)
+  if (!analise.success) {
+    return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
+  }
+  const d = analise.data
+  const modelo = await prismaClinico.modelo.create({
+    data: {
+      usuarioAuthId: user.id,
+      nome: d.nome.trim(),
+      especialidade: limpo(d.especialidade),
+      tipoDocumento: d.tipoDocumento,
+      instrucoes: d.instrucoes.trim(),
+      formatoBase: d.formatoBase,
+      isPublico: false,
+    },
+    select: { id: true },
+  })
+  await prismaClinico.logAcesso.create({ data: { usuarioAuthId: user.id, acao: 'CRIAR_MODELO' } })
+  revalidatePath('/modelos')
+  return { ok: true, id: modelo.id }
+}
+
+/** Atualiza um modelo PRÓPRIO. Modelos da plataforma não são editáveis. */
+export async function atualizarModelo(id: string, entrada: ModeloInput): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+  const analise = modeloSchema.safeParse(entrada)
+  if (!analise.success) {
+    return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
+  }
+  const d = analise.data
+  const res = await prismaClinico.modelo.updateMany({
+    where: { id, usuarioAuthId: user.id, excluidoEm: null },
+    data: {
+      nome: d.nome.trim(),
+      especialidade: limpo(d.especialidade),
+      tipoDocumento: d.tipoDocumento,
+      instrucoes: d.instrucoes.trim(),
+      formatoBase: d.formatoBase,
+    },
+  })
+  if (res.count === 0) return { ok: false, erro: 'Modelo não encontrado ou não editável.' }
+  revalidatePath(`/modelos/${id}`)
+  revalidatePath('/modelos')
+  return { ok: true }
+}
+
+/** Exclui (soft-delete) um modelo PRÓPRIO. */
+export async function excluirModelo(id: string): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+  const res = await prismaClinico.modelo.updateMany({
+    where: { id, usuarioAuthId: user.id, excluidoEm: null },
+    data: { excluidoEm: new Date() },
+  })
+  if (res.count === 0) return { ok: false, erro: 'Modelo não encontrado ou não removível.' }
+  revalidatePath('/modelos')
+  return { ok: true }
+}
+
+/** Duplica um modelo (próprio ou da plataforma) como um novo modelo do médico. */
+export async function duplicarModelo(id: string): Promise<ResultadoCriarModelo> {
+  const user = await exigirUsuario()
+  const origem = await prismaClinico.modelo.findFirst({
+    where: { id, excluidoEm: null, OR: [{ usuarioAuthId: user.id }, { isPublico: true }] },
+  })
+  if (!origem) return { ok: false, erro: 'Modelo não encontrado.' }
+  const novo = await prismaClinico.modelo.create({
+    data: {
+      usuarioAuthId: user.id,
+      nome: `${origem.nome} (cópia)`.slice(0, 80),
+      especialidade: origem.especialidade,
+      tipoDocumento: origem.tipoDocumento,
+      instrucoes: origem.instrucoes,
+      formatoBase: origem.formatoBase,
+      isPublico: false,
+    },
+    select: { id: true },
+  })
+  revalidatePath('/modelos')
+  return { ok: true, id: novo.id }
+}
+
+/** Define um modelo PRÓPRIO como padrão (duplique um da plataforma antes, se preciso). */
+export async function definirModeloPadrao(id: string): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+  const res = await prismaClinico.modelo.updateMany({
+    where: { id, usuarioAuthId: user.id, excluidoEm: null },
+    data: { isPadrao: true },
+  })
+  if (res.count === 0) {
+    return { ok: false, erro: 'Só modelos próprios podem ser padrão. Duplique o modelo primeiro.' }
+  }
+  await prismaClinico.modelo.updateMany({
+    where: { usuarioAuthId: user.id, id: { not: id }, isPadrao: true },
+    data: { isPadrao: false },
+  })
+  revalidatePath('/modelos')
   return { ok: true }
 }
 

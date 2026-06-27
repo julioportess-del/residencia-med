@@ -7,6 +7,7 @@ import {
 } from '@residencia-med/ai/clinico'
 import { usuarioAtual } from '@/lib/supabase/server'
 import { obterPreferencias } from '@/server/preferencias'
+import { contextoDoModelo } from '@/server/modelos'
 
 export const dynamic = 'force-dynamic'
 // Uma única chamada ao Claude → dentro do limite Hobby (60 s).
@@ -33,7 +34,7 @@ export async function POST(req: Request, { params }: Contexto) {
 
   const consulta = await prismaClinico.consulta.findFirst({
     where: { id, usuarioAuthId: user.id, excluidoEm: null },
-    select: { id: true, status: true, tipoConsulta: true },
+    select: { id: true, status: true, tipoConsulta: true, modeloId: true },
   })
   if (!consulta) return erroJson('Consulta não encontrada.', 404)
   if (consulta.status === 'REVISADO') {
@@ -66,10 +67,13 @@ export async function POST(req: Request, { params }: Contexto) {
     })
 
     const pref = await obterPreferencias(user.id)
+    // Modelo aplicado à consulta (se houver) guia a IA: especialidade + instruções.
+    const modelo = consulta.modeloId ? await contextoDoModelo(user.id, consulta.modeloId) : null
+    const instrucoes = [modelo?.instrucoes, pref.instrucoesCustom].filter(Boolean).join('\n\n')
     const estrutura = await estruturarConsulta(transcricao, {
       tipoConsulta: consulta.tipoConsulta,
-      especialidade: pref.especialidade || undefined,
-      instrucoesMedico: pref.instrucoesCustom || undefined,
+      especialidade: modelo?.especialidade || pref.especialidade || undefined,
+      instrucoesMedico: instrucoes || undefined,
     })
     const evolucoes = renderizarEvolucoes(estrutura)
     const dados = estrutura as object
