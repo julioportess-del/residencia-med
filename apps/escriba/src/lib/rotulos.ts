@@ -31,3 +31,12 @@ export const MODELO_EVOLUCAO_LABEL: Record<string, string> = {
   CORRIDA: 'Evolução corrida',
   UBS: 'Prontuário UBS',
 }
+
+export const TIPO_DOC_MODELO_LABEL: Record<string, string> = {
+  EVOLUCAO: 'Evolução',
+  RECEITUARIO: 'Receituário',
+  ATESTADO: 'Atestado',
+  SOLICITACAO_EXAMES: 'Solicitação de exames',
+  RESUMO: 'Resumo clínico',
+  OUTRO: 'Outro',
+}

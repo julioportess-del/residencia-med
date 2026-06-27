@@ -18,20 +18,32 @@ interface PacienteOpcao {
   nomeCompleto: string
 }
 
+interface ModeloOpcao {
+  id: string
+  nome: string
+  especialidade: string | null
+  isPadrao: boolean
+}
+
 interface NovaConsultaFormProps {
   cadastroAtivo: boolean
   pacientes: PacienteOpcao[]
   preSelecionadoId?: string
+  modelos: ModeloOpcao[]
+  preModeloId?: string
 }
 
 export function NovaConsultaForm({
   cadastroAtivo,
   pacientes,
   preSelecionadoId,
+  modelos,
+  preModeloId,
 }: NovaConsultaFormProps) {
   const router = useRouter()
   const [pendente, iniciarTransicao] = useTransition()
   const [pacienteId, setPacienteId] = useState(preSelecionadoId ?? '')
+  const [modeloId, setModeloId] = useState(preModeloId ?? '')
   const [iniciais, setIniciais] = useState('')
   const [tipo, setTipo] = useState<(typeof TIPO_CONSULTA_VALORES)[number]>('DEMANDA_ESPONTANEA')
   const [consentimento, setConsentimento] = useState(false)
@@ -53,6 +65,7 @@ export function NovaConsultaForm({
       tipoConsulta: tipo,
       consentimentoConfirmado: consentimento,
       ...(usandoPaciente ? { pacienteId } : {}),
+      ...(modeloId ? { modeloId } : {}),
     })
     if (!analise.success) {
       setErro(analise.error.issues[0]?.message ?? 'Verifique os campos.')
@@ -123,6 +136,22 @@ export function NovaConsultaForm({
           ))}
         </Select>
       </div>
+
+      {modelos.length > 0 ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="modelo">Modelo (guia a IA)</Label>
+          <Select id="modelo" value={modeloId} onChange={(e) => setModeloId(e.target.value)}>
+            <option value="">Padrão da especialidade / preferências</option>
+            {modelos.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nome}
+                {m.especialidade ? ` · ${m.especialidade}` : ''}
+                {m.isPadrao ? ' (padrão)' : ''}
+              </option>
+            ))}
+          </Select>
+        </div>
+      ) : null}
 
       <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-input bg-muted/40 p-3.5">
         <input

@@ -29,12 +29,13 @@ const ITENS: ItemNav[] = [
   { href: '/dashboard', rotulo: 'Dashboard', icone: LayoutDashboard },
   { href: '/consultas', rotulo: 'Consultas', icone: Stethoscope },
   { href: '/pacientes', rotulo: 'Pacientes', icone: Users },
+  { href: '/modelos', rotulo: 'Modelos', icone: FileText },
   { href: '/assistente', rotulo: 'Assistente', icone: Sparkles },
   { href: '/metricas', rotulo: 'Métricas', icone: BarChart3 },
   { href: '/preferencias', rotulo: 'Preferências', icone: Settings2 },
 ]
 
-const ITENS_FUTUROS: ItemNav[] = [{ href: '#', rotulo: 'Modelos', icone: FileText, emBreve: true }]
+const ITENS_FUTUROS: ItemNav[] = []
 
 function estaAtivo(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)
@@ -64,21 +65,25 @@ function ListaNav({ onNavegar }: { onNavegar?: () => void }) {
         )
       })}
 
-      <p className="px-3 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground/60">
-        Em breve
-      </p>
-      {ITENS_FUTUROS.map((item) => (
-        <span
-          key={item.rotulo}
-          className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/50"
-        >
-          <item.icone className="h-4 w-4 shrink-0" />
-          {item.rotulo}
-          <span className="ml-auto rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            em breve
-          </span>
-        </span>
-      ))}
+      {ITENS_FUTUROS.length > 0 ? (
+        <>
+          <p className="px-3 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground/60">
+            Em breve
+          </p>
+          {ITENS_FUTUROS.map((item) => (
+            <span
+              key={item.rotulo}
+              className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/50"
+            >
+              <item.icone className="h-4 w-4 shrink-0" />
+              {item.rotulo}
+              <span className="ml-auto rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                em breve
+              </span>
+            </span>
+          ))}
+        </>
+      ) : null}
     </nav>
   )
 }

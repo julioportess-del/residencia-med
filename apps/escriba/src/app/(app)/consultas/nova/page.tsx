@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { exigirUsuario } from '@/lib/auth'
 import { obterPreferencias } from '@/server/preferencias'
 import { listarPacientes } from '@/server/pacientes'
+import { listarModelos } from '@/server/modelos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { NovaConsultaForm } from './_components/nova-consulta-form'
 
@@ -11,11 +12,11 @@ export const dynamic = 'force-dynamic'
 export default async function NovaConsultaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ paciente?: string }>
+  searchParams: Promise<{ paciente?: string; modelo?: string }>
 }) {
   const user = await exigirUsuario()
   const pref = await obterPreferencias(user.id)
-  const { paciente: pacienteParam } = await searchParams
+  const { paciente: pacienteParam, modelo: modeloParam } = await searchParams
 
   let pacientes: { id: string; nomeCompleto: string }[] = []
   if (pref.cadastroPacientesAtivo) {
@@ -23,6 +24,16 @@ export default async function NovaConsultaPage({
     pacientes = lista.map((p) => ({ id: p.id, nomeCompleto: p.nomeCompleto }))
   }
   const preSelecionadoId = pacientes.some((p) => p.id === pacienteParam) ? pacienteParam : undefined
+
+  const listaModelos = await listarModelos(user.id)
+  const modelos = listaModelos.map((m) => ({
+    id: m.id,
+    nome: m.nome,
+    especialidade: m.especialidade,
+    isPadrao: m.isPadrao,
+  }))
+  const padraoId = modelos.find((m) => m.isPadrao)?.id
+  const preModeloId = modelos.some((m) => m.id === modeloParam) ? modeloParam : padraoId
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -43,6 +54,8 @@ export default async function NovaConsultaPage({
             cadastroAtivo={pref.cadastroPacientesAtivo}
             pacientes={pacientes}
             preSelecionadoId={preSelecionadoId}
+            modelos={modelos}
+            preModeloId={preModeloId}
           />
         </CardContent>
       </Card>

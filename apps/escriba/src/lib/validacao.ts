@@ -108,6 +108,9 @@ export const TIPO_DOC_MODELO_VALORES = [
   'OUTRO',
 ] as const
 
+export type TipoDocModelo = (typeof TIPO_DOC_MODELO_VALORES)[number]
+export type FormatoEvolucao = (typeof MODELO_EVOLUCAO_VALORES)[number]
+
 export const modeloSchema = z.object({
   nome: z.string().trim().min(2, 'Dê um nome ao modelo.').max(80, 'Nome muito longo.'),
   especialidade: z.string().trim().max(80).optional().or(z.literal('')),
