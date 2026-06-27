@@ -75,6 +75,17 @@ enum StatusAnexo {
   @@schema("clinico")
 }
 
+enum TipoDocumentoModelo {
+  EVOLUCAO
+  RECEITUARIO
+  ATESTADO
+  SOLICITACAO_EXAMES
+  RESUMO
+  OUTRO
+
+  @@schema("clinico")
+}
+
 // ==================== MODELS ====================
 
 /// Uma consulta gravada. Referencia o medico apenas por `usuarioAuthId`
@@ -85,6 +96,8 @@ model Consulta {
   pacienteIniciais String // por padrao iniciais (minimizacao); se vinculado a Paciente, deriva do nome
   pacienteId       String? // vinculo OPT-IN a um cadastro de paciente identificavel
   paciente         Paciente?      @relation(fields: [pacienteId], references: [id], onDelete: SetNull)
+  modeloId         String? // modelo de documento aplicado nesta consulta (guia a IA)
+  modelo           Modelo?        @relation(fields: [modeloId], references: [id], onDelete: SetNull)
   tipoConsulta     TipoConsulta   @default(DEMANDA_ESPONTANEA)
   status           StatusConsulta @default(GRAVANDO)
 
@@ -103,6 +116,7 @@ model Consulta {
   @@index([usuarioAuthId])
   @@index([status])
   @@index([pacienteId])
+  @@index([modeloId])
   @@schema("clinico")
 }
 
@@ -188,6 +202,34 @@ model Paciente {
 
   @@index([usuarioAuthId])
   @@index([nomeCompleto])
+  @@schema("clinico")
+}
+
+/// Modelo de documento que guia a IA na estruturacao (estilo template). Pode ser
+/// da PLATAFORMA (`usuarioAuthId` null, `isPublico` true, criado no seed) ou do
+/// proprio medico. `instrucoes` = orientacao injetada no prompt; `formatoBase` =
+/// aba de evolucao padrao. Nao contem dado de paciente.
+model Modelo {
+  id            String              @id @default(cuid())
+  usuarioAuthId String? // null = modelo da plataforma (Escriba)
+  nome          String
+  especialidade String? // ex.: "Cardiologia"
+  tipoDocumento TipoDocumentoModelo @default(EVOLUCAO)
+  instrucoes    String // orientacao p/ a IA seguir ao montar a evolucao
+  formatoBase   ModeloEvolucao      @default(SOAP)
+  isPublico     Boolean             @default(false)
+  isPadrao      Boolean             @default(false) // padrao do medico (1 por medico)
+  usosCount     Int                 @default(0)
+  ultimoUsoEm   DateTime?
+
+  consultas Consulta[]
+
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+  excluidoEm   DateTime?
+
+  @@index([usuarioAuthId])
+  @@index([especialidade])
   @@schema("clinico")
 }
 
