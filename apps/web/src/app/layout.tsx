@@ -1,14 +1,16 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Toaster } from 'sonner'
 import { TRPCProvider } from '@/lib/trpc/provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
+// Inter self-hosted (variável, subset latin): build 100% offline — sem
+// depender do Google Fonts em CI/deploy — e sem request externo no runtime.
+const inter = localFont({
+  src: './fonts/inter-var-latin.woff2',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
+  weight: '100 900',
   variable: '--font-inter',
 })
 
