@@ -15,17 +15,19 @@ export default async function NovaConsultaPage({
   searchParams: Promise<{ paciente?: string; modelo?: string }>
 }) {
   const user = await exigirUsuario()
-  const pref = await obterPreferencias(user.id)
   const { paciente: pacienteParam, modelo: modeloParam } = await searchParams
 
-  let pacientes: { id: string; nomeCompleto: string }[] = []
-  if (pref.cadastroPacientesAtivo) {
-    const lista = await listarPacientes(user.id)
-    pacientes = lista.map((p) => ({ id: p.id, nomeCompleto: p.nomeCompleto }))
-  }
-  const preSelecionadoId = pacientes.some((p) => p.id === pacienteParam) ? pacienteParam : undefined
+  // Uma única rodada de queries em paralelo — corta a latência da página.
+  const [pref, listaPacientes, listaModelos] = await Promise.all([
+    obterPreferencias(user.id),
+    listarPacientes(user.id),
+    listarModelos(user.id),
+  ])
 
-  const listaModelos = await listarModelos(user.id)
+  const pacientes = pref.cadastroPacientesAtivo
+    ? listaPacientes.map((p) => ({ id: p.id, nomeCompleto: p.nomeCompleto }))
+    : []
+  const preSelecionadoId = pacientes.some((p) => p.id === pacienteParam) ? pacienteParam : undefined
   const modelos = listaModelos.map((m) => ({
     id: m.id,
     nome: m.nome,

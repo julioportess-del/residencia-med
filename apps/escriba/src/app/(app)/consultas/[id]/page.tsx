@@ -16,7 +16,6 @@ import { ConsultaConteudo } from './_components/consulta-conteudo'
 import { ProcessandoPoll } from './_components/processando-poll'
 import { ReestruturarBotao } from './_components/reestruturar-botao'
 import { ConsultaAnexos, type AnexoHistorico } from './_components/consulta-anexos'
-import { AssistenteConsulta } from '@/components/assistente-consulta'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,21 +25,29 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
   const { id } = await params
   const user = await exigirUsuario()
 
-  const consulta = await prismaClinico.consulta.findFirst({
-    where: { id, usuarioAuthId: user.id, excluidoEm: null },
-    include: {
-      evolucoes: {
-        select: {
-          id: true,
-          modelo: true,
-          textoGerado: true,
-          textoEditado: true,
-          dadosEstruturados: true,
+  // Consulta e anexos em paralelo (ambos filtrados por tenant) — menos latência.
+  const [consulta, anexosConsulta] = await Promise.all([
+    prismaClinico.consulta.findFirst({
+      where: { id, usuarioAuthId: user.id, excluidoEm: null },
+      include: {
+        evolucoes: {
+          select: {
+            id: true,
+            modelo: true,
+            textoGerado: true,
+            textoEditado: true,
+            dadosEstruturados: true,
+          },
         },
+        transcricao: { select: { id: true } },
       },
-      transcricao: { select: { id: true } },
-    },
-  })
+    }),
+    prismaClinico.anexo.findMany({
+      where: { consultaId: id, usuarioAuthId: user.id, excluidoEm: null },
+      orderBy: { criadoEm: 'desc' },
+      select: { id: true, nomeArquivo: true, tipoMime: true, status: true, resumoAnalise: true },
+    }),
+  ])
   if (!consulta) notFound()
   if (consulta.status === 'GRAVANDO') redirect(`/consultas/${consulta.id}/gravar`)
 
@@ -62,12 +69,6 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
     : []
   const estrutura = estruturaParse.success ? estruturaParse.data : null
 
-  // Anexos (exames/imagens) vinculados a esta consulta.
-  const anexosConsulta = await prismaClinico.anexo.findMany({
-    where: { consultaId: consulta.id, usuarioAuthId: user.id, excluidoEm: null },
-    orderBy: { criadoEm: 'desc' },
-    select: { id: true, nomeArquivo: true, tipoMime: true, status: true, resumoAnalise: true },
-  })
   const anexosIniciais: AnexoHistorico[] = anexosConsulta.map((a) => ({
     id: a.id,
     nomeArquivo: a.nomeArquivo,
@@ -120,8 +121,6 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
           )}
         </CardContent>
       </Card>
-
-      <AssistenteConsulta consultaId={consulta.id} />
 
       <Card>
         <CardHeader>

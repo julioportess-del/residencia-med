@@ -14,7 +14,7 @@ type Progresso = {
   total: number
 }
 
-const CONCORRENCIA_CHUNKS = 6
+const CONCORRENCIA_CHUNKS = 8
 const MAX_TENTATIVAS_CHUNK = 3
 
 function formatarTempo(segundos: number): string {
@@ -44,6 +44,13 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const intervaloRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Marcas em ref: o onstop do recorder captura closures antigas — a ref
+  // garante que a transcrição sempre veja as marcas atuais.
+  const marcasRef = useRef<number[]>([])
+  // Pré-transcrição em segundo plano: começa ao finalizar a gravação,
+  // enquanto o médico revê o áudio. "Gerar prontuário" só espera o restante.
+  const preTransRef = useRef<{ geracao: number; promessa: Promise<string> } | null>(null)
+  const geracaoRef = useRef(0)
 
   const pararTimer = useCallback(() => {
     if (intervaloRef.current) {
@@ -100,6 +107,9 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
         setAudio({ blob, url: URL.createObjectURL(blob) })
         liberarStream()
         setEstado('finalizado')
+        // Adianta o trabalho pesado: corta e transcreve em segundo plano
+        // enquanto o médico revisa o áudio.
+        iniciarPreTranscricao(blob)
       }
       recorder.start()
       recorderRef.current = recorder
@@ -129,7 +139,8 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   }
 
   function marcarMomento() {
-    setMarcas((m) => [...m, segundos])
+    marcasRef.current = [...marcasRef.current, segundos]
+    setMarcas(marcasRef.current)
     setMarcaFeedback(true)
     setTimeout(() => setMarcaFeedback(false), 1500)
   }
@@ -155,13 +166,19 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     setProgresso(null)
     setSegundos(0)
     setMarcas([])
+    marcasRef.current = []
+    // Invalida a pré-transcrição em andamento (workers checam a geração).
+    geracaoRef.current++
+    preTransRef.current = null
     setEstado('ocioso')
   }
 
   // Transcreve os chunks com concorrência limitada, preservando a ordem.
+  // `geracao` permite cancelar workers se o médico regravar no meio.
   async function transcreverChunks(
     chunks: Blob[],
     aoProgredir: (concluidos: number) => void,
+    geracao: number,
   ): Promise<string> {
     const resultados = new Array<string>(chunks.length).fill('')
     let proximo = 0
@@ -199,6 +216,7 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
 
     async function worker() {
       for (;;) {
+        if (geracaoRef.current !== geracao) return // regravou: para de gastar API
         const i = proximo++
         const chunk = chunks[i]
         if (i >= chunks.length || !chunk) return
@@ -211,10 +229,14 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     const trabalhadores = Math.min(CONCORRENCIA_CHUNKS, chunks.length)
     await Promise.all(Array.from({ length: trabalhadores }, () => worker()))
 
+    if (geracaoRef.current !== geracao) throw new Error('Gravação descartada.')
+
     // Insere as marcas de "momento importante" perto do trecho correspondente
     // (precisão de ~90s, o tamanho do chunk) — vira dica textual para a IA.
     const partes = resultados.map((texto, i) => {
-      const marcasDoChunk = marcas.filter((m) => Math.floor(m / SEGUNDOS_POR_CHUNK) === i)
+      const marcasDoChunk = marcasRef.current.filter(
+        (m) => Math.floor(m / SEGUNDOS_POR_CHUNK) === i,
+      )
       const aviso = marcasDoChunk.length
         ? `[Momento importante marcado pelo médico por volta de ${marcasDoChunk
             .map(formatarTempo)
@@ -225,20 +247,47 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     return partes.join(' ').replace(/\s+/g, ' ').trim()
   }
 
+  /** Corta e transcreve o áudio, reportando progresso. */
+  async function executarTranscricao(blob: Blob, geracao: number): Promise<string> {
+    setProgresso({ fase: 'cortando', atual: 0, total: 0 })
+    // 1) Corta o áudio em chunks WAV curtos (no navegador, sem subir o áudio inteiro).
+    const chunks = await audioParaChunksWav(blob)
+    // 2) Transcreve cada chunk (chamadas curtas, cabem no limite serverless).
+    setProgresso({ fase: 'transcrevendo', atual: 0, total: chunks.length })
+    return transcreverChunks(
+      chunks,
+      (concluidos) =>
+        setProgresso({ fase: 'transcrevendo', atual: concluidos, total: chunks.length }),
+      geracao,
+    )
+  }
+
+  /** Dispara a transcrição em segundo plano assim que a gravação termina. */
+  function iniciarPreTranscricao(blob: Blob) {
+    const geracao = ++geracaoRef.current
+    const promessa = executarTranscricao(blob, geracao)
+    // Evita unhandled rejection; o erro reaparece no await de gerarProntuario.
+    promessa.catch(() => undefined)
+    preTransRef.current = { geracao, promessa }
+  }
+
   async function gerarProntuario() {
     if (!audio) return
     setEnvio('enviando')
     setErroEnvio(null)
-    setProgresso({ fase: 'cortando', atual: 0, total: 0 })
     try {
-      // 1) Corta o áudio em chunks WAV curtos (no navegador, sem subir o áudio inteiro).
-      const chunks = await audioParaChunksWav(audio.blob)
-
-      // 2) Transcreve cada chunk (chamadas curtas, cabem no limite serverless).
-      setProgresso({ fase: 'transcrevendo', atual: 0, total: chunks.length })
-      const transcricao = await transcreverChunks(chunks, (concluidos) =>
-        setProgresso({ fase: 'transcrevendo', atual: concluidos, total: chunks.length }),
-      )
+      // Usa a pré-transcrição iniciada ao finalizar; se falhou/não existe, refaz.
+      let transcricao: string
+      try {
+        const pre = preTransRef.current
+        if (pre && pre.geracao === geracaoRef.current) {
+          transcricao = await pre.promessa
+        } else {
+          transcricao = await executarTranscricao(audio.blob, geracaoRef.current)
+        }
+      } catch {
+        transcricao = await executarTranscricao(audio.blob, geracaoRef.current)
+      }
       if (!transcricao) {
         setErroEnvio('Não foi possível captar fala no áudio. Tente regravar.')
         setEnvio('erro')

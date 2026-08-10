@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, LayoutList, Stethoscope } from 'lucide-react'
+import { FileText, LayoutList, Sparkles, Stethoscope } from 'lucide-react'
 import type { EstruturaClinica, TipoDocumento } from '@residencia-med/ai/clinico'
 import { EvolucoesViewer, type EvolucaoItem } from './evolucoes-viewer'
 import { DocumentosPanel } from './documentos-panel'
 import { SecoesViewer } from './secoes-viewer'
 import { RevisaoIA } from './revisao-ia'
+import { AssistenteChatCaso } from '@/components/assistente-consulta'
 
-type Aba = 'prontuario' | 'secoes' | 'documentos'
+type Aba = 'prontuario' | 'secoes' | 'documentos' | 'assistente'
 
 interface ConsultaConteudoProps {
   consultaId: string
@@ -34,7 +35,7 @@ export function ConsultaConteudo({
 
   return (
     <div className="space-y-5">
-      <nav className="flex gap-4 border-b border-border">
+      <nav className="flex flex-wrap gap-x-4 gap-y-1 border-b border-border">
         <button
           type="button"
           onClick={() => setAba('prontuario')}
@@ -61,6 +62,14 @@ export function ConsultaConteudo({
           <FileText className="h-4 w-4" />
           Documentos
         </button>
+        <button
+          type="button"
+          onClick={() => setAba('assistente')}
+          className={aba === 'assistente' ? ESTILO_ATIVO : ESTILO_INATIVO}
+        >
+          <Sparkles className="h-4 w-4" />
+          Assistente
+        </button>
       </nav>
 
       {aba === 'prontuario' ? (
@@ -74,6 +83,8 @@ export function ConsultaConteudo({
         </>
       ) : aba === 'secoes' && estrutura ? (
         <SecoesViewer estrutura={estrutura} />
+      ) : aba === 'assistente' ? (
+        <AssistenteChatCaso consultaId={consultaId} />
       ) : (
         <DocumentosPanel consultaId={consultaId} disponiveis={documentosDisponiveis} />
       )}
