@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Circle, Loader2, Mic, Pause, Play, RotateCcw, Square } from 'lucide-react'
+import { Check, Circle, Flag, Loader2, Mic, Pause, Play, RotateCcw, Square } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
-import { audioParaChunksWav } from '@/lib/audio-chunks'
+import { audioParaChunksWav, SEGUNDOS_POR_CHUNK } from '@/lib/audio-chunks'
 
 type Estado = 'ocioso' | 'gravando' | 'pausado' | 'finalizado'
 type Envio = 'ocioso' | 'enviando' | 'erro'
@@ -36,6 +36,9 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   const [envio, setEnvio] = useState<Envio>('ocioso')
   const [erroEnvio, setErroEnvio] = useState<string | null>(null)
   const [progresso, setProgresso] = useState<Progresso | null>(null)
+  // Momentos importantes marcados pelo médico (segundos desde o início).
+  const [marcas, setMarcas] = useState<number[]>([])
+  const [marcaFeedback, setMarcaFeedback] = useState(false)
 
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -125,6 +128,12 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     setEstado('pausado')
   }
 
+  function marcarMomento() {
+    setMarcas((m) => [...m, segundos])
+    setMarcaFeedback(true)
+    setTimeout(() => setMarcaFeedback(false), 1500)
+  }
+
   function retomar() {
     recorderRef.current?.resume()
     iniciarTimer()
@@ -145,6 +154,7 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     setEnvio('ocioso')
     setProgresso(null)
     setSegundos(0)
+    setMarcas([])
     setEstado('ocioso')
   }
 
@@ -200,7 +210,19 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
 
     const trabalhadores = Math.min(CONCORRENCIA_CHUNKS, chunks.length)
     await Promise.all(Array.from({ length: trabalhadores }, () => worker()))
-    return resultados.join(' ').replace(/\s+/g, ' ').trim()
+
+    // Insere as marcas de "momento importante" perto do trecho correspondente
+    // (precisão de ~90s, o tamanho do chunk) — vira dica textual para a IA.
+    const partes = resultados.map((texto, i) => {
+      const marcasDoChunk = marcas.filter((m) => Math.floor(m / SEGUNDOS_POR_CHUNK) === i)
+      const aviso = marcasDoChunk.length
+        ? `[Momento importante marcado pelo médico por volta de ${marcasDoChunk
+            .map(formatarTempo)
+            .join(', ')}] `
+        : ''
+      return aviso + texto
+    })
+    return partes.join(' ').replace(/\s+/g, ' ').trim()
   }
 
   async function gerarProntuario() {
@@ -359,7 +381,16 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
         </p>
       ) : null}
 
-      <div className="flex justify-center gap-3">
+      {marcas.length > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          <Flag className="mr-1 inline h-3 w-3" />
+          {marcas.length === 1
+            ? `1 momento marcado (${formatarTempo(marcas[0] ?? 0)})`
+            : `${marcas.length} momentos marcados (${marcas.map(formatarTempo).join(', ')})`}
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap justify-center gap-3">
         {estado === 'ocioso' ? (
           <Button size="lg" onClick={iniciar}>
             <Mic className="h-4 w-4" />
@@ -368,10 +399,16 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
         ) : null}
 
         {estado === 'gravando' ? (
-          <Button size="lg" variant="outline" onClick={pausar}>
-            <Pause className="h-4 w-4" />
-            Pausar
-          </Button>
+          <>
+            <Button size="lg" variant="outline" onClick={pausar}>
+              <Pause className="h-4 w-4" />
+              Pausar
+            </Button>
+            <Button size="lg" variant="outline" onClick={marcarMomento}>
+              <Flag className={marcaFeedback ? 'h-4 w-4 text-primary' : 'h-4 w-4'} />
+              {marcaFeedback ? 'Marcado!' : 'Marcar momento'}
+            </Button>
+          </>
         ) : null}
 
         {estado === 'pausado' ? (

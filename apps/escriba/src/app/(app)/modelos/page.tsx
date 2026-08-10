@@ -15,9 +15,9 @@ export default async function ModelosPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Modelos</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Modelos de prontuário</h1>
           <p className="text-sm text-muted-foreground">
-            Templates que guiam a IA na estruturação. Use os da plataforma ou crie os seus.
+            Como o Escriba organiza cada tipo de atendimento. Use os da plataforma ou crie o seu.
           </p>
         </div>
         <Link href="/modelos/novo">

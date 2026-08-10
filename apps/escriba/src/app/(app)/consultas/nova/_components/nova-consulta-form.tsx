@@ -139,17 +139,21 @@ export function NovaConsultaForm({
 
       {modelos.length > 0 ? (
         <div className="space-y-1.5">
-          <Label htmlFor="modelo">Modelo (guia a IA)</Label>
+          <Label htmlFor="modelo">Modelo do prontuário</Label>
           <Select id="modelo" value={modeloId} onChange={(e) => setModeloId(e.target.value)}>
-            <option value="">Padrão da especialidade / preferências</option>
+            <option value="">Automático — recomendado</option>
             {modelos.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.nome}
                 {m.especialidade ? ` · ${m.especialidade}` : ''}
-                {m.isPadrao ? ' (padrão)' : ''}
+                {m.isPadrao ? ' ★ favorito' : ''}
               </option>
             ))}
           </Select>
+          <p className="text-xs text-muted-foreground">
+            No automático, o Escriba usa seu modelo favorito ou identifica a estrutura pela
+            especialidade. Você pode trocar depois.
+          </p>
         </div>
       ) : null}
 

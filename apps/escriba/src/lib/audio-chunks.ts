@@ -3,7 +3,7 @@
 // Tudo roda NO NAVEGADOR — o áudio completo nunca sai do dispositivo (LGPD).
 
 const TAXA_ALVO = 16000 // Whisper trabalha em 16 kHz
-const SEGUNDOS_POR_CHUNK = 90 // 90 s @ 16 kHz mono 16-bit ≈ 2,9 MB (< 4,5 MB)
+export const SEGUNDOS_POR_CHUNK = 90 // 90 s @ 16 kHz mono 16-bit ≈ 2,9 MB (< 4,5 MB)
 
 interface AudioContextCtor {
   new (): AudioContext

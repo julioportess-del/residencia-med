@@ -59,6 +59,7 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
   const docsDisponiveis: TipoDocumento[] = estruturaParse.success
     ? documentosDisponiveis(estruturaParse.data)
     : []
+  const estrutura = estruturaParse.success ? estruturaParse.data : null
 
   // Anexos (exames/imagens) vinculados a esta consulta.
   const anexosConsulta = await prismaClinico.anexo.findMany({
@@ -104,6 +105,7 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
               evolucoes={evolucoes}
               revisado={consulta.status === 'REVISADO'}
               documentosDisponiveis={docsDisponiveis}
+              estrutura={estrutura}
             />
           ) : temTranscricao ? (
             <ReestruturarBotao
