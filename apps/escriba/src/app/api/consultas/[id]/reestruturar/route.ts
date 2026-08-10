@@ -8,6 +8,7 @@ import {
 import { usuarioAtual } from '@/lib/supabase/server'
 import { obterPreferencias } from '@/server/preferencias'
 import { contextoDoModelo } from '@/server/modelos'
+import { resumoUltimaConsulta, contextoRetornoParaIA } from '@/server/retorno'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -34,7 +35,9 @@ export async function POST(_req: Request, { params }: Contexto) {
       id: true,
       status: true,
       tipoConsulta: true,
+      tipoAtendimento: true,
       modeloId: true,
+      pacienteId: true,
       transcricao: { select: { texto: true } },
     },
   })
@@ -54,7 +57,17 @@ export async function POST(_req: Request, { params }: Contexto) {
 
     const pref = await obterPreferencias(user.id)
     const modelo = consulta.modeloId ? await contextoDoModelo(user.id, consulta.modeloId) : null
-    const instrucoes = [modelo?.instrucoes, pref.instrucoesCustom].filter(Boolean).join('\n\n')
+    const resumoAnterior =
+      consulta.tipoAtendimento === 'RETORNO' && consulta.pacienteId
+        ? await resumoUltimaConsulta(user.id, consulta.pacienteId, consulta.id)
+        : null
+    const instrucoes = [
+      modelo?.instrucoes,
+      pref.instrucoesCustom,
+      resumoAnterior ? contextoRetornoParaIA(resumoAnterior) : null,
+    ]
+      .filter(Boolean)
+      .join('\n\n')
     const estrutura = await estruturarConsulta(transcricao, {
       tipoConsulta: consulta.tipoConsulta,
       especialidade: modelo?.especialidade || pref.especialidade || undefined,

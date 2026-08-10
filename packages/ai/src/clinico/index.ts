@@ -40,3 +40,10 @@ export {
   type AnexoParaAnalise,
   type EntradaAnaliseAnexos,
 } from './analisar-anexos'
+export {
+  revisarConsulta,
+  RevisaoInvalidaError,
+  VERSAO_PROMPT_REVISAR,
+  type RevisaoConsulta,
+  type ApontamentoRevisao,
+} from './revisar-consulta'

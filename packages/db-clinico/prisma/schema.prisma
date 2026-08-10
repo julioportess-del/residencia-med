@@ -57,6 +57,19 @@ enum ModeloEvolucao {
   @@schema("clinico")
 }
 
+/// Natureza do atendimento (fluxo), distinta do foco clinico (TipoConsulta).
+/// RETORNO habilita o "retorno inteligente": recuperar contexto da consulta anterior.
+enum TipoAtendimento {
+  PRIMEIRA_CONSULTA
+  RETORNO
+  TELECONSULTA
+  AVALIACAO
+  PROCEDIMENTO
+  OUTRO
+
+  @@schema("clinico")
+}
+
 enum CategoriaAnexo {
   EXAME_LAB
   EXAME_IMAGEM
@@ -99,6 +112,7 @@ model Consulta {
   modeloId         String? // modelo de documento aplicado nesta consulta (guia a IA)
   modelo           Modelo?        @relation(fields: [modeloId], references: [id], onDelete: SetNull)
   tipoConsulta     TipoConsulta   @default(DEMANDA_ESPONTANEA)
+  tipoAtendimento  TipoAtendimento @default(OUTRO) // natureza do atendimento (fluxo)
   status           StatusConsulta @default(GRAVANDO)
 
   // Consentimento do paciente p/ gravacao (LGPD art. 11)

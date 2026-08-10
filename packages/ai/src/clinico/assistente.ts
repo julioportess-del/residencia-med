@@ -56,20 +56,34 @@ function validar(mensagens: MensagemChat[]): MensagemChat[] {
   return limpas
 }
 
+const MAX_CARACTERES_CONTEXTO = 16_000
+
 /**
  * Assistente de apoio à decisão clínica (efêmero — nada é persistido).
  * Recebe o histórico do chat e devolve a resposta do assistente.
  *
+ * `contexto` (opcional): dados da consulta atual montados pelo chamador
+ * (transcrição, evolução, informações clínicas do paciente) para respostas
+ * situadas — ex.: "quais informações ainda não perguntei?".
+ *
  * Saída é APOIO À DECISÃO — não substitui o julgamento do médico. O chamador é
  * responsável por NÃO enviar dados identificáveis de paciente (apenas iniciais).
  */
-export async function assistenteClinico(mensagens: MensagemChat[]): Promise<string> {
+export async function assistenteClinico(
+  mensagens: MensagemChat[],
+  contexto?: string,
+): Promise<string> {
   const historico = validar(mensagens)
+
+  const contextoLimpo = contexto?.trim().slice(0, MAX_CARACTERES_CONTEXTO)
+  const system = contextoLimpo
+    ? `${SYSTEM_ASSISTENTE}\n\nCONTEXTO DA CONSULTA ATUAL (fornecido pelo sistema — use como base factual; não repita ao médico o que ele já sabe, responda a pergunta):\n${contextoLimpo}`
+    : SYSTEM_ASSISTENTE
 
   const resposta = await anthropic.messages.create({
     model: MODELO_ANTHROPIC,
     max_tokens: MAX_TOKENS,
-    system: SYSTEM_ASSISTENTE,
+    system,
     messages: historico.map((m) => ({ role: m.papel, content: m.conteudo })),
   })
 

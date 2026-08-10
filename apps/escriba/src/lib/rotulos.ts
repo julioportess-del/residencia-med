@@ -18,6 +18,15 @@ export const TIPO_CONSULTA_LABEL: Record<string, string> = {
   OUTRO: 'Outro',
 }
 
+export const TIPO_ATENDIMENTO_LABEL: Record<string, string> = {
+  PRIMEIRA_CONSULTA: 'Primeira consulta',
+  RETORNO: 'Retorno',
+  TELECONSULTA: 'Teleconsulta',
+  AVALIACAO: 'Avaliação',
+  PROCEDIMENTO: 'Procedimento',
+  OUTRO: 'Consulta',
+}
+
 export const STATUS_CONSULTA_LABEL: Record<string, string> = {
   GRAVANDO: 'Gravando',
   TRANSCREVENDO: 'Transcrevendo',

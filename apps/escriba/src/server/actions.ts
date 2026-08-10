@@ -9,6 +9,7 @@ import {
   type OpcoesAtestado,
 } from '@residencia-med/ai/clinico'
 import { exigirUsuario } from '@/lib/auth'
+import { resumoUltimaConsulta, type ResumoRetorno } from '@/server/retorno'
 import {
   novaConsultaSchema,
   preferenciasSchema,
@@ -57,7 +58,7 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' }
   }
 
-  const { pacienteIniciais, tipoConsulta, pacienteId, modeloId } = analise.data
+  const { pacienteIniciais, tipoConsulta, tipoAtendimento, pacienteId, modeloId } = analise.data
 
   // Vínculo opcional a um paciente cadastrado — valida posse (multi-tenant).
   let vinculoId: string | null = null
@@ -94,6 +95,7 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
       pacienteId: vinculoId,
       modeloId: vinculoModeloId,
       tipoConsulta,
+      tipoAtendimento,
       status: 'GRAVANDO',
       consentimentoConfirmado: true,
       consentimentoEm: new Date(),
@@ -116,6 +118,16 @@ export async function criarConsulta(entrada: NovaConsultaInput): Promise<Resulta
   })
 
   return { ok: true, id: consulta.id }
+}
+
+/**
+ * Resumo da última consulta do paciente (retorno inteligente) — chamado
+ * pelo formulário de nova consulta quando o médico seleciona "Retorno".
+ */
+export async function buscarResumoRetorno(pacienteId: string): Promise<ResumoRetorno | null> {
+  const user = await exigirUsuario()
+  if (!pacienteId.trim()) return null
+  return resumoUltimaConsulta(user.id, pacienteId)
 }
 
 /** Cria um paciente (opt-in). Exige cadastro ativo + consentimento. Multi-tenant. */

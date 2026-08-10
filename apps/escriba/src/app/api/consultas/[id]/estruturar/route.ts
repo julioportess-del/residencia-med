@@ -8,6 +8,7 @@ import {
 import { usuarioAtual } from '@/lib/supabase/server'
 import { obterPreferencias } from '@/server/preferencias'
 import { contextoDoModelo } from '@/server/modelos'
+import { resumoUltimaConsulta, contextoRetornoParaIA } from '@/server/retorno'
 
 export const dynamic = 'force-dynamic'
 // Uma única chamada ao Claude → dentro do limite Hobby (60 s).
@@ -34,7 +35,14 @@ export async function POST(req: Request, { params }: Contexto) {
 
   const consulta = await prismaClinico.consulta.findFirst({
     where: { id, usuarioAuthId: user.id, excluidoEm: null },
-    select: { id: true, status: true, tipoConsulta: true, modeloId: true },
+    select: {
+      id: true,
+      status: true,
+      tipoConsulta: true,
+      tipoAtendimento: true,
+      modeloId: true,
+      pacienteId: true,
+    },
   })
   if (!consulta) return erroJson('Consulta não encontrada.', 404)
   if (consulta.status === 'REVISADO') {
@@ -69,7 +77,18 @@ export async function POST(req: Request, { params }: Contexto) {
     const pref = await obterPreferencias(user.id)
     // Modelo aplicado à consulta (se houver) guia a IA: especialidade + instruções.
     const modelo = consulta.modeloId ? await contextoDoModelo(user.id, consulta.modeloId) : null
-    const instrucoes = [modelo?.instrucoes, pref.instrucoesCustom].filter(Boolean).join('\n\n')
+    // Retorno inteligente: contexto da consulta anterior do mesmo paciente.
+    const resumoAnterior =
+      consulta.tipoAtendimento === 'RETORNO' && consulta.pacienteId
+        ? await resumoUltimaConsulta(user.id, consulta.pacienteId, consulta.id)
+        : null
+    const instrucoes = [
+      modelo?.instrucoes,
+      pref.instrucoesCustom,
+      resumoAnterior ? contextoRetornoParaIA(resumoAnterior) : null,
+    ]
+      .filter(Boolean)
+      .join('\n\n')
     const estrutura = await estruturarConsulta(transcricao, {
       tipoConsulta: consulta.tipoConsulta,
       especialidade: modelo?.especialidade || pref.especialidade || undefined,

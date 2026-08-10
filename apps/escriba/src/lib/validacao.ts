@@ -18,6 +18,17 @@ export const TIPO_CONSULTA_VALORES = [
   'OUTRO',
 ] as const
 
+export const TIPO_ATENDIMENTO_VALORES = [
+  'PRIMEIRA_CONSULTA',
+  'RETORNO',
+  'TELECONSULTA',
+  'AVALIACAO',
+  'PROCEDIMENTO',
+  'OUTRO',
+] as const
+
+export type TipoAtendimentoValor = (typeof TIPO_ATENDIMENTO_VALORES)[number]
+
 export const novaConsultaSchema = z.object({
   // Identificação do paciente: aceita nome completo ou iniciais. Bloqueia
   // dígitos de propósito, para evitar registro acidental de CPF/RG.
@@ -31,6 +42,7 @@ export const novaConsultaSchema = z.object({
       'Use apenas letras, espaços, pontos, hífen e apóstrofo (sem números).',
     ),
   tipoConsulta: z.enum(TIPO_CONSULTA_VALORES),
+  tipoAtendimento: z.enum(TIPO_ATENDIMENTO_VALORES).optional().default('OUTRO'),
   consentimentoConfirmado: z.literal(true, {
     errorMap: () => ({ message: 'O consentimento do paciente é obrigatório.' }),
   }),

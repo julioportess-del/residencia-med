@@ -48,10 +48,63 @@ export async function POST(req: Request) {
     ? corpo.anexoIds.filter((x): x is string => typeof x === 'string')
     : []
 
+  // Contexto opcional da consulta: transcrição + evolução + info clínica do
+  // paciente vinculado. Sempre validado por posse (multi-tenant).
+  const consultaId = typeof corpo.consultaId === 'string' ? corpo.consultaId : null
+  let contexto: string | undefined
+  if (consultaId) {
+    const consulta = await prismaClinico.consulta.findFirst({
+      where: { id: consultaId, usuarioAuthId: user.id, excluidoEm: null },
+      select: {
+        pacienteIniciais: true,
+        tipoConsulta: true,
+        tipoAtendimento: true,
+        criadoEm: true,
+        transcricao: { select: { texto: true } },
+        evolucoes: {
+          where: { modelo: 'SOAP' },
+          take: 1,
+          select: { textoEditado: true, textoGerado: true },
+        },
+        paciente: {
+          select: {
+            alergias: true,
+            medicamentos: true,
+            condicoesCronicas: true,
+            antecedentes: true,
+          },
+        },
+      },
+    })
+    if (consulta) {
+      const evolucao = consulta.evolucoes[0]
+      const p = consulta.paciente
+      contexto = [
+        `Paciente: ${consulta.pacienteIniciais}`,
+        p?.alergias.length ? `Alergias: ${p.alergias.join('; ')}` : null,
+        p?.medicamentos.length
+          ? `Medicamentos em uso (cadastro): ${p.medicamentos.join('; ')}`
+          : null,
+        p?.condicoesCronicas.length
+          ? `Condições crônicas: ${p.condicoesCronicas.join('; ')}`
+          : null,
+        p?.antecedentes ? `Antecedentes: ${p.antecedentes}` : null,
+        evolucao
+          ? `EVOLUÇÃO DESTA CONSULTA:\n${(evolucao.textoEditado ?? evolucao.textoGerado).slice(0, 6000)}`
+          : null,
+        consulta.transcricao?.texto
+          ? `TRANSCRIÇÃO DA CONSULTA:\n${consulta.transcricao.texto.slice(0, 8000)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join('\n')
+    }
+  }
+
   // Sem anexos: chat de texto puro (comportamento original).
   if (anexoIds.length === 0) {
     try {
-      const resposta = await assistenteClinico(mensagens)
+      const resposta = await assistenteClinico(mensagens, contexto)
       await prismaClinico.logAcesso.create({
         data: { usuarioAuthId: user.id, acao: 'CONSULTAR_ASSISTENTE' },
       })

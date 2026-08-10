@@ -1,17 +1,23 @@
 'use client'
 
-import { useState, useTransition, type FormEvent } from 'react'
+import { useEffect, useState, useTransition, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck, UserPlus } from 'lucide-react'
+import { History, ShieldCheck, UserPlus } from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Alert } from '@/components/ui/alert'
-import { TIPO_CONSULTA_LABEL } from '@/lib/rotulos'
-import { TIPO_CONSULTA_VALORES, novaConsultaSchema } from '@/lib/validacao'
-import { criarConsulta } from '@/server/actions'
+import { TIPO_CONSULTA_LABEL, TIPO_ATENDIMENTO_LABEL } from '@/lib/rotulos'
+import {
+  TIPO_CONSULTA_VALORES,
+  TIPO_ATENDIMENTO_VALORES,
+  novaConsultaSchema,
+  type TipoAtendimentoValor,
+} from '@/lib/validacao'
+import { criarConsulta, buscarResumoRetorno } from '@/server/actions'
+import type { ResumoRetorno } from '@/server/retorno'
 
 interface PacienteOpcao {
   id: string
@@ -46,11 +52,39 @@ export function NovaConsultaForm({
   const [modeloId, setModeloId] = useState(preModeloId ?? '')
   const [iniciais, setIniciais] = useState('')
   const [tipo, setTipo] = useState<(typeof TIPO_CONSULTA_VALORES)[number]>('DEMANDA_ESPONTANEA')
+  const [atendimento, setAtendimento] = useState<TipoAtendimentoValor>('OUTRO')
   const [consentimento, setConsentimento] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
+  // Retorno inteligente: resumo da última consulta do paciente vinculado.
+  const [resumoRetorno, setResumoRetorno] = useState<ResumoRetorno | null>(null)
+  const [buscandoResumo, setBuscandoResumo] = useState(false)
+
   // Quando há paciente vinculado, as iniciais derivam do nome cadastrado.
   const usandoPaciente = cadastroAtivo && pacienteId !== ''
+  const ehRetorno = atendimento === 'RETORNO'
+
+  useEffect(() => {
+    if (!ehRetorno || !usandoPaciente) {
+      setResumoRetorno(null)
+      return
+    }
+    let cancelado = false
+    setBuscandoResumo(true)
+    buscarResumoRetorno(pacienteId)
+      .then((r) => {
+        if (!cancelado) setResumoRetorno(r)
+      })
+      .catch(() => {
+        if (!cancelado) setResumoRetorno(null)
+      })
+      .finally(() => {
+        if (!cancelado) setBuscandoResumo(false)
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [ehRetorno, usandoPaciente, pacienteId])
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -63,6 +97,7 @@ export function NovaConsultaForm({
     const analise = novaConsultaSchema.safeParse({
       pacienteIniciais: nomePaciente,
       tipoConsulta: tipo,
+      tipoAtendimento: atendimento,
       consentimentoConfirmado: consentimento,
       ...(usandoPaciente ? { pacienteId } : {}),
       ...(modeloId ? { modeloId } : {}),
@@ -127,7 +162,81 @@ export function NovaConsultaForm({
       ) : null}
 
       <div className="space-y-1.5">
-        <Label htmlFor="tipo">Tipo de consulta</Label>
+        <Label htmlFor="atendimento">Tipo de atendimento</Label>
+        <Select
+          id="atendimento"
+          value={atendimento}
+          onChange={(e) => setAtendimento(e.target.value as TipoAtendimentoValor)}
+        >
+          {TIPO_ATENDIMENTO_VALORES.map((valor) => (
+            <option key={valor} value={valor}>
+              {TIPO_ATENDIMENTO_LABEL[valor]}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {/* Retorno inteligente: resumo da última consulta antes de iniciar */}
+      {ehRetorno ? (
+        !usandoPaciente ? (
+          cadastroAtivo ? (
+            <Alert>
+              Selecione um paciente cadastrado para recuperar o histórico da última consulta.
+            </Alert>
+          ) : null
+        ) : buscandoResumo ? (
+          <p className="text-sm text-muted-foreground">Buscando última consulta…</p>
+        ) : resumoRetorno ? (
+          <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/[0.04] p-4">
+            <p className="inline-flex items-center gap-2 text-sm font-medium">
+              <History className="h-4 w-4 text-primary" />
+              Última consulta · {new Date(resumoRetorno.dataConsulta).toLocaleDateString('pt-BR')}
+            </p>
+            <dl className="space-y-1 text-sm">
+              {resumoRetorno.diagnosticos.length > 0 ? (
+                <div>
+                  <dt className="inline font-medium">Diagnósticos: </dt>
+                  <dd className="inline text-muted-foreground">
+                    {resumoRetorno.diagnosticos.join('; ')}
+                  </dd>
+                </div>
+              ) : null}
+              {resumoRetorno.medicamentos.length > 0 ? (
+                <div>
+                  <dt className="inline font-medium">Medicamentos: </dt>
+                  <dd className="inline text-muted-foreground">
+                    {resumoRetorno.medicamentos.join('; ')}
+                  </dd>
+                </div>
+              ) : null}
+              {resumoRetorno.conduta ? (
+                <div>
+                  <dt className="inline font-medium">Conduta: </dt>
+                  <dd className="inline text-muted-foreground">{resumoRetorno.conduta}</dd>
+                </div>
+              ) : null}
+              {resumoRetorno.pendencias.length > 0 ? (
+                <div>
+                  <dt className="inline font-medium">Pendências: </dt>
+                  <dd className="inline text-muted-foreground">
+                    {resumoRetorno.pendencias.join('; ')}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+            <p className="text-xs text-muted-foreground">
+              O Escriba usa esse histórico como contexto, sem misturar com o relato de hoje.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma consulta anterior encontrada para este paciente.
+          </p>
+        )
+      ) : null}
+
+      <div className="space-y-1.5">
+        <Label htmlFor="tipo">Foco clínico</Label>
         <Select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)}>
           {TIPO_CONSULTA_VALORES.map((valor) => (
             <option key={valor} value={valor}>
@@ -175,7 +284,7 @@ export function NovaConsultaForm({
       {erro ? <Alert variant="destructive">{erro}</Alert> : null}
 
       <Button type="submit" size="lg" className="w-full" loading={pendente}>
-        Iniciar consulta
+        {ehRetorno ? 'Iniciar retorno' : 'Iniciar consulta'}
       </Button>
     </form>
   )

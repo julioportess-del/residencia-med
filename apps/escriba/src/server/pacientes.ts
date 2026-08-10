@@ -1,4 +1,5 @@
 import { prismaClinico } from '@residencia-med/db-clinico'
+import { estruturaClinicaSchema } from '@residencia-med/ai/clinico'
 
 export interface PacienteResumo {
   id: string
@@ -12,8 +13,11 @@ export interface ConsultaVinculada {
   id: string
   pacienteIniciais: string
   tipoConsulta: string
+  tipoAtendimento: string
   status: string
   atualizadoEm: Date
+  /** Mini-resumo derivado da evolução (queixa/hipóteses) para a linha do tempo. */
+  resumo: string | null
 }
 
 export interface PacienteDetalhe {
@@ -78,8 +82,11 @@ export async function obterPaciente(
           id: true,
           pacienteIniciais: true,
           tipoConsulta: true,
+          tipoAtendimento: true,
           status: true,
           atualizadoEm: true,
+          // Estrutura clínica (só das mais recentes) p/ mini-resumo na timeline.
+          evolucoes: { take: 1, select: { dadosEstruturados: true } },
         },
       },
     },
@@ -98,12 +105,30 @@ export async function obterPaciente(
     condicoesCronicas: p.condicoesCronicas,
     antecedentes: p.antecedentes,
     consentimentoEm: p.consentimentoEm,
-    consultas: p.consultas.map((c) => ({
+    consultas: p.consultas.map((c, i) => ({
       id: c.id,
       pacienteIniciais: c.pacienteIniciais,
       tipoConsulta: c.tipoConsulta as string,
+      tipoAtendimento: c.tipoAtendimento as string,
       status: c.status as string,
       atualizadoEm: c.atualizadoEm,
+      // Limita o parse às 12 mais recentes (custo previsível).
+      resumo: i < 12 ? miniResumo(c.evolucoes[0]?.dadosEstruturados) : null,
     })),
   }
+}
+
+/** Uma linha de resumo (queixa → hipóteses) a partir da estrutura persistida. */
+function miniResumo(dados: unknown): string | null {
+  const parse = estruturaClinicaSchema.safeParse(dados)
+  if (!parse.success) return null
+  const e = parse.data
+  const partes = [
+    e.subjetivo.queixaPrincipal,
+    e.avaliacao.hipotesesDiagnosticas?.length
+      ? e.avaliacao.hipotesesDiagnosticas.slice(0, 2).join('; ')
+      : null,
+  ].filter(Boolean)
+  if (partes.length === 0) return null
+  return partes.join(' → ').slice(0, 160)
 }

@@ -6,6 +6,7 @@ import type { EstruturaClinica, TipoDocumento } from '@residencia-med/ai/clinico
 import { EvolucoesViewer, type EvolucaoItem } from './evolucoes-viewer'
 import { DocumentosPanel } from './documentos-panel'
 import { SecoesViewer } from './secoes-viewer'
+import { RevisaoIA } from './revisao-ia'
 
 type Aba = 'prontuario' | 'secoes' | 'documentos'
 
@@ -63,7 +64,14 @@ export function ConsultaConteudo({
       </nav>
 
       {aba === 'prontuario' ? (
-        <EvolucoesViewer consultaId={consultaId} evolucoes={evolucoes} revisado={revisado} />
+        <>
+          <EvolucoesViewer consultaId={consultaId} evolucoes={evolucoes} revisado={revisado} />
+          {estrutura ? (
+            <div className="border-t border-border pt-4">
+              <RevisaoIA consultaId={consultaId} />
+            </div>
+          ) : null}
+        </>
       ) : aba === 'secoes' && estrutura ? (
         <SecoesViewer estrutura={estrutura} />
       ) : (
