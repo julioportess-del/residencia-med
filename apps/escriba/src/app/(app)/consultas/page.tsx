@@ -7,7 +7,7 @@ import { listarConsultas } from '@/server/consultas'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '@/components/status-badge'
 import { TIPO_CONSULTA_LABEL } from '@/lib/rotulos'
-import { ExcluirConsultaBotao } from './_components/excluir-consulta-botao'
+import { ExcluirConsultaBotao } from '@/components/excluir-consulta-botao'
 
 export const dynamic = 'force-dynamic'
 

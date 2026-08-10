@@ -452,6 +452,7 @@ export async function excluirConsulta(consultaId: string): Promise<ResultadoAcao
     data: { usuarioAuthId: user.id, acao: 'EXCLUIR_CONSULTA', consultaId },
   })
   revalidatePath('/consultas')
+  revalidatePath('/dashboard')
   return { ok: true }
 }
 

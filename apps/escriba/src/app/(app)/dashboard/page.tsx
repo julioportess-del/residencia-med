@@ -6,6 +6,7 @@ import { obterResumoDashboard, type ItemConsultaResumo } from '@/server/dashboar
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@residencia-med/ui'
 import { StatusBadge } from '@/components/status-badge'
+import { ExcluirConsultaBotao } from '@/components/excluir-consulta-botao'
 import { TIPO_CONSULTA_LABEL } from '@/lib/rotulos'
 
 export const dynamic = 'force-dynamic'
@@ -94,9 +95,12 @@ export default async function DashboardPage() {
                     </p>
                     <StatusBadge status={c.status} />
                   </div>
-                  <Link href={destinoConsulta(c)}>
-                    <Button size="sm">Continuar</Button>
-                  </Link>
+                  <div className="flex items-center gap-1.5">
+                    <Link href={destinoConsulta(c)}>
+                      <Button size="sm">Continuar</Button>
+                    </Link>
+                    <ExcluirConsultaBotao consultaId={c.id} rotulo={c.pacienteIniciais} />
+                  </div>
                 </li>
               ))}
             </ul>
@@ -119,20 +123,21 @@ export default async function DashboardPage() {
             ) : (
               <ul className="divide-y divide-border">
                 {resumo.consultasHoje.map((c) => (
-                  <li key={c.id}>
+                  <li key={c.id} className="flex items-center justify-between gap-3 py-2.5">
                     <Link
                       href={destinoConsulta(c)}
-                      className="flex items-center justify-between gap-3 py-2.5 transition-colors hover:text-primary"
+                      className="min-w-0 flex-1 transition-colors hover:text-primary"
                     >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{c.pacienteIniciais}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {horaCurta(c.atualizadoEm)} ·{' '}
-                          {TIPO_CONSULTA_LABEL[c.tipoConsulta] ?? c.tipoConsulta}
-                        </p>
-                      </div>
-                      <StatusBadge status={c.status} />
+                      <p className="truncate text-sm font-medium">{c.pacienteIniciais}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {horaCurta(c.atualizadoEm)} ·{' '}
+                        {TIPO_CONSULTA_LABEL[c.tipoConsulta] ?? c.tipoConsulta}
+                      </p>
                     </Link>
+                    <div className="flex items-center gap-1.5">
+                      <StatusBadge status={c.status} />
+                      <ExcluirConsultaBotao consultaId={c.id} rotulo={c.pacienteIniciais} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -165,11 +170,14 @@ export default async function DashboardPage() {
                         {TIPO_CONSULTA_LABEL[c.tipoConsulta] ?? c.tipoConsulta}
                       </p>
                     </div>
-                    <Link href={`/consultas/${c.id}`}>
-                      <Button size="sm" variant="outline">
-                        Revisar
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link href={`/consultas/${c.id}`}>
+                        <Button size="sm" variant="outline">
+                          Revisar
+                        </Button>
+                      </Link>
+                      <ExcluirConsultaBotao consultaId={c.id} rotulo={c.pacienteIniciais} />
+                    </div>
                   </li>
                 ))}
               </ul>
