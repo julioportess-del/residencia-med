@@ -158,7 +158,12 @@ export async function POST(req: Request) {
       }),
     )
 
-    const resposta = await analisarAnexosClinicos({ pergunta, anexos: paraAnalise, historico })
+    const resposta = await analisarAnexosClinicos({
+      pergunta,
+      anexos: paraAnalise,
+      historico,
+      contexto,
+    })
 
     await prismaClinico.anexo.updateMany({
       where: { id: { in: anexoIds }, usuarioAuthId: user.id },
