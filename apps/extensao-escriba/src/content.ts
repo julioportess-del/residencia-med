@@ -11,7 +11,8 @@ import type { EstadoExtensao, MensagemParaBg, Resposta, ResultadoConsulta } from
 const CSS = `
 :host { all: initial; }
 * { box-sizing: border-box; margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
-.raiz { position: fixed; bottom: 20px; right: 20px; z-index: 2147483647; }
+/* Acima do rodapé/botões do Feegow para não sobrepor a UI da plataforma. */
+.raiz { position: fixed; bottom: 96px; right: 24px; z-index: 2147483647; }
 .pill {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
   background: #0f766e; color: #fff; border: none; border-radius: 999px;

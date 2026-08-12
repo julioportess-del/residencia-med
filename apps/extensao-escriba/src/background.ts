@@ -1,4 +1,4 @@
-import { buscarConsulta, criarConsulta } from './api'
+import { buscarConsulta, criarConsulta, lerCredenciais } from './api'
 import type {
   AvisoEstado,
   EstadoExtensao,
@@ -71,6 +71,10 @@ async function tratar(msg: MensagemParaBg): Promise<Resposta<unknown>> {
         return { ok: false, erro: 'Já existe uma gravação em andamento.' }
       }
       try {
+        const creds = await lerCredenciais()
+        if (!creds) {
+          return { ok: false, erro: 'Extensão não conectada. Abra o popup e cole o token.' }
+        }
         const { id } = await criarConsulta(msg.paciente, msg.tipoAtendimento)
         await garantirOffscreen()
         return await enviarAoOffscreen({
@@ -78,6 +82,8 @@ async function tratar(msg: MensagemParaBg): Promise<Resposta<unknown>> {
           tipo: 'OFF_INICIAR',
           consultaId: id,
           paciente: msg.paciente,
+          token: creds.token,
+          apiBase: creds.base,
         })
       } catch (e) {
         return { ok: false, erro: e instanceof Error ? e.message : 'Falha ao criar a consulta.' }

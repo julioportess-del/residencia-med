@@ -2,10 +2,17 @@ import { API_BASE_PADRAO } from './config'
 import type { ResultadoConsulta } from './tipos'
 
 /**
- * Cliente da API do Escriba. Roda em contextos da extensão (background e
- * offscreen) — com `host_permissions` o fetch não sofre CORS. Auth por
- * Bearer token colado uma única vez no popup (chrome.storage.local).
+ * Cliente da API do Escriba. Auth por Bearer token colado uma vez no popup.
+ * IMPORTANTE: `chrome.storage` só existe no service worker/popup — o
+ * offscreen document NÃO tem acesso. Por isso as funções usadas no
+ * offscreen (transcreverChunk/estruturar) recebem as credenciais
+ * explicitamente, repassadas pelo background na mensagem de início.
  */
+
+export interface Credenciais {
+  token: string
+  base: string
+}
 
 export async function lerToken(): Promise<string | null> {
   const { token } = await chrome.storage.local.get('token')
@@ -17,14 +24,21 @@ export async function lerApiBase(): Promise<string> {
   return typeof apiBase === 'string' && apiBase ? apiBase : API_BASE_PADRAO
 }
 
-async function requisicao<T>(caminho: string, init?: RequestInit): Promise<T> {
+/** Lê token+base do storage (só service worker/popup). */
+export async function lerCredenciais(): Promise<Credenciais | null> {
   const [token, base] = await Promise.all([lerToken(), lerApiBase()])
-  if (!token) throw new Error('Extensão não conectada. Abra o popup e cole o token.')
+  return token ? { token, base } : null
+}
 
-  const resp = await fetch(`${base}${caminho}`, {
+async function requisicaoCom<T>(
+  creds: Credenciais,
+  caminho: string,
+  init?: RequestInit,
+): Promise<T> {
+  const resp = await fetch(`${creds.base}${caminho}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${creds.token}`,
       ...(init?.headers ?? {}),
     },
   })
@@ -37,6 +51,12 @@ async function requisicao<T>(caminho: string, init?: RequestInit): Promise<T> {
     throw new Error(msg)
   }
   return dados as T
+}
+
+async function requisicao<T>(caminho: string, init?: RequestInit): Promise<T> {
+  const creds = await lerCredenciais()
+  if (!creds) throw new Error('Extensão não conectada. Abra o popup e cole o token.')
+  return requisicaoCom(creds, caminho, init)
 }
 
 export async function validarConexao(): Promise<{ feegow: { configurado: boolean } }> {
@@ -64,21 +84,27 @@ export async function buscarConsulta(id: string): Promise<ResultadoConsulta> {
 }
 
 export async function transcreverChunk(
+  creds: Credenciais,
   consultaId: string,
   chunk: Blob,
   i: number,
 ): Promise<string> {
   const form = new FormData()
   form.append('audio', chunk, `chunk-${i}.wav`)
-  const r = await requisicao<{ texto: string }>(`/api/consultas/${consultaId}/transcrever-chunk`, {
-    method: 'POST',
-    body: form,
-  })
+  const r = await requisicaoCom<{ texto: string }>(
+    creds,
+    `/api/consultas/${consultaId}/transcrever-chunk`,
+    { method: 'POST', body: form },
+  )
   return r.texto ?? ''
 }
 
-export async function estruturar(consultaId: string, transcricao: string): Promise<void> {
-  await requisicao(`/api/consultas/${consultaId}/estruturar`, {
+export async function estruturar(
+  creds: Credenciais,
+  consultaId: string,
+  transcricao: string,
+): Promise<void> {
+  await requisicaoCom(creds, `/api/consultas/${consultaId}/estruturar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ transcricao }),

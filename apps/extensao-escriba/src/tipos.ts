@@ -36,7 +36,16 @@ export type MensagemParaBg =
   | { alvo: 'bg'; tipo: 'BUSCAR_RESULTADO'; consultaId: string }
 
 export type MensagemParaOffscreen =
-  | { alvo: 'off'; tipo: 'OFF_INICIAR'; consultaId: string; paciente: string }
+  | {
+      alvo: 'off'
+      tipo: 'OFF_INICIAR'
+      consultaId: string
+      paciente: string
+      // Credenciais repassadas pelo background: o offscreen NÃO tem
+      // acesso a chrome.storage.
+      token: string
+      apiBase: string
+    }
   | { alvo: 'off'; tipo: 'OFF_PAUSAR' }
   | { alvo: 'off'; tipo: 'OFF_RETOMAR' }
   | { alvo: 'off'; tipo: 'OFF_FINALIZAR' }

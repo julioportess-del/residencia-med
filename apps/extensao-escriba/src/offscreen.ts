@@ -1,4 +1,4 @@
-import { estruturar, transcreverChunk } from './api'
+import { estruturar, transcreverChunk, type Credenciais } from './api'
 import { audioParaChunksWav } from './audio-chunks'
 import type { EstadoExtensao, MensagemParaOffscreen, Resposta } from './tipos'
 
@@ -11,6 +11,8 @@ import type { EstadoExtensao, MensagemParaOffscreen, Resposta } from './tipos'
 let recorder: MediaRecorder | null = null
 let stream: MediaStream | null = null
 let pedacos: Blob[] = []
+// Credenciais da API (chegam via OFF_INICIAR — offscreen não lê storage).
+let credenciais: Credenciais | null = null
 
 let estado: EstadoExtensao = { estado: 'ocioso', msAcumulados: 0 }
 
@@ -20,8 +22,13 @@ function definirEstado(novo: Partial<EstadoExtensao>): void {
   void chrome.runtime.sendMessage({ alvo: 'bg', tipo: 'ATUALIZAR_ESTADO', estado }).catch(() => {})
 }
 
-async function iniciar(consultaId: string, paciente: string): Promise<Resposta<EstadoExtensao>> {
+async function iniciar(
+  consultaId: string,
+  paciente: string,
+  creds: Credenciais,
+): Promise<Resposta<EstadoExtensao>> {
   if (recorder) return { ok: false, erro: 'Já existe uma gravação em andamento.' }
+  credenciais = creds
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true })
   } catch {
@@ -109,8 +116,9 @@ const CONCORRENCIA = 6
 
 async function processar(blob: Blob): Promise<void> {
   const consultaId = estado.consultaId
-  if (!consultaId) return
+  if (!consultaId || !credenciais) return
   const id: string = consultaId
+  const creds: Credenciais = credenciais
   try {
     const chunks = await audioParaChunksWav(blob)
     definirEstado({ fase: 'transcrevendo', progresso: { atual: 0, total: chunks.length } })
@@ -123,7 +131,7 @@ async function processar(blob: Blob): Promise<void> {
         const i = proximo++
         const chunk = chunks[i]
         if (i >= chunks.length || !chunk) return
-        resultados[i] = await transcreverChunk(id, chunk, i)
+        resultados[i] = await transcreverChunk(creds, id, chunk, i)
         concluidos++
         definirEstado({ progresso: { atual: concluidos, total: chunks.length } })
       }
@@ -137,7 +145,7 @@ async function processar(blob: Blob): Promise<void> {
     }
 
     definirEstado({ fase: 'estruturando', progresso: undefined })
-    await estruturar(id, transcricao)
+    await estruturar(creds, id, transcricao)
     definirEstado({ estado: 'pronto', fase: undefined })
   } catch (e) {
     definirEstado({
@@ -155,7 +163,10 @@ chrome.runtime.onMessage.addListener((msg: MensagemParaOffscreen, _sender, sendR
       sendResponse({ ok: true, dados: estado })
       return undefined
     case 'OFF_INICIAR':
-      void iniciar(msg.consultaId, msg.paciente).then(sendResponse)
+      void iniciar(msg.consultaId, msg.paciente, {
+        token: msg.token,
+        base: msg.apiBase,
+      }).then(sendResponse)
       return true
     case 'OFF_PAUSAR':
       sendResponse(pausar())
