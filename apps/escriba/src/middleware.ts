@@ -25,6 +25,13 @@ function ehPublica(pathname: string): boolean {
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const ehApi = pathname.startsWith('/api/')
+
+  // Rotas de API com credencial própria (Bearer da extensão Chrome, cron do
+  // Vercel): a própria rota valida — o middleware não deve exigir cookie.
+  if (ehApi && req.headers.get('authorization')) {
+    return NextResponse.next()
+  }
 
   // Modo dev local: pula autenticacao
   if (DEV_USER_EMAIL) {
@@ -44,6 +51,11 @@ export default async function middleware(req: NextRequest) {
   const { response, user } = await atualizarSessaoSupabase(req)
 
   if (!user && !ehPublica(pathname)) {
+    // API sem sessão: 401 JSON (redirect para página de login não faz
+    // sentido para chamadas programáticas).
+    if (ehApi) {
+      return NextResponse.json({ ok: false, erro: 'Não autenticado.' }, { status: 401 })
+    }
     const url = req.nextUrl.clone()
     url.pathname = '/sign-in'
     url.searchParams.set('next', pathname)
