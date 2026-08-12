@@ -11,6 +11,7 @@ import {
   AlarmClock,
 } from 'lucide-react'
 import type { EstruturaClinica } from '@residencia-med/ai/clinico'
+import { montarSecoesTexto, type SecaoTexto } from '@/lib/secoes'
 
 /**
  * Visão do prontuário em áreas copiáveis individualmente (Resumo,
@@ -20,88 +21,22 @@ import type { EstruturaClinica } from '@residencia-med/ai/clinico'
  */
 
 interface Secao {
-  chave: string
+  chave: SecaoTexto['chave']
   titulo: string
   icone: React.ReactNode
   texto: string
 }
 
-function juntar(linhas: (string | undefined | null)[]): string {
-  return linhas.filter((l): l is string => Boolean(l && l.trim())).join('\n')
-}
-
-function lista(itens: string[] | undefined, prefixo = '- '): string {
-  return (itens ?? [])
-    .filter((i) => i.trim())
-    .map((i) => `${prefixo}${i}`)
-    .join('\n')
+const ICONES: Record<SecaoTexto['chave'], React.ReactNode> = {
+  resumo: <MessageSquareText className="h-4 w-4" />,
+  prescricoes: <Pill className="h-4 w-4" />,
+  exames: <FlaskConical className="h-4 w-4" />,
+  orientacoes: <ClipboardList className="h-4 w-4" />,
+  pendencias: <AlarmClock className="h-4 w-4" />,
 }
 
 export function montarSecoes(e: EstruturaClinica): Secao[] {
-  const cids = (e.avaliacao.cidSugerido ?? []).map((c) => `${c.codigo} — ${c.descricao}`).join('; ')
-
-  const resumo = juntar([
-    e.subjetivo.queixaPrincipal ? `Queixa: ${e.subjetivo.queixaPrincipal}` : null,
-    e.avaliacao.hipotesesDiagnosticas?.length
-      ? `Hipóteses: ${e.avaliacao.hipotesesDiagnosticas.join('; ')}`
-      : null,
-    cids ? `CID sugerido: ${cids}` : null,
-    e.plano.conduta ? `Conduta: ${e.plano.conduta}` : null,
-  ])
-
-  const prescricoes = lista(e.plano.prescricoes)
-
-  const exames = juntar([
-    e.objetivo.examesComplementares?.length
-      ? `Resultados avaliados:\n${lista(e.objetivo.examesComplementares)}`
-      : null,
-    e.plano.examesSolicitados?.length ? `Solicitados:\n${lista(e.plano.examesSolicitados)}` : null,
-  ])
-
-  const orientacoes = juntar([
-    lista(e.plano.orientacoes) || null,
-    e.plano.sinaisDeAlerta?.length ? `Sinais de alerta:\n${lista(e.plano.sinaisDeAlerta)}` : null,
-  ])
-
-  const pendencias = juntar([
-    e.plano.retorno ? `Retorno: ${e.plano.retorno}` : null,
-    e.plano.encaminhamentos?.length ? `Encaminhamentos:\n${lista(e.plano.encaminhamentos)}` : null,
-  ])
-
-  const todas: Secao[] = [
-    {
-      chave: 'resumo',
-      titulo: 'Resumo',
-      icone: <MessageSquareText className="h-4 w-4" />,
-      texto: resumo,
-    },
-    {
-      chave: 'prescricoes',
-      titulo: 'Prescrições',
-      icone: <Pill className="h-4 w-4" />,
-      texto: prescricoes,
-    },
-    {
-      chave: 'exames',
-      titulo: 'Exames',
-      icone: <FlaskConical className="h-4 w-4" />,
-      texto: exames,
-    },
-    {
-      chave: 'orientacoes',
-      titulo: 'Orientações',
-      icone: <ClipboardList className="h-4 w-4" />,
-      texto: orientacoes,
-    },
-    {
-      chave: 'pendencias',
-      titulo: 'Pendências',
-      icone: <AlarmClock className="h-4 w-4" />,
-      texto: pendencias,
-    },
-  ]
-
-  return todas.filter((s) => s.texto.trim().length > 0)
+  return montarSecoesTexto(e).map((s) => ({ ...s, icone: ICONES[s.chave] }))
 }
 
 export function SecoesViewer({ estrutura }: { estrutura: EstruturaClinica }) {

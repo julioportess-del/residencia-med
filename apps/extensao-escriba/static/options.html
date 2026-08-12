@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Escriba Health — Permissões</title>
+    <style>
+      body {
+        max-width: 480px;
+        margin: 48px auto;
+        font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: #0f172a;
+        padding: 0 16px;
+      }
+      h1 {
+        font-size: 20px;
+        color: #0f766e;
+      }
+      p {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.5;
+      }
+      button {
+        height: 40px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 9px;
+        background: #0f766e;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .ok {
+        color: #15803d;
+        font-weight: 600;
+      }
+      .erro {
+        color: #dc2626;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎙 Escriba Health</h1>
+    <p>
+      Para gravar a consulta de dentro do Feegow, a extensão precisa de acesso ao microfone. Clique
+      abaixo e escolha <strong>Permitir</strong> — isso é pedido uma única vez.
+    </p>
+    <button id="permitir">Permitir microfone</button>
+    <p id="status"></p>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

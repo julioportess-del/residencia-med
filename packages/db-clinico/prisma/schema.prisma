@@ -288,3 +288,62 @@ model Anexo {
   @@index([expiraEm])
   @@schema("clinico")
 }
+
+// ─── Integration Layer (prontuários externos: Feegow é o 1º adapter) ───
+
+enum SistemaProntuario {
+  FEEGOW
+
+  @@schema("clinico")
+}
+
+/// Configuração de integração do médico com um prontuário externo.
+/// O token da API do EHR fica CIFRADO (AES-256-GCM, chave em env) —
+/// nunca em texto puro nem no navegador/extensão.
+model IntegracaoProntuario {
+  id            String            @id @default(cuid())
+  usuarioAuthId String
+  sistema       SistemaProntuario
+  tokenCifrado  String?
+  ativa         Boolean           @default(true)
+  criadoEm      DateTime          @default(now())
+  atualizadoEm  DateTime          @updatedAt
+
+  @@unique([usuarioAuthId, sistema])
+  @@schema("clinico")
+}
+
+/// Vínculo entre um recurso do Escriba e o recurso equivalente no EHR
+/// externo (paciente↔paciente, consulta↔agendamento). Permite retorno
+/// inteligente e reconciliação cross-source sem duplicar cadastros.
+model VinculoExterno {
+  id            String            @id @default(cuid())
+  usuarioAuthId String
+  sistema       SistemaProntuario
+  tipoRecurso   String // 'PACIENTE' | 'AGENDAMENTO'
+  idExterno     String
+  pacienteId    String?
+  consultaId    String?
+  criadoEm      DateTime          @default(now())
+
+  @@unique([usuarioAuthId, sistema, tipoRecurso, idExterno])
+  @@index([pacienteId])
+  @@index([consultaId])
+  @@schema("clinico")
+}
+
+/// Token de acesso da extensão Chrome (Bearer). Guardamos só o hash
+/// sha256 — o valor em claro aparece uma única vez para o médico colar
+/// na extensão. Revogável; `ultimoUsoEm` para auditoria.
+model TokenExtensao {
+  id            String    @id @default(cuid())
+  usuarioAuthId String
+  hashToken     String    @unique
+  nome          String    @default("Extensão Chrome")
+  criadoEm      DateTime  @default(now())
+  ultimoUsoEm   DateTime?
+  revogadoEm    DateTime?
+
+  @@index([usuarioAuthId])
+  @@schema("clinico")
+}

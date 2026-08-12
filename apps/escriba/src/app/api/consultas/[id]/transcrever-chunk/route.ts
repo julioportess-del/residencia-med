@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prismaClinico } from '@residencia-med/db-clinico'
 import { transcreverAudio, TranscricaoVaziaError } from '@residencia-med/ai/clinico'
-import { usuarioAtual } from '@/lib/supabase/server'
+import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 
 export const dynamic = 'force-dynamic'
 // Cada chunk é curto (~90 s de áudio) → transcrição rápida, dentro do limite Hobby.
@@ -24,7 +24,7 @@ function erroJson(mensagem: string, status: number) {
 export async function POST(req: Request, { params }: Contexto) {
   const { id } = await params
 
-  const { user } = await usuarioAtual()
+  const user = await usuarioDaRequisicao(req)
   if (!user) return erroJson('Não autenticado.', 401)
 
   // Multi-tenant: só a consulta do próprio médico, ainda em gravação.

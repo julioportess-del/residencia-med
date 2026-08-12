@@ -5,7 +5,7 @@ import {
   renderizarEvolucoes,
   EstruturacaoInvalidaError,
 } from '@residencia-med/ai/clinico'
-import { usuarioAtual } from '@/lib/supabase/server'
+import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 import { obterPreferencias } from '@/server/preferencias'
 import { contextoDoModelo } from '@/server/modelos'
 import { resumoUltimaConsulta, contextoRetornoParaIA } from '@/server/retorno'
@@ -30,7 +30,7 @@ function erroJson(mensagem: string, status: number) {
 export async function POST(req: Request, { params }: Contexto) {
   const { id } = await params
 
-  const { user } = await usuarioAtual()
+  const user = await usuarioDaRequisicao(req)
   if (!user) return erroJson('Não autenticado.', 401)
 
   const consulta = await prismaClinico.consulta.findFirst({

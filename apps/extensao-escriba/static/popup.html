@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        width: 300px;
+        margin: 0;
+        padding: 14px;
+        font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: #0f172a;
+      }
+      h1 {
+        font-size: 15px;
+        color: #0f766e;
+        margin: 0 0 10px;
+      }
+      p {
+        font-size: 12px;
+        color: #475569;
+        margin: 0 0 10px;
+      }
+      input {
+        width: 100%;
+        height: 34px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0 10px;
+        font-size: 12px;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        height: 36px;
+        margin-top: 8px;
+        border: none;
+        border-radius: 8px;
+        background: #0f766e;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.sec {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+      .ok {
+        color: #15803d;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .erro {
+        color: #dc2626;
+        font-size: 12px;
+      }
+      #conectado,
+      #desconectado {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎙 Escriba Health</h1>
+
+    <div id="desconectado">
+      <p>Cole o token gerado em <strong>Preferências → Extensão Chrome</strong> no Escriba.</p>
+      <input id="token" type="password" placeholder="esc_..." autocomplete="off" />
+      <button id="conectar">Conectar</button>
+      <p id="msg"></p>
+    </div>
+
+    <div id="conectado">
+      <p class="ok">✓ Conectado</p>
+      <p>Abra o Feegow (app.feegow.com) — o widget do Escriba aparece no canto da tela.</p>
+      <button id="mic" class="sec">Permitir microfone</button>
+      <button id="desconectar" class="sec">Desconectar</button>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

@@ -10,3 +10,7 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE "clinico"."Consulta"
   ADD COLUMN IF NOT EXISTS "tipoAtendimento" "clinico"."TipoAtendimento" NOT NULL DEFAULT 'OUTRO';
+SELECT EXISTS (
+  SELECT 1 FROM information_schema.columns
+  WHERE table_schema='clinico' AND table_name='Consulta' AND column_name='tipoAtendimento'
+) AS migracao_ok;

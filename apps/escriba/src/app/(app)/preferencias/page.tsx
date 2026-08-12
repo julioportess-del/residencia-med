@@ -2,6 +2,7 @@ import { exigirUsuario } from '@/lib/auth'
 import { obterPreferencias } from '@/server/preferencias'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PreferenciasForm } from './_components/preferencias-form'
+import { ExtensaoToken } from './_components/extensao-token'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,15 @@ export default async function PreferenciasPage() {
         </CardHeader>
         <CardContent>
           <PreferenciasForm inicial={pref} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Extensão Chrome (Feegow)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ExtensaoToken />
         </CardContent>
       </Card>
     </div>

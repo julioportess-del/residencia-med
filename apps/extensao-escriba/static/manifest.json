@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Escriba Health — Scribe no seu prontuário",
+  "version": "0.1.0",
+  "description": "Grave a consulta direto de dentro do Feegow. Transcrição e prontuário estruturado por IA, com revisão médica antes de qualquer inserção.",
+  "permissions": ["storage", "offscreen"],
+  "host_permissions": ["https://escriba-escriba.vercel.app/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["https://app.feegow.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Escriba Health"
+  },
+  "options_page": "options.html"
+}
