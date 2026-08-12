@@ -332,8 +332,31 @@ function renderPronto(card: HTMLElement): void {
   )
 
   if (!resultado) {
-    card.append(h('div', { className: 'status', texto: 'Carregando revisão…' }))
-    void carregarResultado()
+    if (buscaFalhou) {
+      // Ex.: consulta excluída ou estado antigo de outra sessão — dá saída.
+      card.append(
+        h('div', { className: 'linha' }, [
+          h('button', {
+            className: 'botao sec',
+            texto: 'Tentar de novo',
+            onclick: () => {
+              buscaFalhou = false
+              erroLocal = null
+              render()
+              void carregarResultado()
+            },
+          }),
+          h('button', {
+            className: 'botao',
+            texto: 'Recomeçar',
+            onclick: () => void descartar(),
+          }),
+        ]),
+      )
+    } else {
+      card.append(h('div', { className: 'status', texto: 'Carregando revisão…' }))
+      void carregarResultado()
+    }
     return
   }
 
@@ -379,17 +402,27 @@ function renderPronto(card: HTMLElement): void {
   )
 }
 
+let buscandoResultado = false
+let buscaFalhou = false
+
 async function carregarResultado(): Promise<void> {
-  if (!estadoAtual.consultaId) return
-  const r = await bg<ResultadoConsulta>({
-    alvo: 'bg',
-    tipo: 'BUSCAR_RESULTADO',
-    consultaId: estadoAtual.consultaId,
-  })
-  if (r.ok) {
-    resultado = r.dados
-  } else {
-    erroLocal = r.erro
+  if (!estadoAtual.consultaId || buscandoResultado || buscaFalhou) return
+  buscandoResultado = true
+  try {
+    const r = await bg<ResultadoConsulta>({
+      alvo: 'bg',
+      tipo: 'BUSCAR_RESULTADO',
+      consultaId: estadoAtual.consultaId,
+    })
+    if (r.ok) {
+      resultado = r.dados
+      erroLocal = null
+    } else {
+      erroLocal = r.erro
+      buscaFalhou = true // não refaz em loop; o médico decide (tentar/recomeçar)
+    }
+  } finally {
+    buscandoResultado = false
   }
   render()
 }
@@ -399,6 +432,7 @@ async function descartar(): Promise<void> {
   if (r.ok) estadoAtual = r.dados
   resultado = null
   erroLocal = null
+  buscaFalhou = false
   render()
 }
 
