@@ -30,6 +30,7 @@ export async function GET(req: Request, { params }: Contexto) {
       evolucoes: {
         select: { modelo: true, textoGerado: true, textoEditado: true, dadosEstruturados: true },
       },
+      transcricao: { select: { texto: true } },
     },
   })
   if (!consulta) {
@@ -50,6 +51,7 @@ export async function GET(req: Request, { params }: Contexto) {
     status: consulta.status,
     paciente: consulta.pacienteIniciais,
     prontuario,
+    transcricao: consulta.transcricao?.texto ?? null,
     secoes,
   })
 }

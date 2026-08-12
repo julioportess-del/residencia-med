@@ -58,8 +58,51 @@ input[type="text"], select {
 .secao pre { font-size: 12px; white-space: pre-wrap; color: #334155; max-height: 130px; overflow-y: auto; font-family: inherit; }
 .copiar { background: #f1f5f9; border: none; border-radius: 6px; cursor: pointer;
   font-size: 11px; padding: 3px 8px; color: #0f766e; font-weight: 600; }
+.acoes { display: inline-flex; gap: 4px; }
 a.link { font-size: 12px; color: #0f766e; text-align: center; display: block; }
 `
+
+/**
+ * Último campo editável focado NA PÁGINA do Feegow (fora do widget).
+ * É o alvo do "Inserir no prontuário": o médico clica no campo da evolução
+ * e depois no botão — write-back sem copiar/colar manual.
+ */
+let ultimoCampoEditavel: HTMLElement | null = null
+
+function ehEditavel(el: Element | null): el is HTMLElement {
+  if (!el) return false
+  if (el instanceof HTMLTextAreaElement) return true
+  if (el instanceof HTMLInputElement) return el.type === 'text' || el.type === 'search'
+  return el instanceof HTMLElement && el.isContentEditable
+}
+
+document.addEventListener(
+  'focusin',
+  (e) => {
+    const alvo = e.target as Element | null
+    if (ehEditavel(alvo)) ultimoCampoEditavel = alvo
+  },
+  true,
+)
+
+/** Insere o texto no último campo do Feegow; false = caiu no fallback. */
+async function inserirNoProntuario(texto: string): Promise<boolean> {
+  const alvo = ultimoCampoEditavel
+  if (!alvo || !document.contains(alvo)) {
+    await navigator.clipboard.writeText(texto)
+    return false
+  }
+  if (alvo instanceof HTMLTextAreaElement || alvo instanceof HTMLInputElement) {
+    alvo.value = alvo.value.trim() ? `${alvo.value}\n\n${texto}` : texto
+    // Notifica frameworks/jQuery da mudança.
+    alvo.dispatchEvent(new Event('input', { bubbles: true }))
+    alvo.dispatchEvent(new Event('change', { bubbles: true }))
+  } else {
+    alvo.focus()
+    document.execCommand('insertText', false, texto)
+  }
+  return true
+}
 
 function detectarNomePaciente(): string {
   for (const seletor of FEEGOW.seletoresNomePaciente) {
@@ -295,6 +338,13 @@ function renderPronto(card: HTMLElement): void {
   }
 
   const addSecao = (titulo: string, texto: string) => {
+    const botaoInserir = h('button', { className: 'copiar', texto: '→ Inserir' })
+    botaoInserir.title = 'Clique no campo da evolução no Feegow e depois aqui'
+    botaoInserir.onclick = async () => {
+      const inseriu = await inserirNoProntuario(texto)
+      botaoInserir.textContent = inseriu ? '✓ Inserido' : 'Copiado — clique no campo e cole'
+      setTimeout(() => (botaoInserir.textContent = '→ Inserir'), inseriu ? 1500 : 3500)
+    }
     const botaoCopiar = h('button', { className: 'copiar', texto: 'Copiar' })
     botaoCopiar.onclick = async () => {
       await navigator.clipboard.writeText(texto)
@@ -302,12 +352,16 @@ function renderPronto(card: HTMLElement): void {
       setTimeout(() => (botaoCopiar.textContent = 'Copiar'), 1500)
     }
     card.append(
-      h('div', { className: 'secao' }, [h('h4', {}, [titulo, botaoCopiar]), h('pre', { texto })]),
+      h('div', { className: 'secao' }, [
+        h('h4', {}, [titulo, h('span', { className: 'acoes' }, [botaoInserir, botaoCopiar])]),
+        h('pre', { texto }),
+      ]),
     )
   }
 
   if (resultado.prontuario) addSecao('Prontuário (SOAP)', resultado.prontuario)
   for (const s of resultado.secoes) addSecao(s.titulo, s.texto)
+  if (resultado.transcricao) addSecao('Transcrição da consulta', resultado.transcricao)
 
   const base = 'https://escriba-escriba.vercel.app'
   card.append(

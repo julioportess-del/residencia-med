@@ -74,5 +74,6 @@ export interface ResultadoConsulta {
   status: string
   paciente: string
   prontuario: string | null
+  transcricao: string | null
   secoes: SecaoTexto[]
 }
