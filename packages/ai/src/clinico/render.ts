@@ -31,13 +31,40 @@ function blocosSubjetivo(e: EstruturaClinica): string[] {
 
 function blocosObjetivo(e: EstruturaClinica): string[] {
   const o = e.objetivo
+  // Exame fisico NAO entra aqui: tem secao propria obrigatoria ao final
+  // (secaoExameFisico), separada da historia/avaliacao/conduta.
   return [
     linha('Sinais vitais', o.sinaisVitais),
-    linha('Exame fisico', o.exameFisico),
     o.examesComplementares?.length
       ? `Exames complementares:\n${lista(o.examesComplementares)}`
       : null,
   ].filter((x): x is string => x !== null)
+}
+
+/**
+ * Secao EXAME FISICO — obrigatoria ao final de toda evolucao.
+ * Regra critica: "Achados documentados" traz SOMENTE o que o medico
+ * verbalizou; itens sugeridos pela IA aparecem como campos a preencher
+ * "( ) item: ___", nunca como achados; nada e preenchido como "normal".
+ */
+export function secaoExameFisico(e: EstruturaClinica): string {
+  const achados = e.objetivo.exameFisico?.trim()
+  const sugestoes = (e.objetivo.sugestoesExameFisico ?? []).filter((s) => s.trim())
+
+  const partes = [
+    'EXAME FISICO',
+    `Achados documentados durante a consulta:\n${
+      achados ?? 'Nenhum achado de exame fisico foi registrado durante a consulta.'
+    }`,
+  ]
+  if (sugestoes.length > 0) {
+    partes.push(
+      `Sugestoes para complementacao (avaliar e preencher — nao sao achados):\n${sugestoes
+        .map((s) => `( ) ${s}: ___`)
+        .join('\n')}`,
+    )
+  }
+  return partes.join('\n')
 }
 
 function blocosAvaliacao(e: EstruturaClinica): string[] {
@@ -79,6 +106,7 @@ export function renderizarSoap(e: EstruturaClinica): string {
     secao('# O — Objetivo', blocosObjetivo(e)),
     secao('# A — Avaliacao', blocosAvaliacao(e)),
     secao('# P — Plano', blocosPlano(e)),
+    `# ${secaoExameFisico(e)}`,
   ].filter((x): x is string => x !== null)
   return secoes.join('\n\n').trim()
 }
@@ -86,7 +114,7 @@ export function renderizarSoap(e: EstruturaClinica): string {
 /** Evolucao corrida: narrativa em prosa; fallback monta a partir dos blocos. */
 export function renderizarCorrida(e: EstruturaClinica): string {
   const narrativa = e.narrativaCorrida?.trim()
-  if (narrativa) return narrativa
+  if (narrativa) return `${narrativa}\n\n${secaoExameFisico(e)}`
   // Fallback: concatena os blocos em texto continuo.
   const todos = [
     ...blocosSubjetivo(e),
@@ -94,7 +122,8 @@ export function renderizarCorrida(e: EstruturaClinica): string {
     ...blocosAvaliacao(e),
     ...blocosPlano(e),
   ]
-  return todos.join(' ').replace(/\n+/g, ' ').trim()
+  const corpo = todos.join(' ').replace(/\n+/g, ' ').trim()
+  return `${corpo}\n\n${secaoExameFisico(e)}`.trim()
 }
 
 /** Evolucao UBS: formato enxuto p/ atencao primaria (queixa, exame, conduta). */
@@ -107,6 +136,7 @@ export function renderizarUbs(e: EstruturaClinica): string {
     secao('Objetivo:', blocosObjetivo(e)),
     a.hipotesesDiagnosticas?.length ? `Avaliacao: ${a.hipotesesDiagnosticas.join('; ')}` : null,
     secao('Plano:', blocosPlano(e)),
+    secaoExameFisico(e),
   ].filter((x): x is string => x !== null)
   return blocos.join('\n\n').trim()
 }

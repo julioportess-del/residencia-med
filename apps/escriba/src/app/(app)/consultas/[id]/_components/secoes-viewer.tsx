@@ -9,6 +9,7 @@ import {
   MessageSquareText,
   Pill,
   AlarmClock,
+  Stethoscope,
 } from 'lucide-react'
 import type { EstruturaClinica } from '@residencia-med/ai/clinico'
 import { montarSecoesTexto, type SecaoTexto } from '@/lib/secoes'
@@ -29,6 +30,7 @@ interface Secao {
 
 const ICONES: Record<SecaoTexto['chave'], React.ReactNode> = {
   resumo: <MessageSquareText className="h-4 w-4" />,
+  exameFisico: <Stethoscope className="h-4 w-4" />,
   prescricoes: <Pill className="h-4 w-4" />,
   exames: <FlaskConical className="h-4 w-4" />,
   orientacoes: <ClipboardList className="h-4 w-4" />,

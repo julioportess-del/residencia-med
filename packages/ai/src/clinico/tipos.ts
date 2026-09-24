@@ -26,7 +26,15 @@ export const subjetivoSchema = z.object({
 
 export const objetivoSchema = z.object({
   sinaisVitais: z.string().optional(),
+  /** SOMENTE achados de exame fisico explicitamente ditos na consulta. */
   exameFisico: z.string().optional(),
+  /**
+   * Itens de exame fisico SUGERIDOS pela IA conforme o contexto clinico
+   * (queixa, sintomas, sistemas abordados) para o medico avaliar e
+   * preencher. NUNCA sao achados — aparecem sempre separados, como
+   * lembretes editaveis, jamais como "normal"/"sem alteracoes".
+   */
+  sugestoesExameFisico: z.array(z.string()).optional(),
   examesComplementares: z.array(z.string()).optional(),
 })
 

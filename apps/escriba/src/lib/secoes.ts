@@ -8,7 +8,7 @@ import type { EstruturaClinica } from '@residencia-med/ai/clinico'
  */
 
 export interface SecaoTexto {
-  chave: 'resumo' | 'prescricoes' | 'exames' | 'orientacoes' | 'pendencias'
+  chave: 'resumo' | 'exameFisico' | 'prescricoes' | 'exames' | 'orientacoes' | 'pendencias'
   titulo: string
   texto: string
 }
@@ -55,8 +55,24 @@ export function montarSecoesTexto(e: EstruturaClinica): SecaoTexto[] {
     e.plano.encaminhamentos?.length ? `Encaminhamentos:\n${lista(e.plano.encaminhamentos)}` : null,
   ])
 
+  // EXAME FÍSICO: achados = SÓ o que foi dito; sugestões = campos a
+  // preencher pelo médico (nunca viram achados, nunca "normal").
+  const sugestoesEf = (e.objetivo.sugestoesExameFisico ?? []).filter((s) => s.trim())
+  const exameFisico = juntar([
+    `Achados documentados durante a consulta:\n${
+      e.objetivo.exameFisico?.trim() ??
+      'Nenhum achado de exame físico foi registrado durante a consulta.'
+    }`,
+    sugestoesEf.length
+      ? `Sugestões para complementação (avaliar e preencher — não são achados):\n${sugestoesEf
+          .map((s) => `( ) ${s}: ___`)
+          .join('\n')}`
+      : null,
+  ])
+
   const todas: SecaoTexto[] = [
     { chave: 'resumo', titulo: 'Resumo', texto: resumo },
+    { chave: 'exameFisico', titulo: 'Exame físico', texto: exameFisico },
     { chave: 'prescricoes', titulo: 'Prescrições', texto: prescricoes },
     { chave: 'exames', titulo: 'Exames', texto: exames },
     { chave: 'orientacoes', titulo: 'Orientações', texto: orientacoes },
