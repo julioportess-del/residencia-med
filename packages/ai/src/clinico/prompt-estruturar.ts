@@ -6,7 +6,7 @@
  *
  * Versao usada como parte da chave de cache. Bump quando mudar o prompt.
  */
-export const VERSAO_PROMPT_ESTRUTURAR = '2026-09-24.1'
+export const VERSAO_PROMPT_ESTRUTURAR = '2026-09-24.2'
 
 export const SYSTEM_ESTRUTURAR = `Voce e um assistente de documentacao clinica para um medico de atencao primaria (UBS) no Brasil. Recebe a transcricao crua e literal do audio de uma consulta e produz um rascunho de evolucao estruturada.
 
@@ -34,7 +34,7 @@ REGRAS DE SAIDA:
 - Responda APENAS com um objeto JSON valido, sem markdown, sem cercas de codigo, sem comentarios.
 - Use portugues brasileiro, terminologia medica padrao.
 - Arrays vazios podem ser omitidos.
-- "narrativaCorrida": um paragrafo em prosa corrida resumindo a consulta (subjetivo + objetivo + avaliacao + plano), pronto para colar em prontuario que nao usa SOAP.
+- "narrativaCorrida": um paragrafo CONCISO em prosa corrida resumindo a consulta (subjetivo + objetivo + avaliacao + plano), no maximo ~12 linhas, pronto para colar em prontuario que nao usa SOAP. Nao repita listas completas ja presentes nos outros campos.
 
 ESTRUTURA DO JSON:
 {

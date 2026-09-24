@@ -6,6 +6,7 @@ import {
   EstruturacaoInvalidaError,
 } from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
+import { mensagemFalhaIA } from '@/lib/erros-ia'
 import { obterPreferencias } from '@/server/preferencias'
 import { contextoDoModelo } from '@/server/modelos'
 import { resumoUltimaConsulta, contextoRetornoParaIA } from '@/server/retorno'
@@ -144,19 +145,10 @@ export async function POST(req: Request, { params }: Contexto) {
     if (erro instanceof EstruturacaoInvalidaError) {
       return erroJson(erro.message, 422)
     }
-    const ehTimeout =
-      erro instanceof Error &&
-      (erro.name === 'APIConnectionTimeoutError' || /timeout|timed out/i.test(erro.message))
-    if (ehTimeout) {
-      return erroJson(
-        'A geração demorou mais que o limite do servidor. A transcrição foi salva — toque em "Gerar evolução novamente".',
-        504,
-      )
+    if (erro instanceof Error && erro.name === 'IAIndisponivelError') {
+      return erroJson(erro.message, 503)
     }
-    const mensagem =
-      erro instanceof Error && erro.name === 'IAIndisponivelError'
-        ? erro.message
-        : 'Falha ao estruturar a consulta. A transcrição foi salva — tente gerar novamente.'
-    return erroJson(mensagem, 500)
+    const falha = mensagemFalhaIA(erro)
+    return erroJson(falha.mensagem, falha.status)
   }
 }

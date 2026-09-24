@@ -7,7 +7,9 @@ import {
   montarMensagemUsuario,
 } from './prompt-estruturar'
 
-const MAX_TOKENS = 4096
+// 8192: consultas longas + extração exaustiva + narrativa + sugestões de
+// exame físico não cabem em 4096 — saída truncada virava "JSON incompleto".
+const MAX_TOKENS = 8192
 // Modelo da estruturação. Haiku por padrão: ~2-3x mais rápido que Sonnet, cabe
 // no limite de 60s do Vercel Hobby mesmo em consultas longas, e mais barato. A
 // saída passa por revisão médica obrigatória (RASCUNHO). Override por env p/
@@ -105,6 +107,14 @@ export async function estruturarConsulta(
     // janela inteira). Em estouro, lanca e a rota trata como falha recuperavel.
     { timeout: TIMEOUT_MS, maxRetries: 0 },
   )
+
+  // Saída cortada pelo limite de tokens: erro claro (em vez de "JSON
+  // incompleto"), para diagnóstico direto na UI.
+  if (resposta.stop_reason === 'max_tokens') {
+    throw new EstruturacaoInvalidaError(
+      'A evolução gerada excedeu o limite de tamanho (consulta muito longa). Tente novamente; se persistir, avise o suporte.',
+    )
+  }
 
   const bruto = resposta.content.map((bloco) => (bloco.type === 'text' ? bloco.text : '')).join('')
 

@@ -6,6 +6,7 @@ import {
   EstruturacaoInvalidaError,
 } from '@residencia-med/ai/clinico'
 import { usuarioAtual } from '@/lib/supabase/server'
+import { mensagemFalhaIA } from '@/lib/erros-ia'
 import { obterPreferencias } from '@/server/preferencias'
 import { contextoDoModelo } from '@/server/modelos'
 import { resumoUltimaConsulta, contextoRetornoParaIA } from '@/server/retorno'
@@ -119,14 +120,10 @@ export async function POST(_req: Request, { params }: Contexto) {
       .catch(() => undefined)
 
     if (erro instanceof EstruturacaoInvalidaError) return erroJson(erro.message, 422)
-    const ehTimeout =
-      erro instanceof Error &&
-      (erro.name === 'APIConnectionTimeoutError' || /timeout|timed out/i.test(erro.message))
-    const mensagem = ehTimeout
-      ? 'A geração demorou mais que o limite do servidor. Tente novamente.'
-      : erro instanceof Error && erro.name === 'IAIndisponivelError'
-        ? erro.message
-        : 'Falha ao gerar a evolução. Tente novamente.'
-    return erroJson(mensagem, ehTimeout ? 504 : 500)
+    if (erro instanceof Error && erro.name === 'IAIndisponivelError') {
+      return erroJson(erro.message, 503)
+    }
+    const falha = mensagemFalhaIA(erro)
+    return erroJson(falha.mensagem, falha.status)
   }
 }
