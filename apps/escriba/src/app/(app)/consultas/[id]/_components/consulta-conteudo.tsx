@@ -7,6 +7,7 @@ import { EvolucoesViewer, type EvolucaoItem } from './evolucoes-viewer'
 import { DocumentosPanel } from './documentos-panel'
 import { SecoesViewer } from './secoes-viewer'
 import { RevisaoIA } from './revisao-ia'
+import { ExameFisicoEditor } from './exame-fisico-editor'
 import { AssistenteChatCaso } from '@/components/assistente-consulta'
 
 type Aba = 'prontuario' | 'secoes' | 'documentos' | 'assistente'
@@ -75,6 +76,13 @@ export function ConsultaConteudo({
       {aba === 'prontuario' ? (
         <>
           <EvolucoesViewer consultaId={consultaId} evolucoes={evolucoes} revisado={revisado} />
+          {estrutura ? (
+            <ExameFisicoEditor
+              consultaId={consultaId}
+              inicial={estrutura.objetivo.exameFisico ?? ''}
+              sugestoes={(estrutura.objetivo.sugestoesExameFisico ?? []).filter((s) => s.trim())}
+            />
+          ) : null}
           {estrutura ? (
             <div className="border-t border-border pt-4">
               <RevisaoIA consultaId={consultaId} />

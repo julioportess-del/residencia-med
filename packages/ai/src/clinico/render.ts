@@ -43,28 +43,15 @@ function blocosObjetivo(e: EstruturaClinica): string[] {
 
 /**
  * Secao EXAME FISICO — obrigatoria ao final de toda evolucao.
- * Regra critica: "Achados documentados" traz SOMENTE o que o medico
- * verbalizou; itens sugeridos pela IA aparecem como campos a preencher
- * "( ) item: ___", nunca como achados; nada e preenchido como "normal".
+ * Regra critica: traz SOMENTE o que o medico verbalizou na consulta ou
+ * escreveu depois no campo de exame fisico. Nada e preenchido como
+ * "normal"; as sugestoes da IA sao dica de UI e NUNCA entram neste texto.
  */
 export function secaoExameFisico(e: EstruturaClinica): string {
   const achados = e.objetivo.exameFisico?.trim()
-  const sugestoes = (e.objetivo.sugestoesExameFisico ?? []).filter((s) => s.trim())
-
-  const partes = [
-    'EXAME FISICO',
-    `Achados documentados durante a consulta:\n${
-      achados ?? 'Nenhum achado de exame fisico foi registrado durante a consulta.'
-    }`,
-  ]
-  if (sugestoes.length > 0) {
-    partes.push(
-      `Sugestoes para complementacao (avaliar e preencher — nao sao achados):\n${sugestoes
-        .map((s) => `( ) ${s}: ___`)
-        .join('\n')}`,
-    )
-  }
-  return partes.join('\n')
+  return `EXAME FISICO\n${
+    achados ?? 'Nenhum achado de exame fisico foi registrado durante a consulta.'
+  }`
 }
 
 function blocosAvaliacao(e: EstruturaClinica): string[] {

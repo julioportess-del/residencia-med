@@ -55,20 +55,11 @@ export function montarSecoesTexto(e: EstruturaClinica): SecaoTexto[] {
     e.plano.encaminhamentos?.length ? `Encaminhamentos:\n${lista(e.plano.encaminhamentos)}` : null,
   ])
 
-  // EXAME FÍSICO: achados = SÓ o que foi dito; sugestões = campos a
-  // preencher pelo médico (nunca viram achados, nunca "normal").
-  const sugestoesEf = (e.objetivo.sugestoesExameFisico ?? []).filter((s) => s.trim())
-  const exameFisico = juntar([
-    `Achados documentados durante a consulta:\n${
-      e.objetivo.exameFisico?.trim() ??
-      'Nenhum achado de exame físico foi registrado durante a consulta.'
-    }`,
-    sugestoesEf.length
-      ? `Sugestões para complementação (avaliar e preencher — não são achados):\n${sugestoesEf
-          .map((s) => `( ) ${s}: ___`)
-          .join('\n')}`
-      : null,
-  ])
+  // EXAME FÍSICO: só o que foi dito na consulta ou escrito pelo médico no
+  // editor — sugestões da IA são dica de UI e não entram no texto copiável.
+  const exameFisico =
+    e.objetivo.exameFisico?.trim() ??
+    'Nenhum achado de exame físico foi registrado durante a consulta.'
 
   const todas: SecaoTexto[] = [
     { chave: 'resumo', titulo: 'Resumo', texto: resumo },

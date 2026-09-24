@@ -5,6 +5,7 @@ import { prismaClinico } from '@residencia-med/db-clinico'
 import {
   estruturaClinicaSchema,
   renderizarDocumento,
+  renderizarModelo,
   type TipoDocumento,
   type OpcoesAtestado,
 } from '@residencia-med/ai/clinico'
@@ -328,6 +329,62 @@ export async function definirModeloPadrao(id: string): Promise<ResultadoAcao> {
  * Salva a edição médica de uma evolução (`textoEditado`). A versão gerada pela
  * IA (`textoGerado`) é preservada. Multi-tenant: só evoluções do próprio médico.
  */
+/**
+ * Salva o EXAME FÍSICO escrito pelo médico: atualiza a estrutura clínica
+ * (objetivo.exameFisico) e regenera o texto das 3 evoluções. Edições
+ * manuais do texto inteiro (textoEditado) são preservadas — nesse caso o
+ * novo exame físico aparece nas Seções e no texto gerado, não no editado.
+ */
+export async function salvarExameFisico(
+  consultaId: string,
+  textoExameFisico: string,
+): Promise<ResultadoAcao> {
+  const user = await exigirUsuario()
+
+  const texto = textoExameFisico.trim()
+  if (texto.length > 4000) {
+    return { ok: false, erro: 'Texto do exame físico muito longo (máx. 4000 caracteres).' }
+  }
+
+  const consulta = await prismaClinico.consulta.findFirst({
+    where: { id: consultaId, usuarioAuthId: user.id, excluidoEm: null },
+    select: {
+      id: true,
+      evolucoes: { select: { id: true, modelo: true, dadosEstruturados: true } },
+    },
+  })
+  if (!consulta) return { ok: false, erro: 'Consulta não encontrada.' }
+
+  const base = consulta.evolucoes.find((e) => e.dadosEstruturados)?.dadosEstruturados
+  const parse = estruturaClinicaSchema.safeParse(base)
+  if (!parse.success) {
+    return { ok: false, erro: 'Esta consulta ainda não tem evolução gerada.' }
+  }
+
+  const estrutura = {
+    ...parse.data,
+    objetivo: { ...parse.data.objetivo, exameFisico: texto || undefined },
+  }
+
+  await prismaClinico.$transaction([
+    ...consulta.evolucoes.map((ev) =>
+      prismaClinico.evolucao.update({
+        where: { id: ev.id },
+        data: {
+          dadosEstruturados: estrutura,
+          textoGerado: renderizarModelo(estrutura, ev.modelo),
+        },
+      }),
+    ),
+    prismaClinico.logAcesso.create({
+      data: { usuarioAuthId: user.id, acao: 'EDITAR_EXAME_FISICO', consultaId: consulta.id },
+    }),
+  ])
+
+  revalidatePath(`/consultas/${consulta.id}`)
+  return { ok: true }
+}
+
 export async function salvarEvolucaoEditada(
   evolucaoId: string,
   textoEditado: string,

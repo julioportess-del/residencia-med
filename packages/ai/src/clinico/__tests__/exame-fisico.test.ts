@@ -18,22 +18,20 @@ describe('seção EXAME FÍSICO', () => {
       objetivo: { exameFisico: 'Ausculta pulmonar com sibilos difusos. SatO2 94%.' },
     })
     const texto = secaoExameFisico(e)
-    expect(texto).toContain('Achados documentados durante a consulta:')
     expect(texto).toContain('sibilos difusos')
     expect(texto).not.toContain('Nenhum achado')
   })
 
-  test('sugestões são campos a preencher, claramente separados dos achados', () => {
+  test('sugestões da IA NUNCA entram no texto do prontuário (são só dica de UI)', () => {
     const e = estruturaClinicaSchema.parse({
       objetivo: {
         sugestoesExameFisico: ['Ausculta pulmonar', 'Frequencia respiratoria'],
       },
     })
     const texto = secaoExameFisico(e)
-    expect(texto).toContain('Sugestoes para complementacao')
-    expect(texto).toContain('nao sao achados')
-    expect(texto).toContain('( ) Ausculta pulmonar: ___')
-    expect(texto).toContain('( ) Frequencia respiratoria: ___')
+    expect(texto).not.toContain('Ausculta pulmonar')
+    expect(texto).not.toContain('( )')
+    expect(texto).toContain('Nenhum achado de exame fisico foi registrado')
   })
 
   test('os três formatos de evolução incluem a seção obrigatória', () => {
