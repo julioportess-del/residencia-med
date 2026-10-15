@@ -98,16 +98,30 @@ export async function garantirUser(authId: string, email: string) {
   const existente = await prisma.user.findUnique({ where: { authId } })
   if (existente) return existente
 
-  // Pode existir um row antigo com mesmo email — vincula em vez de duplicar
-  const porEmail = await prisma.user.findUnique({ where: { email } })
-  if (porEmail) {
-    return prisma.user.update({
-      where: { id: porEmail.id },
-      data: { authId },
-    })
-  }
+  try {
+    // Pode existir um row antigo com mesmo email — vincula em vez de duplicar
+    const porEmail = await prisma.user.findUnique({ where: { email } })
+    if (porEmail) {
+      return await prisma.user.update({
+        where: { id: porEmail.id },
+        data: { authId },
+      })
+    }
 
-  return prisma.user.create({
-    data: { authId, email },
-  })
+    return await prisma.user.create({
+      data: { authId, email },
+    })
+  } catch (erro) {
+    // Primeiro acesso dispara layout + tRPC em paralelo: quem perde a corrida
+    // bate na unique de authId/email. O row já existe — basta relê-lo.
+    if (ehViolacaoUnica(erro)) {
+      const criado = await prisma.user.findUnique({ where: { authId } })
+      if (criado) return criado
+    }
+    throw erro
+  }
+}
+
+function ehViolacaoUnica(erro: unknown): boolean {
+  return typeof erro === 'object' && erro !== null && 'code' in erro && erro.code === 'P2002'
 }

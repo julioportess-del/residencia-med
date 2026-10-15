@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
   '/docs/api',
   '/sign-in',
   '/sign-up',
+  '/recuperar-senha',
   '/auth/callback',
   '/api/webhooks',
   '/api/health',
@@ -27,6 +28,8 @@ const PUBLIC_PATHS = [
 const PROTECTED_DEMO_PREFIXES = [
   '/sign-in',
   '/sign-up',
+  '/recuperar-senha',
+  '/redefinir-senha',
   '/onboarding',
   '/dashboard',
   '/questoes',

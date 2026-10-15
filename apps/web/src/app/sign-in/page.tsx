@@ -2,15 +2,16 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Stethoscope } from 'lucide-react'
 import { supabaseUserAtual, SUPABASE_HABILITADO } from '@/lib/supabase/server'
+import { caminhoInternoSeguro } from '@/lib/auth/redirecionamento'
 import { SignInForm } from './_components/sign-in-form'
 
 export const metadata = { title: 'Entrar' }
 
-type Props = { searchParams: Promise<{ next?: string }> }
+type Props = { searchParams: Promise<{ next?: string; erro?: string }> }
 
 export default async function SignInPage({ searchParams }: Props) {
   const sp = await searchParams
-  const proximaUrl = sp.next ?? '/dashboard'
+  const proximaUrl = caminhoInternoSeguro(sp.next)
 
   if (SUPABASE_HABILITADO) {
     const { user } = await supabaseUserAtual()
@@ -27,6 +28,14 @@ export default async function SignInPage({ searchParams }: Props) {
         <div className="rounded-xl border bg-background p-6 shadow-sm">
           <h1 className="text-2xl font-bold">Entrar</h1>
           <p className="mt-1 text-sm text-muted-foreground">Acesse sua conta para continuar.</p>
+          {sp.erro === 'link-invalido' && (
+            <p
+              role="alert"
+              className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              Este link expirou ou já foi usado. Peça um novo em “Esqueci minha senha”.
+            </p>
+          )}
           <SignInForm proximaUrl={proximaUrl} />
         </div>
         <p className="mt-4 text-center text-sm text-muted-foreground">

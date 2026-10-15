@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,15 @@ export function SignInForm({ proximaUrl }: { proximaUrl: string }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="senha">Senha</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="senha">Senha</Label>
+          <Link
+            href="/recuperar-senha"
+            className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
         <Input
           id="senha"
           type="password"
