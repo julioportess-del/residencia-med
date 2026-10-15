@@ -1,5 +1,12 @@
 import { differenceInDays, startOfDay, subDays } from 'date-fns'
 import type { PrismaClient } from '@residencia-med/db'
+import {
+  diasAteProva,
+  metaDiariaQuestoes,
+  primeirosPassos,
+  priorizarEstudo,
+  visaoSemanal,
+} from '@residencia-med/core'
 import { router, procedureProtegida } from '../trpc'
 
 export type ComparacaoParesOutput = null | {
@@ -12,6 +19,160 @@ export type ComparacaoParesOutput = null | {
 }
 
 export const dashboardRouter = router({
+  /** Bloco "Hoje": contagem regressiva, meta da semana (seg-dom), revisões pendentes, primeiros passos. */
+  hoje: procedureProtegida.query(async ({ ctx }) => {
+    const userId = ctx.userId
+    const agora = new Date()
+
+    const [
+      user,
+      respostasRecentes,
+      revisoesPendentes,
+      totalRespostas,
+      totalRevisoes,
+      plano,
+      totalSimulados,
+    ] = await Promise.all([
+      ctx.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          metaResidencia: true,
+          bancasAlvo: true,
+          dataProva: true,
+          cargaHorariaSemanal: true,
+        },
+      }),
+      // 8 dias cobre a semana corrente inteira (seg-hoje) em qualquer fuso
+      ctx.prisma.resposta.findMany({
+        where: { userId, createdAt: { gte: subDays(agora, 8) } },
+        select: { createdAt: true, correta: true },
+      }),
+      ctx.prisma.itemRevisao.count({ where: { userId, proximaRevisao: { lte: agora } } }),
+      ctx.prisma.resposta.count({ where: { userId } }),
+      ctx.prisma.itemRevisao.count({ where: { userId, ultimaRevisao: { not: null } } }),
+      ctx.prisma.planoEstudo.findUnique({ where: { userId }, select: { id: true } }),
+      ctx.prisma.sessao.count({ where: { userId, tipo: 'SIMULADO', finalizadaEm: { not: null } } }),
+    ])
+
+    const onboardingCompleto = Boolean(
+      user &&
+      user.bancasAlvo.length > 0 &&
+      user.dataProva &&
+      user.cargaHorariaSemanal &&
+      user.metaResidencia,
+    )
+    const metaDiaria = metaDiariaQuestoes(user?.cargaHorariaSemanal)
+
+    return {
+      bancaAlvo: user?.metaResidencia ?? null,
+      dataProva: user?.dataProva ?? null,
+      diasAteProva: diasAteProva(user?.dataProva, agora),
+      metaDiaria,
+      semana: visaoSemanal(respostasRecentes, agora, metaDiaria),
+      revisoesPendentes,
+      totalRespostas,
+      passos: primeirosPassos({
+        onboardingCompleto,
+        totalRespostas,
+        totalRevisoes,
+        temPlano: Boolean(plano),
+        totalSimulados,
+      }),
+    }
+  }),
+
+  /**
+   * Especialidades ordenadas por oportunidade de ganho: lacuna de acerto x peso na banca-alvo.
+   * Peso = incidência pré-computada (AnaliseIncidencia) ou, na falta, volume de questões da banca.
+   */
+  prioridades: procedureProtegida.query(async ({ ctx }) => {
+    const userId = ctx.userId
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: userId },
+      select: { metaResidencia: true, bancasAlvo: true },
+    })
+    const codigoBanca = user?.metaResidencia ?? user?.bancasAlvo[0] ?? null
+
+    const [especialidades, respostas, incidencias, volume] = await Promise.all([
+      ctx.prisma.especialidade.findMany({
+        select: { id: true, nome: true, cor: true },
+        orderBy: { ordem: 'asc' },
+      }),
+      ctx.prisma.resposta.findMany({
+        where: { userId },
+        select: {
+          correta: true,
+          questao: {
+            select: {
+              temas: {
+                where: { primario: true },
+                select: { tema: { select: { especialidadeId: true } } },
+                take: 1,
+              },
+            },
+          },
+        },
+      }),
+      codigoBanca
+        ? ctx.prisma.analiseIncidencia.findMany({
+            where: { banca: { codigo: codigoBanca } },
+            select: {
+              porcentagem: true,
+              janelaAnos: true,
+              tema: { select: { especialidadeId: true } },
+            },
+          })
+        : Promise.resolve([]),
+      ctx.prisma.questaoTema.findMany({
+        where: {
+          primario: true,
+          questao: { publicada: true, ...(codigoBanca ? { banca: { codigo: codigoBanca } } : {}) },
+        },
+        select: { tema: { select: { especialidadeId: true } } },
+      }),
+    ])
+
+    const desempenho = new Map<string, { total: number; acertos: number }>()
+    for (const r of respostas) {
+      const espId = r.questao.temas[0]?.tema.especialidadeId
+      if (!espId) continue
+      const atual = desempenho.get(espId) ?? { total: 0, acertos: 0 }
+      desempenho.set(espId, {
+        total: atual.total + 1,
+        acertos: atual.acertos + (r.correta ? 1 : 0),
+      })
+    }
+
+    // Menor janela disponível = tendência mais recente da banca
+    const janela = Math.min(...incidencias.map((i) => i.janelaAnos))
+    const incidencia = new Map<string, number>()
+    for (const i of incidencias.filter((x) => x.janelaAnos === janela)) {
+      const id = i.tema.especialidadeId
+      incidencia.set(id, (incidencia.get(id) ?? 0) + i.porcentagem)
+    }
+    const fonteIncidencia: 'analise' | 'volume' | 'nenhuma' =
+      incidencia.size > 0 ? 'analise' : volume.length > 0 ? 'volume' : 'nenhuma'
+    if (fonteIncidencia === 'volume') {
+      for (const v of volume) {
+        const id = v.tema.especialidadeId
+        incidencia.set(id, (incidencia.get(id) ?? 0) + 1)
+      }
+    }
+
+    const cores = new Map(especialidades.map((e) => [e.id, e.cor]))
+    const itens = priorizarEstudo(
+      especialidades.map((e) => ({
+        id: e.id,
+        nome: e.nome,
+        total: desempenho.get(e.id)?.total ?? 0,
+        acertos: desempenho.get(e.id)?.acertos ?? 0,
+        incidencia: incidencia.get(e.id) ?? 0,
+      })),
+    ).map((i) => ({ ...i, cor: cores.get(i.id) ?? null }))
+
+    return { bancaAlvo: codigoBanca, fonteIncidencia, itens }
+  }),
+
   resumo: procedureProtegida.query(async ({ ctx }) => {
     const userId = ctx.userId
 

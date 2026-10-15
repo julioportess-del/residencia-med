@@ -1,33 +1,25 @@
 'use client'
 
 import { Activity, Flame, Gauge, ListChecks, Target, Users } from 'lucide-react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
+import { PainelHoje } from './painel-hoje'
+import { PrioridadesCard } from './prioridades-card'
 
 export function DashboardClient() {
   const { data: resumo, isLoading: r1 } = trpc.dashboard.resumo.useQuery()
-  const { data: porEsp, isLoading: r2 } = trpc.dashboard.porEspecialidade.useQuery()
+  const { data: hoje, isLoading: r0 } = trpc.dashboard.hoje.useQuery()
+  const { data: prioridades, isLoading: r2 } = trpc.dashboard.prioridades.useQuery()
   const { data: pf, isLoading: r3 } = trpc.dashboard.pontosFortesEFracos.useQuery()
   const { data: pares, isLoading: r4 } = trpc.dashboard.comparacaoPares.useQuery()
   const { data: profic, isLoading: r5 } = trpc.proficiencia.atual.useQuery()
 
   return (
     <div className="mt-6 space-y-6">
+      <PainelHoje dados={hoje} loading={r0} />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           icone={<ListChecks className="size-4" />}
@@ -67,68 +59,8 @@ export function DashboardClient() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Atividade dos últimos 7 dias</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {r1 ? (
-            <Skeleton className="h-64" />
-          ) : !resumo || resumo.ultimos7.every((d) => d.total === 0) ? (
-            <EstadoVazio>Nenhuma atividade nos últimos 7 dias.</EstadoVazio>
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={resumo.ultimos7}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                <XAxis
-                  dataKey="dia"
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(v: string) => v.slice(5)}
-                />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="total" fill="#94a3b8" name="Total" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="acertos" fill="#10b981" name="Acertos" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Por especialidade</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {r2 ? (
-              <Skeleton className="h-64" />
-            ) : !porEsp || porEsp.length === 0 ? (
-              <EstadoVazio>
-                Responda algumas questões para ver seu desempenho por especialidade.
-              </EstadoVazio>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={porEsp.map((e) => ({ name: e.nome, value: e.total }))}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                  >
-                    {porEsp.map((e, i) => (
-                      <Cell key={i} fill={e.cor ?? '#1d4ed8'} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <PrioridadesCard dados={prioridades} loading={r2} />
 
         <Card>
           <CardHeader>
