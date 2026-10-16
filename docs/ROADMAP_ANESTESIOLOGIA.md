@@ -32,12 +32,13 @@ Outras: PSU-MG 2027 (possivelmente também em 22/11, confirmar), UNIFESP (29/11,
 - Migration aditiva `20261016120000_caderno_erros` aplicada em produção via SQL e registrada em `_prisma_migrations`.
 - Pendente: diagnóstico inicial (vai para a Etapa 3, junto com o domínio por tema, que depende da classificação das questões).
 
-## Etapa 3 — Memória de longo prazo
+## Etapa 3 — Memória de longo prazo (em andamento)
 
-1. Flashcards com **FSRS** (`ts-fsrs` 5.x, MIT): decks, suspensos, favoritos, revisão rápida, criação a partir do erro.
-2. Revisão de questões migrada para FSRS (retenção desejada ajustável, padrão 0,9).
-3. Domínio por tema com confiabilidade ("avaliação insuficiente" abaixo da amostra mínima).
-4. Calibração de confiança.
+- ✅ **Flashcards com FSRS** (`ts-fsrs` 5.4.2, MIT; retenção alvo 90%): decks, cartões novos/vencidos, revisão com Errei/Difícil/Bom/Fácil mostrando o próximo intervalo, atalhos (Espaço, 1–4), favoritar, suspender, histórico de revisões e **retenção real dos últimos 30 dias** ("avaliação insuficiente" abaixo de 20 revisões).
+- ✅ **Do erro ao cartão**: no caderno de erros e na correção, "Criar flashcard" com o conceito correto já no verso (deck "Caderno de erros").
+- ✅ Flashcards vencidos entram primeiro no "Plano de hoje"; Flashcards ganhou lugar na barra do celular.
+- Migration aditiva `20261016150000_flashcards_fsrs` aplicada em produção.
+- Pendente: migrar a revisão de **questões** de SM-2 para FSRS; domínio por tema com confiabilidade; calibração de confiança; importar do Anki.
 
 ## Etapa 4 — Planejamento adaptativo
 

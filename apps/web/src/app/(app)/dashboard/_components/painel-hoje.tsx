@@ -44,6 +44,7 @@ export function PainelHoje({ dados, loading }: { dados?: DadosHoje; loading: boo
         nome={dados.nome}
         revisoesPendentes={dados.revisoesPendentes}
         errosAbertos={dados.errosAbertos}
+        flashcardsVencidos={dados.flashcardsVencidos}
         ineditasBancaAlvo={dados.ineditasBancaAlvo}
         filtrosIneditas={dados.filtrosIneditas}
         bancaAlvo={dados.bancaAlvo}

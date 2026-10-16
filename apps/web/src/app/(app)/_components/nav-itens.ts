@@ -2,6 +2,7 @@ import {
   BookOpen,
   Calendar,
   ChartLine,
+  Layers,
   CreditCard,
   MessageSquare,
   NotebookPen,
@@ -16,8 +17,9 @@ export type ItemNav = { href: string; icon: LucideIcon; label: string; principal
 export const NAV: readonly ItemNav[] = [
   { href: '/dashboard', icon: ChartLine, label: 'Painel', principal: true },
   { href: '/questoes', icon: BookOpen, label: 'Questões', principal: true },
-  { href: '/simulado', icon: Target, label: 'Simulado', principal: true },
+  { href: '/flashcards', icon: Layers, label: 'Flashcards', principal: true },
   { href: '/revisao', icon: Repeat2, label: 'Revisão', principal: true },
+  { href: '/simulado', icon: Target, label: 'Simulado', principal: false },
   { href: '/caderno', icon: NotebookPen, label: 'Caderno de erros', principal: false },
   { href: '/plano', icon: Calendar, label: 'Plano', principal: false },
   { href: '/mentor', icon: MessageSquare, label: 'Mentor', principal: false },

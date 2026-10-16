@@ -63,3 +63,26 @@ describe('saudacao', () => {
     expect(saudacao(new Date('2026-10-16T23:30:00Z'))).toBe('Boa noite') // 20h30
   })
 })
+
+describe('planejarDia — flashcards', () => {
+  it('flashcards vencidos vêm primeiro (~30 s cada, até 25% do tempo)', () => {
+    const p = planejarDia({
+      minutos: 40,
+      flashcardsVencidos: 100,
+      revisoesPendentes: 0,
+      errosAbertos: 0,
+      ineditasDisponiveis: 500,
+    })
+    expect(p.tarefas[0]).toMatchObject({ tipo: 'FLASHCARDS', quantidade: 20, minutos: 10 })
+  })
+
+  it('sem o campo de flashcards, comportamento anterior', () => {
+    const p = planejarDia({
+      minutos: 10,
+      revisoesPendentes: 0,
+      errosAbertos: 0,
+      ineditasDisponiveis: 9,
+    })
+    expect(p.tarefas.some((t) => t.tipo === 'FLASHCARDS')).toBe(false)
+  })
+})

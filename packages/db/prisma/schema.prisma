@@ -153,6 +153,8 @@ model User {
   notificacoes        Notificacao[]
   pushSubscriptions   PushSubscription[]
   registrosErro       RegistroErro[]
+  decks               Deck[]
+  flashcards          Flashcard[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -376,6 +378,7 @@ model Questao {
   respostas         Resposta[]
   itensRevisao      ItemRevisao[]
   registrosErro     RegistroErro[]
+  flashcards        Flashcard[]
 
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -856,4 +859,87 @@ model RegistroErro {
 
   @@unique([userId, questaoId])
   @@index([userId, motivo])
+}
+
+// ==================== FLASHCARDS (FSRS) ====================
+
+enum EstadoFsrs {
+  NOVO
+  APRENDENDO
+  REVISAO
+  REAPRENDENDO
+}
+
+enum NotaFlashcard {
+  ERREI
+  DIFICIL
+  BOM
+  FACIL
+}
+
+enum OrigemFlashcard {
+  MANUAL
+  ERRO // criado a partir do caderno de erros
+  IA // sugerido pelo comentário gerado por IA
+}
+
+model Deck {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nome      String
+  descricao String?
+  cartoes   Flashcard[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, nome])
+  @@index([userId])
+}
+
+/// Estado FSRS espelhado de ts-fsrs (packages/core/src/flashcards.ts).
+model Flashcard {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deckId            String
+  deck              Deck               @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  questaoId         String?
+  questao           Questao?           @relation(fields: [questaoId], references: [id], onDelete: SetNull)
+  frente            String             @db.Text
+  verso             String             @db.Text
+  origem            OrigemFlashcard    @default(MANUAL)
+  suspenso          Boolean            @default(false)
+  favorito          Boolean            @default(false)
+
+  vencimento        DateTime
+  estabilidade      Float
+  dificuldade       Float
+  diasDecorridos    Int
+  diasAgendados     Int
+  passosAprendizado Int
+  repeticoes        Int
+  lapsos            Int
+  estado            EstadoFsrs
+  ultimaRevisao     DateTime?
+
+  revisoes          RevisaoFlashcard[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([userId, vencimento])
+  @@index([deckId])
+}
+
+model RevisaoFlashcard {
+  id          String        @id @default(cuid())
+  flashcardId String
+  flashcard   Flashcard     @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  userId      String
+  nota        NotaFlashcard
+  estadoAntes EstadoFsrs
+  revisadoEm  DateTime      @default(now())
+
+  @@index([userId, revisadoEm])
+  @@index([flashcardId])
 }

@@ -12,9 +12,10 @@ export const MINUTOS_POR_MODO: Record<ModoEstudo, number> = {
 }
 
 /** Tempo médio por item, incluindo ler a correção comentada. */
-export const MINUTOS_POR_ITEM = { REVISOES: 2, ERROS: 3, INEDITAS: 3 } as const
+export const MINUTOS_POR_ITEM = { FLASHCARDS: 0.5, REVISOES: 2, ERROS: 3, INEDITAS: 3 } as const
 
 /** Fração máxima do tempo para revisões e para erros (o resto é questão nova). */
+const FRACAO_MAX_FLASHCARDS = 0.25
 const FRACAO_MAX_REVISOES = 0.4
 const FRACAO_MAX_ERROS = 0.2
 
@@ -24,6 +25,7 @@ export type TarefaDia = { tipo: TipoTarefa; quantidade: number; minutos: number 
 
 export type EntradaPlanoDia = {
   minutos: number
+  flashcardsVencidos?: number
   revisoesPendentes: number
   errosAbertos: number
   ineditasDisponiveis: number
@@ -32,12 +34,22 @@ export type EntradaPlanoDia = {
 function alocar(tipo: TipoTarefa, orcamento: number, disponivel: number): TarefaDia | null {
   const quantidade = Math.min(disponivel, Math.floor(orcamento / MINUTOS_POR_ITEM[tipo]))
   if (quantidade <= 0) return null
-  return { tipo, quantidade, minutos: quantidade * MINUTOS_POR_ITEM[tipo] }
+  return { tipo, quantidade, minutos: Math.ceil(quantidade * MINUTOS_POR_ITEM[tipo]) }
 }
 
 export function planejarDia(entrada: EntradaPlanoDia): { tarefas: TarefaDia[]; minutos: number } {
   const tarefas: TarefaDia[] = []
   let restante = entrada.minutos
+
+  const flashcards = alocar(
+    'FLASHCARDS',
+    Math.min(restante, entrada.minutos * FRACAO_MAX_FLASHCARDS),
+    entrada.flashcardsVencidos ?? 0,
+  )
+  if (flashcards) {
+    tarefas.push(flashcards)
+    restante -= flashcards.minutos
+  }
 
   const revisoes = alocar(
     'REVISOES',

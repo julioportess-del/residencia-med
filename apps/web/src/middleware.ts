@@ -35,6 +35,7 @@ const PROTECTED_DEMO_PREFIXES = [
   '/questoes',
   '/estudo',
   '/caderno',
+  '/flashcards',
   '/simulado',
   '/revisao',
   '/plano',

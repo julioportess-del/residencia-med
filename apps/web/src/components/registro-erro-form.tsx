@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { ROTULO_MOTIVO_ERRO, type MotivoErro } from '@residencia-med/core'
 import { Button } from '@/components/ui/button'
 import { trpc } from '@/lib/trpc/client'
+import { CriarFlashcardInline } from './criar-flashcard-inline'
 import { cn } from '@/lib/cn'
 
 const MOTIVOS = Object.entries(ROTULO_MOTIVO_ERRO) as Array<[MotivoErro, string]>
@@ -92,13 +93,18 @@ export function RegistroErroForm({ questaoId, onSalvo, compacto }: Props) {
           className="mt-1 w-full rounded-md border bg-background p-2 text-sm text-foreground"
         />
       </label>
-      <Button
-        size="sm"
-        onClick={() => salvar.mutate({ questaoId, motivo, conceitoCorreto: conceito, anotacao })}
-        loading={salvar.isPending}
-      >
-        Salvar no caderno
-      </Button>
+      <div className="flex flex-wrap items-start gap-2">
+        <Button
+          size="sm"
+          onClick={() => salvar.mutate({ questaoId, motivo, conceitoCorreto: conceito, anotacao })}
+          loading={salvar.isPending}
+        >
+          Salvar no caderno
+        </Button>
+        {conceito.trim() && (
+          <CriarFlashcardInline questaoId={questaoId} versoInicial={conceito.trim()} />
+        )}
+      </div>
     </div>
   )
 }

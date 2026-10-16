@@ -86,6 +86,9 @@ export const dashboardRouter = router({
       situacao: 'INEDITAS' as const,
       ...(bancasAlvo.length ? { bancaIds: bancasAlvo } : {}),
     }
+    const flashcardsVencidos = await ctx.prisma.flashcard.count({
+      where: { userId, suspenso: false, vencimento: { lte: agora } },
+    })
     const ineditasBancaAlvo = await ctx.prisma.questao.count({
       where: await montarWhereQuestoes(ctx.prisma, userId, filtrosIneditas),
     })
@@ -99,6 +102,7 @@ export const dashboardRouter = router({
       semana: visaoSemanal(respostasRecentes, agora, metaDiaria),
       revisoesPendentes,
       errosAbertos,
+      flashcardsVencidos,
       ineditasBancaAlvo,
       filtrosIneditas,
       minutosDiarios: user?.cargaHorariaSemanal

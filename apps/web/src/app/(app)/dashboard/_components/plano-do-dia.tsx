@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Repeat2, Sparkles, XCircle } from 'lucide-react'
+import { ArrowRight, Layers, Repeat2, Sparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   MINUTOS_POR_MODO,
@@ -20,6 +20,7 @@ type Props = {
   nome: string
   revisoesPendentes: number
   errosAbertos: number
+  flashcardsVencidos: number
   ineditasBancaAlvo: number
   filtrosIneditas: { situacao: 'INEDITAS'; bancaIds?: string[] }
   bancaAlvo: string | null
@@ -34,6 +35,7 @@ const MODOS: Array<{ v: ModoEstudo; label: string }> = [
 const CHAVE_MODO = 'painel:modo-estudo'
 
 const ICONE: Record<TipoTarefa, React.ReactNode> = {
+  FLASHCARDS: <Layers className="size-4" />,
   REVISOES: <Repeat2 className="size-4" />,
   ERROS: <XCircle className="size-4" />,
   INEDITAS: <Sparkles className="size-4" />,
@@ -67,6 +69,7 @@ export function PlanoDoDia(props: Props) {
   const minutos = MINUTOS_POR_MODO[modo]
   const { tarefas } = planejarDia({
     minutos,
+    flashcardsVencidos: props.flashcardsVencidos,
     revisoesPendentes: props.revisoesPendentes,
     errosAbertos: props.errosAbertos,
     ineditasDisponiveis: props.ineditasBancaAlvo,
@@ -78,6 +81,10 @@ export function PlanoDoDia(props: Props) {
   })
 
   function comecar(tipo: TipoTarefa, quantidade: number) {
+    if (tipo === 'FLASHCARDS') {
+      router.push('/flashcards')
+      return
+    }
     const filtros =
       tipo === 'REVISOES'
         ? { situacao: 'REVISAO_VENCIDA' as const }
@@ -88,6 +95,7 @@ export function PlanoDoDia(props: Props) {
   }
 
   const textoTarefa: Record<TipoTarefa, (n: number) => string> = {
+    FLASHCARDS: (n) => `${n} ${n === 1 ? 'flashcard pendente' : 'flashcards pendentes'}`,
     REVISOES: (n) => `${n} ${n === 1 ? 'revisão vencida' : 'revisões vencidas'}`,
     ERROS: (n) => `Refazer ${n} ${n === 1 ? 'erro' : 'erros'} do caderno`,
     INEDITAS: (n) =>
