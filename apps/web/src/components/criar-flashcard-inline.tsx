@@ -9,21 +9,31 @@ import { trpc } from '@/lib/trpc/client'
 type Props = {
   questaoId: string
   versoInicial: string
+  frenteInicial?: string
+  label?: string
   origem?: 'ERRO' | 'IA' | 'MANUAL'
 }
 
 /** Transforma o conceito de um erro em cartão de repetição espaçada. */
-export function CriarFlashcardInline({ questaoId, versoInicial, origem = 'ERRO' }: Props) {
+export function CriarFlashcardInline({
+  questaoId,
+  versoInicial,
+  frenteInicial = '',
+  label = 'Criar flashcard',
+  origem = 'ERRO',
+}: Props) {
   const utils = trpc.useUtils()
   const [aberto, setAberto] = useState(false)
-  const [frente, setFrente] = useState('')
+  const [frente, setFrente] = useState(frenteInicial)
   const [verso, setVerso] = useState(versoInicial)
 
   const criar = trpc.flashcards.criar.useMutation({
     onSuccess: () => {
-      toast.success('Flashcard criado no deck "Caderno de erros".')
+      toast.success(
+        origem === 'ERRO' ? 'Flashcard criado no deck "Caderno de erros".' : 'Flashcard criado.',
+      )
       setAberto(false)
-      setFrente('')
+      setFrente(frenteInicial)
       void utils.flashcards.decks.invalidate()
     },
     onError: (e) => toast.error(e.message),
@@ -37,10 +47,11 @@ export function CriarFlashcardInline({ questaoId, versoInicial, origem = 'ERRO' 
         variant="outline"
         onClick={() => {
           setVerso(versoInicial)
+          setFrente(frenteInicial)
           setAberto(true)
         }}
       >
-        <Layers className="size-3.5" /> Criar flashcard
+        <Layers className="size-3.5" /> {label}
       </Button>
     )
   }

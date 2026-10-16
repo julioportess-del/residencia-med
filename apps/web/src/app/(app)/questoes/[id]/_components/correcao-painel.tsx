@@ -14,6 +14,7 @@ import {
 import type { ComentarioQuestao } from '@residencia-med/ai'
 import { interpretarConfianca, type NivelConfianca } from '@residencia-med/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CriarFlashcardInline } from '@/components/criar-flashcard-inline'
 import { ExplicarComIA } from '@/components/explicar-ia-dialog'
 import { RegistroErroForm } from '@/components/registro-erro-form'
 import { cn } from '@/lib/cn'
@@ -115,6 +116,7 @@ export function CorrecaoPainel({
         <CardContent className="space-y-3 text-sm leading-relaxed">
           {correcao.comentarioIa ? (
             <ComentarioIa
+              questaoId={questaoId}
               comentario={correcao.comentarioIa}
               revisado={correcao.comentarioIaRevisado ?? false}
               contestado={correcao.gabaritoContestadoIa ?? false}
@@ -218,6 +220,7 @@ export function CorrecaoPainel({
 }
 
 type ComentarioIaProps = {
+  questaoId: string
   comentario: ComentarioQuestao
   revisado: boolean
   contestado: boolean
@@ -226,6 +229,7 @@ type ComentarioIaProps = {
 }
 
 function ComentarioIa({
+  questaoId,
   comentario,
   revisado,
   contestado,
@@ -295,6 +299,14 @@ function ComentarioIa({
           ))}
         </ul>
       </div>
+
+      <CriarFlashcardInline
+        questaoId={questaoId}
+        frenteInicial={comentario.flashcard.frente}
+        versoInicial={comentario.flashcard.verso}
+        label="Criar flashcard sugerido"
+        origem="IA"
+      />
 
       {comentario.referencia && (
         <p className="text-xs text-muted-foreground">
