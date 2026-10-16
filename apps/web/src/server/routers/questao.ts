@@ -1,10 +1,12 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { gerarQuestaoSimilar } from '@residencia-med/ai'
+import { ANTHROPIC_HABILITADO, gerarQuestaoSimilar } from '@residencia-med/ai'
 import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
 import { checarLimiteQuestoes, obterPlanoUsuario, temAcesso } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
-import { enqueueAtualizarRevisao } from '../../lib/queues'
+
+const PREFIXO_EXPLICACAO_PENDENTE = 'Explicação pendente'
+import { atualizarItemRevisao } from '../lib/revisao'
 
 export const questaoRouter = router({
   listar: procedureProtegida.input(FiltroQuestoesInput).query(async ({ ctx, input }) => {
@@ -133,7 +135,20 @@ export const questaoRouter = router({
         },
       })
       if (!questao) throw new TRPCError({ code: 'NOT_FOUND' })
-      return questao
+      // Nada que revele o gabarito antes da resposta (ele vem em `responder`).
+      const {
+        gabaritoLetra: _g,
+        explicacao: _e,
+        explicacaoMd: _m,
+        alternativas,
+        ...resto
+      } = questao
+      return {
+        ...resto,
+        alternativas: alternativas.map(
+          ({ correta: _c, explicacaoErro: _x, ...alternativa }) => alternativa,
+        ),
+      }
     }),
 
   responder: procedureProtegida.input(ResponderQuestaoInput).mutation(async ({ ctx, input }) => {
@@ -147,6 +162,14 @@ export const questaoRouter = router({
       include: { alternativas: true },
     })
     if (!questao) throw new TRPCError({ code: 'NOT_FOUND' })
+
+    if (input.sessaoId) {
+      const sessao = await ctx.prisma.sessao.findFirst({
+        where: { id: input.sessaoId, userId: ctx.userId },
+        select: { id: true },
+      })
+      if (!sessao) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Sessão inválida' })
+    }
 
     const escolhida = questao.alternativas.find((a) => a.letra === input.alternativaLetra)
     if (!escolhida) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Alternativa invalida' })
@@ -168,8 +191,8 @@ export const questaoRouter = router({
     })
 
     if (input.sessaoId) {
-      await ctx.prisma.sessao.update({
-        where: { id: input.sessaoId },
+      await ctx.prisma.sessao.updateMany({
+        where: { id: input.sessaoId, userId: ctx.userId },
         data: {
           acertos: { increment: correta ? 1 : 0 },
           erros: { increment: correta ? 0 : 1 },
@@ -178,10 +201,12 @@ export const questaoRouter = router({
       })
     }
 
-    await enqueueAtualizarRevisao({
+    const { proximaRevisao } = await atualizarItemRevisao(ctx.prisma, {
       userId: ctx.userId,
       questaoId: questao.id,
-      respostaId: resposta.id,
+      correta,
+      tempoSegundos: input.tempoSegundos,
+      confianca: input.confianca ?? null,
     })
 
     return {
@@ -189,6 +214,11 @@ export const questaoRouter = router({
       correta,
       gabaritoLetra: questao.gabaritoLetra,
       explicacaoMd: questao.explicacaoMd,
+      // Importadas de PDF ainda sem comentário pedagógico (só gabarito oficial)
+      explicacaoPendente: questao.explicacao.startsWith(PREFIXO_EXPLICACAO_PENDENTE),
+      fonte: questao.fonte,
+      proximaRevisao,
+      iaDisponivel: ANTHROPIC_HABILITADO,
       alternativasErrosMd: Object.fromEntries(
         questao.alternativas
           .filter((a) => !a.correta && a.explicacaoErro)

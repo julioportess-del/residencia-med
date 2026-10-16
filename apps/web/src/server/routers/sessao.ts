@@ -81,6 +81,11 @@ export const sessaoRouter = router({
   finalizar: procedureProtegida
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
+      const dono = await ctx.prisma.sessao.findFirst({
+        where: { id: input.id, userId: ctx.userId },
+        select: { id: true },
+      })
+      if (!dono) throw new TRPCError({ code: 'NOT_FOUND' })
       const sessao = await ctx.prisma.sessao.update({
         where: { id: input.id },
         data: { finalizadaEm: new Date() },

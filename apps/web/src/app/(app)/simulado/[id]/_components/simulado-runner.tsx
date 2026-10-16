@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Clock } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,12 +19,55 @@ type Props = {
   tempoMinutos: number
 }
 
+type EstadoSalvo = {
+  idx: number
+  respostas: Record<string, string>
+  tempos: Record<string, number>
+  restanteSec: number
+}
+
+const chaveEstado = (sessaoId: string) => `simulado:${sessaoId}`
+
+function lerEstado(sessaoId: string): EstadoSalvo | null {
+  try {
+    const bruto = window.localStorage.getItem(chaveEstado(sessaoId))
+    return bruto ? (JSON.parse(bruto) as EstadoSalvo) : null
+  } catch {
+    return null
+  }
+}
+
+function salvarEstado(sessaoId: string, estado: EstadoSalvo): void {
+  try {
+    window.localStorage.setItem(chaveEstado(sessaoId), JSON.stringify(estado))
+  } catch {
+    // armazenamento indisponível (aba anônima): segue sem retomada
+  }
+}
+
+function limparEstado(sessaoId: string): void {
+  try {
+    window.localStorage.removeItem(chaveEstado(sessaoId))
+  } catch {
+    // idem
+  }
+}
+
+/**
+ * Modo prova: respostas ficam no cliente (pode trocar até entregar) e são
+ * enviadas UMA vez ao finalizar, com o tempo real gasto em cada questão.
+ * O progresso é salvo localmente para retomar após recarregar a página.
+ */
 export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
   const router = useRouter()
   const [idx, setIdx] = useState(0)
   const [respostas, setRespostas] = useState<Record<string, string>>({})
   const [restanteSec, setRestanteSec] = useState(tempoMinutos * 60)
-  const [inicioQuestao, setInicioQuestao] = useState(Date.now())
+  const [enviando, setEnviando] = useState(false)
+  const tempos = useRef<Record<string, number>>({})
+  const inicioQuestao = useRef(Date.now())
+  const finalizando = useRef(false)
+  const enviadas = useRef<Set<string>>(new Set())
 
   const idAtual = questaoIds[idx]
   const questao = trpc.questao.detalhe.useQuery(
@@ -34,65 +77,82 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
 
   const responderM = trpc.questao.responder.useMutation()
   const finalizarM = trpc.sessao.finalizar.useMutation({
-    onSuccess: () => router.push(`/simulado/${sessaoId}/resultado`),
+    onSuccess: () => {
+      limparEstado(sessaoId)
+      router.push(`/simulado/${sessaoId}/resultado`)
+    },
+    onError: () => {
+      finalizando.current = false
+      setEnviando(false)
+      toast.error('Não foi possível finalizar. Tente de novo.')
+    },
   })
+
+  // Retoma simulado interrompido
+  useEffect(() => {
+    const salvo = lerEstado(sessaoId)
+    if (!salvo) return
+    tempos.current = salvo.tempos
+    setRespostas(salvo.respostas)
+    setRestanteSec(salvo.restanteSec)
+    setIdx(Math.min(salvo.idx, questaoIds.length - 1))
+    toast.info('Simulado retomado de onde você parou.')
+  }, [sessaoId, questaoIds.length])
+
+  useEffect(() => {
+    salvarEstado(sessaoId, { idx, respostas, tempos: tempos.current, restanteSec })
+  }, [sessaoId, idx, respostas, restanteSec])
 
   useEffect(() => {
     if (restanteSec <= 0) {
       void finalizar()
       return
     }
-    const t = setInterval(() => setRestanteSec((s) => s - 1), 1000)
-    return () => clearInterval(t)
+    const t = setTimeout(() => setRestanteSec((s) => s - 1), 1000)
+    return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restanteSec])
 
-  useEffect(() => {
-    setInicioQuestao(Date.now())
-  }, [idx])
+  function registrarTempoAtual() {
+    if (!idAtual) return
+    const gasto = Math.floor((Date.now() - inicioQuestao.current) / 1000)
+    tempos.current = { ...tempos.current, [idAtual]: (tempos.current[idAtual] ?? 0) + gasto }
+    inicioQuestao.current = Date.now()
+  }
 
-  const finalizar = async () => {
-    if (finalizarM.isPending) return
-    // submete respostas pendentes
+  function irPara(novoIdx: number) {
+    registrarTempoAtual()
+    setIdx(novoIdx)
+  }
+
+  async function finalizar() {
+    if (finalizando.current) return
+    finalizando.current = true
+    setEnviando(true)
+    registrarTempoAtual()
     for (const qid of questaoIds) {
-      if (!respostas[qid]) continue
+      const letra = respostas[qid]
+      if (!letra || enviadas.current.has(qid)) continue
       try {
         await responderM.mutateAsync({
           questaoId: qid,
-          alternativaLetra: respostas[qid] as never,
-          tempoSegundos: 60,
+          alternativaLetra: letra as never,
+          tempoSegundos: Math.max(1, tempos.current[qid] ?? 1),
           confianca: 'INCERTO',
           sessaoId,
         })
+        enviadas.current.add(qid)
       } catch {
-        // já submetidas serão detectadas duplicadas ou ignoradas
+        finalizando.current = false
+        setEnviando(false)
+        toast.error('Erro ao enviar respostas. Seu progresso está salvo; tente finalizar de novo.')
+        return
       }
     }
     finalizarM.mutate({ id: sessaoId })
   }
 
-  const proxima = async () => {
-    const escolha = idAtual ? respostas[idAtual] : undefined
-    if (idAtual && escolha) {
-      try {
-        await responderM.mutateAsync({
-          questaoId: idAtual,
-          alternativaLetra: escolha as never,
-          tempoSegundos: Math.max(1, Math.floor((Date.now() - inicioQuestao) / 1000)),
-          confianca: 'INCERTO',
-          sessaoId,
-        })
-      } catch {
-        toast.error('Erro ao salvar resposta')
-        return
-      }
-    }
-    if (idx < questaoIds.length - 1) {
-      setIdx((i) => i + 1)
-    } else {
-      finalizarM.mutate({ id: sessaoId })
-    }
-  }
+  const ultima = idx === questaoIds.length - 1
 
   if (!idAtual) return <div>Sessão inválida.</div>
 
@@ -159,13 +219,16 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
-              onClick={() => setIdx((i) => Math.max(0, i - 1))}
-              disabled={idx === 0}
+              onClick={() => irPara(Math.max(0, idx - 1))}
+              disabled={idx === 0 || enviando}
             >
               Anterior
             </Button>
-            <Button onClick={proxima} loading={responderM.isPending || finalizarM.isPending}>
-              {idx === questaoIds.length - 1 ? 'Finalizar' : 'Próxima'}
+            <Button
+              onClick={() => (ultima ? void finalizar() : irPara(idx + 1))}
+              loading={enviando}
+            >
+              {ultima ? 'Entregar simulado' : 'Próxima'}
             </Button>
           </div>
         </>

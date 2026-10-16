@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
+import { CorrecaoPainel } from './correcao-painel'
 import { cn } from '@/lib/cn'
 
 type Confianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE'
@@ -198,30 +199,14 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
         </>
       ) : (
         <div className="space-y-4">
-          <Card
-            className={cn(
-              correta ? 'border-emerald-500 bg-emerald-50' : 'border-rose-500 bg-rose-50',
-            )}
-          >
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 font-semibold">
-                {correta ? <Check className="text-emerald-600" /> : <X className="text-rose-600" />}
-                {correta
-                  ? 'Resposta correta!'
-                  : `Errou. O gabarito era ${respondida.gabaritoLetra}.`}
-              </div>
-            </CardContent>
-          </Card>
-
-          {respondida.explicacaoMd ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="whitespace-pre-line text-sm leading-relaxed">
-                  {respondida.explicacaoMd}
-                </p>
-              </CardContent>
-            </Card>
-          ) : null}
+          <CorrecaoPainel
+            questaoId={q.id}
+            escolha={escolha ?? ''}
+            confianca={confianca}
+            correcao={respondida}
+            temas={q.temas}
+            guidelines={q.guidelines}
+          />
 
           <div className="flex flex-wrap gap-3">
             <Button onClick={irParaProxima} loading={proximaQ.isLoading}>

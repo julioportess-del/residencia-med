@@ -34,8 +34,22 @@ export function chaveCacheLLM(input: {
   modelo: string
   versaoPrompt: string
 }): string {
-  const canonical = JSON.stringify(input, Object.keys(input).sort())
+  // Serialização canônica RECURSIVA. O replacer-array do JSON.stringify também
+  // filtra objetos aninhados — ele zerava `args` e todas as chamadas colidiam.
+  const canonical = JSON.stringify(ordenarChaves(input))
   return `llm:${createHash('sha256').update(canonical).digest('hex')}`
+}
+
+function ordenarChaves(valor: unknown): unknown {
+  if (Array.isArray(valor)) return valor.map(ordenarChaves)
+  if (valor !== null && typeof valor === 'object') {
+    return Object.fromEntries(
+      Object.entries(valor)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([k, v]) => [k, ordenarChaves(v)]),
+    )
+  }
+  return valor
 }
 
 export async function getCache<T>(chave: string): Promise<T | null> {
