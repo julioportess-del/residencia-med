@@ -43,8 +43,14 @@ export function CadernoErros() {
     onError: (e) => toast.error(e.message),
   })
 
-  if (caderno.isLoading) return <Skeleton className="mt-6 h-96 w-full" />
-  if (!caderno.data) return null
+  if (caderno.error) {
+    return (
+      <p className="mt-6 text-sm text-destructive">
+        Não foi possível carregar o caderno. Recarregue a página.
+      </p>
+    )
+  }
+  if (!caderno.data) return <Skeleton className="mt-6 h-96 w-full" />
 
   const { contagem, padroes, itens } = caderno.data
   const visiveis = itens.filter((i) => i.status === aba)

@@ -18,7 +18,7 @@ const ICONE: Record<string, React.ReactNode> = {
 export function ListasInteligentes({ onEscolher }: { onEscolher: (f: FiltrosLista) => void }) {
   const listas = trpc.questao.listasInteligentes.useQuery()
 
-  if (listas.isLoading) {
+  if (!listas.data && !listas.error) {
     return (
       <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (

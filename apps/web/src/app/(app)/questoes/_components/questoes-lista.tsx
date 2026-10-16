@@ -282,11 +282,15 @@ export function QuestoesLista() {
         </div>
       </section>
 
-      {questoes.isLoading ? (
+      {!questoes.data && !questoes.error ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full" />
           ))}
+        </div>
+      ) : questoes.error ? (
+        <div className="flex h-40 items-center justify-center rounded-md border border-dashed text-sm text-destructive">
+          Não foi possível carregar as questões. Recarregue a página.
         </div>
       ) : itens.length === 0 ? (
         <div className="flex h-40 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
