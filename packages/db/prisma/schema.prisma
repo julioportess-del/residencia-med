@@ -364,6 +364,16 @@ model Questao {
   // IA
   embedding         Unsupported("vector(1536)")?
   geradaPorIA       Boolean             @default(false)
+
+  // Comentario gerado por IA (rotulado na UI ate revisao humana).
+  // JSON no formato ComentarioQuestao de packages/ai/funcoes/comentar-questao.
+  comentarioIa         Json?
+  comentarioIaModelo   String?
+  comentarioIaVersao   String?
+  comentarioIaEm       DateTime?
+  comentarioIaRevisado Boolean          @default(false)
+  // IA discordou do gabarito oficial: exibir alerta, nunca trocar o gabarito sozinha
+  gabaritoContestadoIa Boolean          @default(false)
   questaoOriginalId String?
   questaoOriginal   Questao?            @relation("VariacoesIA", fields: [questaoOriginalId], references: [id], onDelete: SetNull)
   variacoes         Questao[]           @relation("VariacoesIA")
@@ -405,11 +415,19 @@ model Alternativa {
   @@index([questaoId])
 }
 
+enum OrigemClassificacao {
+  MANUAL
+  PARSER
+  IA
+}
+
 model QuestaoTema {
   questaoId String
   temaId    String
   peso      Float   @default(1.0) // primary = 1.0, secondary = 0.3-0.5
   primario  Boolean @default(false)
+  origem    OrigemClassificacao @default(MANUAL)
+  confianca Float?  // 0-1, quando classificada por IA
   questao   Questao @relation(fields: [questaoId], references: [id], onDelete: Cascade)
   tema      Tema    @relation(fields: [temaId], references: [id], onDelete: Cascade)
 

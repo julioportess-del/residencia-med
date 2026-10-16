@@ -18,6 +18,8 @@ export type LLMCallMetricas = {
 // Precos por 1M tokens, atualizar conforme provider muda
 const PRECO_USD_1M = {
   'claude-sonnet-4-6': { input: 3, output: 15, cached: 0.3 },
+  'claude-sonnet-5-5': { input: 2, output: 10, cached: 0.1 },
+  'claude-opus-5-5': { input: 4, output: 20, cached: 0.2 },
   'claude-opus-4-7': { input: 15, output: 75, cached: 1.5 },
   'gpt-4o': { input: 2.5, output: 10, cached: 1.25 },
   'text-embedding-3-small': { input: 0.02, output: 0, cached: 0.02 },

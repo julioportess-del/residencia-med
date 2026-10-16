@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { ANTHROPIC_HABILITADO, gerarQuestaoSimilar } from '@residencia-med/ai'
+import { ANTHROPIC_HABILITADO, gerarQuestaoSimilar, lerComentarioIa } from '@residencia-med/ai'
 import { FiltroQuestoesInput, ResponderQuestaoInput } from '@residencia-med/types'
 import { checarLimiteQuestoes, obterPlanoUsuario, temAcesso } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
@@ -196,6 +196,8 @@ export const questaoRouter = router({
         gabaritoLetra: _g,
         explicacao: _e,
         explicacaoMd: _m,
+        comentarioIa: _ci,
+        gabaritoContestadoIa: _gc,
         alternativas,
         ...resto
       } = questao
@@ -275,6 +277,10 @@ export const questaoRouter = router({
       fonte: questao.fonte,
       proximaRevisao,
       iaDisponivel: ANTHROPIC_HABILITADO,
+      // Comentário gerado por IA (rotulado na UI enquanto não revisado)
+      comentarioIa: lerComentarioIa(questao.comentarioIa),
+      comentarioIaRevisado: questao.comentarioIaRevisado,
+      gabaritoContestadoIa: questao.gabaritoContestadoIa,
       alternativasErrosMd: Object.fromEntries(
         questao.alternativas
           .filter((a) => !a.correta && a.explicacaoErro)

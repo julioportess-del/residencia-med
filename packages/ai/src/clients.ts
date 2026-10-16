@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
+/** Chave pessoal sem workspace fixo exige o cabeçalho anthropic-workspace-id. */
+const ANTHROPIC_WORKSPACE_ID = process.env.ANTHROPIC_WORKSPACE_ID
 const OPENAI_KEY = process.env.OPENAI_API_KEY
 
 export const ANTHROPIC_HABILITADO = Boolean(ANTHROPIC_KEY)
@@ -34,7 +36,14 @@ function clienteProxy<T extends object>(real: T | null, provedor: 'Anthropic' | 
 }
 
 export const anthropic = clienteProxy(
-  ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null,
+  ANTHROPIC_KEY
+    ? new Anthropic({
+        apiKey: ANTHROPIC_KEY,
+        ...(ANTHROPIC_WORKSPACE_ID
+          ? { defaultHeaders: { 'anthropic-workspace-id': ANTHROPIC_WORKSPACE_ID } }
+          : {}),
+      })
+    : null,
   'Anthropic',
 )
 

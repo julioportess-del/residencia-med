@@ -1,6 +1,17 @@
 'use client'
 
-import { AlertTriangle, BookMarked, Check, ExternalLink, FileText, Repeat2, X } from 'lucide-react'
+import {
+  AlertTriangle,
+  BookMarked,
+  Check,
+  ExternalLink,
+  FileText,
+  Lightbulb,
+  Repeat2,
+  Sparkles,
+  X,
+} from 'lucide-react'
+import type { ComentarioQuestao } from '@residencia-med/ai'
 import { interpretarConfianca, type NivelConfianca } from '@residencia-med/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExplicarComIA } from '@/components/explicar-ia-dialog'
@@ -16,6 +27,9 @@ type Correcao = {
   proximaRevisao: Date
   iaDisponivel: boolean
   alternativasErrosMd: Record<string, string>
+  comentarioIa?: ComentarioQuestao | null
+  comentarioIaRevisado?: boolean
+  gabaritoContestadoIa?: boolean
 }
 
 type Props = {
@@ -99,7 +113,15 @@ export function CorrecaoPainel({
           <CardTitle className="text-base">Comentário</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm leading-relaxed">
-          {correcao.explicacaoPendente ? (
+          {correcao.comentarioIa ? (
+            <ComentarioIa
+              comentario={correcao.comentarioIa}
+              revisado={correcao.comentarioIaRevisado ?? false}
+              contestado={correcao.gabaritoContestadoIa ?? false}
+              gabaritoLetra={correcao.gabaritoLetra}
+              escolha={escolha}
+            />
+          ) : correcao.explicacaoPendente ? (
             <p className="text-muted-foreground">
               Esta questão foi importada da prova oficial e ainda não tem comentário revisado. O
               gabarito acima é o oficial da banca.
@@ -108,7 +130,7 @@ export function CorrecaoPainel({
             <p className="whitespace-pre-line">{correcao.explicacaoMd}</p>
           )}
 
-          {comentariosAlternativas.length > 0 && (
+          {!correcao.comentarioIa && comentariosAlternativas.length > 0 && (
             <div className="space-y-2 border-t pt-3">
               <div className="text-xs font-medium uppercase text-muted-foreground">
                 Por que as outras alternativas estão erradas
@@ -190,6 +212,95 @@ export function CorrecaoPainel({
             )}
           </CardContent>
         </Card>
+      )}
+    </div>
+  )
+}
+
+type ComentarioIaProps = {
+  comentario: ComentarioQuestao
+  revisado: boolean
+  contestado: boolean
+  gabaritoLetra: string
+  escolha: string
+}
+
+function ComentarioIa({
+  comentario,
+  revisado,
+  contestado,
+  gabaritoLetra,
+  escolha,
+}: ComentarioIaProps) {
+  return (
+    <div className="space-y-3">
+      <span className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200">
+        <Sparkles className="size-3" />
+        {revisado ? 'Gerado por IA · revisado' : 'Gerado por IA · não revisado'}
+      </span>
+
+      {contestado && comentario.divergencia && (
+        <div className="rounded-md border border-amber-500 bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+          <div className="flex items-center gap-1.5 font-medium">
+            <AlertTriangle className="size-4" />A IA discorda do gabarito oficial ({gabaritoLetra})
+          </div>
+          <p className="mt-1">{comentario.divergencia}</p>
+          <p className="mt-1 text-xs opacity-80">
+            O app mantém o gabarito oficial. Questão possivelmente passível de recurso — confira na
+            referência.
+          </p>
+        </div>
+      )}
+
+      {comentario.dependeImagem && (
+        <p className="text-xs text-muted-foreground">
+          Esta questão dependia de imagem que não foi importada; o comentário pode estar incompleto.
+        </p>
+      )}
+
+      <p>{comentario.resumo}</p>
+      <p>
+        <span className="font-medium">Conceito-chave: </span>
+        {comentario.conceitoPrincipal}
+      </p>
+      {comentario.pegadinha && (
+        <p className="flex gap-1.5">
+          <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
+          <span>
+            <span className="font-medium">Pegadinha: </span>
+            {comentario.pegadinha}
+          </span>
+        </p>
+      )}
+
+      <div className="space-y-2 border-t pt-3">
+        <div className="text-xs font-medium uppercase text-muted-foreground">
+          Alternativa por alternativa
+        </div>
+        <ul className="space-y-1.5">
+          {comentario.alternativas.map((a) => (
+            <li
+              key={a.letra}
+              className={cn(
+                'rounded-md px-2 py-1',
+                a.letra === gabaritoLetra && 'bg-emerald-50 dark:bg-emerald-950/30',
+                a.letra === escolha &&
+                  a.letra !== gabaritoLetra &&
+                  'bg-rose-50 dark:bg-rose-950/30',
+              )}
+            >
+              <span className="mr-1.5 font-semibold">{a.letra})</span>
+              {a.comentario}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {comentario.referencia && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium">Referência citada pela IA: </span>
+          {comentario.referencia}
+        </p>
       )}
     </div>
   )

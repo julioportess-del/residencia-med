@@ -9,7 +9,10 @@
     "build": "tsc --noEmit",
     "lint": "eslint src --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "classificar-temas": "tsx --env-file-if-exists=.env src/jobs/classificar-temas.ts",
+    "lote-ia": "tsx --env-file-if-exists=.env src/jobs/lote-ia.ts",
+    "lote-ia-sql": "tsx src/jobs/gravar-lote-ia.ts"
   },
   "dependencies": {
     "@residencia-med/ai": "workspace:*",

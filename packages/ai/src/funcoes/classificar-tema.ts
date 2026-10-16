@@ -1,28 +1,43 @@
 import { z } from 'zod'
 import { anthropic, MODELO_ANTHROPIC } from '../clients'
 import { chaveCacheLLM, getCache, setCache } from '../cache'
-import { promptClassificarTema, VERSAO_CLASSIFICAR_TEMA } from '../prompts/classificar-tema'
+import {
+  promptClassificarTema,
+  VERSAO_CLASSIFICAR_TEMA,
+  type PromptClassificarTemaInput,
+} from '../prompts/classificar-tema'
 
-const ClassificacaoSchema = z.array(
-  z.object({
-    codigoTema: z.string(),
-    peso: z.number().min(0).max(1),
-    primario: z.boolean(),
-  }),
-)
+const ClassificacaoSchema = z.object({
+  codigoTema: z.string().nullable(),
+  secundarios: z.array(z.string()).default([]),
+  confianca: z.number(),
+  justificativa: z.string().default(''),
+})
 
 export type ClassificacaoTema = z.infer<typeof ClassificacaoSchema>
+export type ClassificarTemaInput = PromptClassificarTemaInput
 
 const FUNCAO = 'classificarTema'
+const TTL_CACHE_SEGUNDOS = 60 * 60 * 24 * 30
 
-export async function classificarTema(input: {
-  enunciado: string
-  vignette?: string
-  temasDisponiveis: Array<{ codigo: string; nome: string; especialidade: string }>
-}): Promise<ClassificacaoTema> {
+/** Extrai o primeiro objeto JSON da resposta (tolera cercas ```json e texto em volta). */
+export function extrairJsonClassificacao(texto: string): ClassificacaoTema {
+  const cercado = texto.match(/```(?:json)?\s*([\s\S]*?)```/)
+  const bruto = cercado?.[1] ?? texto.match(/\{[\s\S]*\}/)?.[0]
+  if (!bruto) throw new Error('Resposta da IA sem JSON de classificação')
+  return ClassificacaoSchema.parse(JSON.parse(bruto))
+}
+
+export async function classificarTema(input: ClassificarTemaInput): Promise<ClassificacaoTema> {
+  // A taxonomia entra na chave: se temas mudarem, a classificação é refeita.
   const chave = chaveCacheLLM({
     funcao: FUNCAO,
-    args: { enunciado: input.enunciado, vignette: input.vignette ?? '' },
+    args: {
+      enunciado: input.enunciado,
+      vignette: input.vignette ?? '',
+      alternativas: input.alternativas ?? [],
+      temas: input.temasDisponiveis.map((t) => t.codigo).sort(),
+    },
     modelo: MODELO_ANTHROPIC,
     versaoPrompt: VERSAO_CLASSIFICAR_TEMA,
   })
@@ -33,17 +48,15 @@ export async function classificarTema(input: {
   const { system, user } = promptClassificarTema(input)
   const response = await anthropic.messages.create({
     model: MODELO_ANTHROPIC,
-    max_tokens: 512,
+    max_tokens: 400,
+    temperature: 0,
     system,
     messages: [{ role: 'user', content: user }],
   })
 
   const texto = response.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
+  const parsed = extrairJsonClassificacao(texto)
 
-  const match = texto.match(/```json\s*([\s\S]*?)```/) ?? texto.match(/\[[\s\S]*\]/)
-  const raw = match ? (Array.isArray(match) ? (match[1] ?? match[0]) : match) : texto
-  const parsed = ClassificacaoSchema.parse(JSON.parse(typeof raw === 'string' ? raw : ''))
-
-  await setCache(chave, parsed, 60 * 60 * 24 * 30)
+  await setCache(chave, parsed, TTL_CACHE_SEGUNDOS)
   return parsed
 }
