@@ -194,11 +194,13 @@ export function FlashcardsPainel() {
                 className="h-9 rounded-md border bg-background px-2 text-sm"
               >
                 <option value="">Deck: Geral</option>
-                {decks.data?.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    Deck: {d.nome}
-                  </option>
-                ))}
+                {decks.data
+                  ?.filter((d) => d.nome !== 'Geral')
+                  .map((d) => (
+                    <option key={d.id} value={d.id}>
+                      Deck: {d.nome}
+                    </option>
+                  ))}
               </select>
               <Button type="submit" loading={criar.isPending}>
                 Adicionar cartão
