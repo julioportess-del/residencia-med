@@ -15,7 +15,15 @@ import { cn } from '@/lib/cn'
 type Confianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE'
 type Letra = 'A' | 'B' | 'C' | 'D' | 'E'
 
-export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string }) {
+type Props = {
+  id: string
+  sessaoId?: string
+  /** Em sessão de estudo: avança na sequência da sessão em vez do "próxima" global. */
+  onProxima?: () => void
+  progresso?: { atual: number; total: number }
+}
+
+export function QuestaoDetalhe({ id, sessaoId, onProxima, progresso }: Props) {
   const router = useRouter()
   const questao = trpc.questao.detalhe.useQuery({ id })
   const [escolha, setEscolha] = useState<string | null>(null)
@@ -41,10 +49,14 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
 
   const proximaQ = trpc.questao.proxima.useQuery(
     { atualId: id },
-    { enabled: Boolean(responder.data) },
+    { enabled: Boolean(responder.data) && !onProxima },
   )
 
   const irParaProxima = () => {
+    if (onProxima) {
+      onProxima()
+      return
+    }
     if (proximaQ.data?.id) {
       router.push(`/questoes/${proximaQ.data.id}`)
     } else {
@@ -108,6 +120,11 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
         >
           <ArrowLeft className="size-4" /> Voltar ao banco
         </Link>
+        {progresso && (
+          <span className="text-sm font-medium tabular-nums">
+            Questão {progresso.atual} de {progresso.total}
+          </span>
+        )}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="size-4" />
           {min}:{seg}
@@ -209,7 +226,7 @@ export function QuestaoDetalhe({ id, sessaoId }: { id: string; sessaoId?: string
           />
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={irParaProxima} loading={proximaQ.isLoading}>
+            <Button onClick={irParaProxima} loading={!onProxima && proximaQ.isLoading}>
               Próxima questão <ArrowRight className="size-4" />
             </Button>
             <Button variant="outline" asChild>

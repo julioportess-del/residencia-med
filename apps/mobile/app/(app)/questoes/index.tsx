@@ -16,8 +16,7 @@ export default function QuestoesScreen() {
   const router = useRouter()
   const { data, isLoading } = trpc.questao.listar.useQuery({
     limit: 30,
-    somenteNaoRespondidas: false,
-    somenteErradas: false,
+    situacao: 'TODAS' as const,
   })
 
   if (isLoading) {

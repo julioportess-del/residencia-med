@@ -7,16 +7,13 @@ import { router, procedureProtegida } from '../trpc'
 
 const PREFIXO_EXPLICACAO_PENDENTE = 'Explicação pendente'
 import { atualizarItemRevisao } from '../lib/revisao'
+import { montarWhereQuestoes } from '../lib/filtro-questoes'
+import { LISTAS_INTELIGENTES } from '@residencia-med/core'
 
 export const questaoRouter = router({
   listar: procedureProtegida.input(FiltroQuestoesInput).query(async ({ ctx, input }) => {
-    const where = {
-      publicada: true,
-      ...(input.bancaIds?.length ? { bancaId: { in: input.bancaIds } } : {}),
-      ...(input.dificuldades?.length ? { dificuldade: { in: input.dificuldades } } : {}),
-      ...(input.anos?.length ? { ano: { in: input.anos } } : {}),
-      ...(input.temaIds?.length ? { temas: { some: { temaId: { in: input.temaIds } } } } : {}),
-    }
+    const where = await montarWhereQuestoes(ctx.prisma, ctx.userId, input)
+    const total = await ctx.prisma.questao.count({ where })
 
     const questoes = await ctx.prisma.questao.findMany({
       where,
@@ -55,7 +52,66 @@ export const questaoRouter = router({
         jaRespondida: q._count.respostas > 0,
       })),
       proxCursor,
+      total,
     }
+  }),
+
+  /** Opções dos filtros com contagem: bancas (e anos de cada uma) e especialidades. */
+  filtrosDisponiveis: procedureProtegida.query(async ({ ctx }) => {
+    const [bancas, porBancaAno, especialidades] = await Promise.all([
+      ctx.prisma.banca.findMany({
+        select: { id: true, codigo: true, nome: true },
+        orderBy: [{ prioridade: 'desc' }, { codigo: 'asc' }],
+      }),
+      ctx.prisma.questao.groupBy({
+        by: ['bancaId', 'ano'],
+        where: { publicada: true },
+        _count: { _all: true },
+      }),
+      ctx.prisma.especialidade.findMany({
+        select: {
+          id: true,
+          nome: true,
+          temas: { select: { _count: { select: { questoes: true } } } },
+        },
+        orderBy: { ordem: 'asc' },
+      }),
+    ])
+    return {
+      bancas: bancas
+        .map((b) => {
+          const anos = porBancaAno
+            .filter((g) => g.bancaId === b.id)
+            .map((g) => ({ ano: g.ano, total: g._count._all }))
+            .sort((a, c) => c.ano - a.ano)
+          return { ...b, anos, total: anos.reduce((s, a) => s + a.total, 0) }
+        })
+        .filter((b) => b.total > 0),
+      especialidades: especialidades.map((e) => ({
+        id: e.id,
+        nome: e.nome,
+        total: e.temas.reduce((s, t) => s + t._count.questoes, 0),
+      })),
+    }
+  }),
+
+  /** Listas inteligentes com contagem (banca-alvo = bancas do onboarding). */
+  listasInteligentes: procedureProtegida.query(async ({ ctx }) => {
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: ctx.userId },
+      select: { bancasAlvo: true },
+    })
+    const bancasAlvo = user?.bancasAlvo ?? []
+    return Promise.all(
+      LISTAS_INTELIGENTES.map(async (lista) => {
+        const filtros = {
+          situacao: lista.situacao,
+          bancaIds: lista.somenteBancaAlvo && bancasAlvo.length ? bancasAlvo : undefined,
+        }
+        const where = await montarWhereQuestoes(ctx.prisma, ctx.userId, filtros)
+        return { ...lista, filtros, total: await ctx.prisma.questao.count({ where }) }
+      }),
+    )
   }),
 
   /**

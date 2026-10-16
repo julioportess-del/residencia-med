@@ -13,13 +13,15 @@ Outras: PSU-MG 2027 (possivelmente também em 22/11, confirmar), UNIFESP (29/11,
 - Correção completa: sua resposta × gabarito oficial, leitura de confiança (hipercorreção), comentário por alternativa, temas, diretrizes, link do PDF oficial, IA rotulada (aparece só com chave).
 - Conta master sem paywall; login, recuperação de senha.
 
-## Etapa 1 — Treinar a prova-alvo (meta: 1 semana)
+## Etapa 1 — Treinar a prova-alvo ✅ (16/10/2026)
 
-1. **Modo prova ACM/AMRIGS**: simulado por banca e ano (prova histórica completa) e estilo-banca (100 q A–D, 4 h), com correção no fim.
-2. **Listas inteligentes** (sem IA): Inéditas da banca-alvo · Meus erros · Acertos no chute · Certeza com erro · Revisões vencidas.
-3. Filtros reais no banco: banca, ano, situação (inédita/respondida/errada), palavra-chave, paginação.
-4. Confiança com 4 níveis ("não sei"), via migration aditiva.
-5. Resultado do simulado: por área, por dificuldade, tempo por questão, em branco.
+- Banco de questões com filtros combinados reais (palavra-chave, banca, ano, área, dificuldade, situação), contagem, "carregar mais" e filtros salvos na URL (dá para favoritar).
+- Situações calculadas pelo histórico: inéditas, respondidas, errei, acertei, errei com certeza, acertei no chute, revisão vencida.
+- **Listas inteligentes**: Inéditas da minha banca · Revisões vencidas · Meus erros · Errei com certeza · Acertei no chute.
+- **Modo estudo** (`/estudo/[id]`): sequência da seleção com correção comentada a cada questão, retomando de onde parou.
+- **Simulado**: prova completa (banca + ano, na ordem original, 2,4 min/questão), estilo banca (100 inéditas) e personalizado. Sorteio uniforme (Fisher–Yates) e sem as questões que você já fez, quando escolhido.
+- **Resultado**: acertos, erros, em branco, tempo total e médio, desempenho por área, dificuldade e confiança, questão a questão.
+- Pendente desta etapa: confiança com 4 níveis ("não sei"), que exige migration; vai junto com a próxima migration.
 
 ## Etapa 2 — Estudar no celular e aprender com o erro
 

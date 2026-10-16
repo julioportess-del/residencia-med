@@ -2,7 +2,9 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { CriarSessaoInput } from '@residencia-med/types'
 import { checarLimiteSimulados } from '@residencia-med/billing'
+import { analisarSessao, embaralhar } from '@residencia-med/core'
 import { router, procedureProtegida } from '../trpc'
+import { montarWhereQuestoes } from '../lib/filtro-questoes'
 
 export const sessaoRouter = router({
   criar: procedureProtegida.input(CriarSessaoInput).mutation(async ({ ctx, input }) => {
@@ -13,28 +15,21 @@ export const sessaoRouter = router({
       }
     }
 
-    const where = {
-      publicada: true,
-      ...(input.filtros.bancaIds?.length ? { bancaId: { in: input.filtros.bancaIds } } : {}),
-      ...(input.filtros.dificuldades?.length
-        ? { dificuldade: { in: input.filtros.dificuldades } }
-        : {}),
-      ...(input.filtros.anos?.length ? { ano: { in: input.filtros.anos } } : {}),
-      ...(input.filtros.temaIds?.length
-        ? { temas: { some: { temaId: { in: input.filtros.temaIds } } } }
-        : {}),
-    }
-
-    const total = await ctx.prisma.questao.count({ where })
-    if (total === 0)
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Nenhuma questao com esses filtros' })
-
+    const where = await montarWhereQuestoes(ctx.prisma, ctx.userId, input.filtros)
     const candidatas = await ctx.prisma.questao.findMany({
       where,
-      take: Math.min(input.numeroQuestoes * 3, 300),
       select: { id: true },
+      // SEQUENCIAL = ordem da prova original (prova histórica)
+      orderBy: [{ ano: 'desc' }, { numeroOriginal: 'asc' }, { id: 'asc' }],
     })
-    const embaralhadas = candidatas.sort(() => Math.random() - 0.5).slice(0, input.numeroQuestoes)
+    if (candidatas.length === 0) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Nenhuma questão com esses filtros' })
+    }
+    const ordenadas =
+      input.ordem === 'SEQUENCIAL'
+        ? candidatas.map((q) => q.id)
+        : embaralhar(candidatas.map((q) => q.id))
+    const selecionadas = ordenadas.slice(0, input.numeroQuestoes)
 
     const sessao = await ctx.prisma.sessao.create({
       data: {
@@ -43,15 +38,92 @@ export const sessaoRouter = router({
         bancaId: input.bancaId,
         configuracao: {
           filtros: input.filtros,
-          questaoIds: embaralhadas.map((q) => q.id),
+          questaoIds: selecionadas,
+          ordem: input.ordem,
           tempoMinutos: input.tempoMinutos,
           numeroQuestoes: input.numeroQuestoes,
         },
       },
     })
 
-    return { sessaoId: sessao.id, questaoIds: embaralhadas.map((q) => q.id) }
+    return { sessaoId: sessao.id, questaoIds: selecionadas }
   }),
+
+  /** Resultado analisado (leitura, sem efeitos colaterais). */
+  resultado: procedureProtegida
+    .input(z.object({ id: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      const sessao = await ctx.prisma.sessao.findFirst({
+        where: { id: input.id, userId: ctx.userId },
+        select: {
+          id: true,
+          tipo: true,
+          configuracao: true,
+          iniciadaEm: true,
+          finalizadaEm: true,
+          respostas: {
+            select: {
+              questaoId: true,
+              correta: true,
+              tempoSegundos: true,
+              confianca: true,
+              alternativaLetra: true,
+              createdAt: true,
+              questao: {
+                select: {
+                  enunciado: true,
+                  gabaritoLetra: true,
+                  dificuldade: true,
+                  banca: { select: { codigo: true } },
+                  ano: true,
+                  temas: {
+                    where: { primario: true },
+                    select: { tema: { select: { especialidade: { select: { nome: true } } } } },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+      if (!sessao) throw new TRPCError({ code: 'NOT_FOUND' })
+      const { questaoIds } = sessao.configuracao as { questaoIds: string[] }
+
+      const analise = analisarSessao(
+        questaoIds,
+        sessao.respostas.map((r) => ({
+          questaoId: r.questaoId,
+          correta: r.correta,
+          tempoSegundos: r.tempoSegundos,
+          confianca: r.confianca,
+          area: r.questao.temas[0]?.tema.especialidade.nome ?? null,
+          dificuldade: r.questao.dificuldade,
+          respondidaEm: r.createdAt,
+        })),
+      )
+      const porQuestao = new Map(sessao.respostas.map((r) => [r.questaoId, r]))
+      return {
+        tipo: sessao.tipo,
+        finalizadaEm: sessao.finalizadaEm,
+        analise,
+        questoes: questaoIds.map((qid, i) => {
+          const r = porQuestao.get(qid)
+          return {
+            numero: i + 1,
+            questaoId: qid,
+            respondida: Boolean(r),
+            correta: r?.correta ?? false,
+            escolha: r?.alternativaLetra ?? null,
+            gabarito: r?.questao.gabaritoLetra ?? null,
+            tempoSegundos: r?.tempoSegundos ?? 0,
+            resumo: r
+              ? `${r.questao.banca.codigo} ${r.questao.ano} · ${r.questao.enunciado.slice(0, 110)}`
+              : null,
+          }
+        }),
+      }
+    }),
 
   detalhe: procedureProtegida
     .input(z.object({ id: z.string().cuid() }))
