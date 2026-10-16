@@ -12,7 +12,14 @@ import { trpc } from '@/lib/trpc/client'
 import { CorrecaoPainel } from './correcao-painel'
 import { cn } from '@/lib/cn'
 
-type Confianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE'
+type Confianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE' | 'NAO_SEI'
+
+const OPCOES_CONFIANCA: ReadonlyArray<{ v: Confianca; label: string }> = [
+  { v: 'CONFIANTE', label: 'Tenho certeza' },
+  { v: 'INCERTO', label: 'Estou em dúvida' },
+  { v: 'CHUTE', label: 'Chutei' },
+  { v: 'NAO_SEI', label: 'Não sei responder' },
+]
 type Letra = 'A' | 'B' | 'C' | 'D' | 'E'
 
 type Props = {
@@ -194,17 +201,25 @@ export function QuestaoDetalhe({ id, sessaoId, onProxima, progresso }: Props) {
         <>
           <Card>
             <CardContent className="pt-6 space-y-3">
-              <div className="text-sm font-medium">Você está...</div>
-              <div className="flex gap-2">
-                {(['CHUTE', 'INCERTO', 'CONFIANTE'] as const).map((c) => (
+              <div className="text-sm font-medium" id="rotulo-confianca">
+                Antes de ver o gabarito: quanto você tem certeza?
+              </div>
+              <div
+                className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+                role="radiogroup"
+                aria-labelledby="rotulo-confianca"
+              >
+                {OPCOES_CONFIANCA.map((c) => (
                   <Button
-                    key={c}
+                    key={c.v}
                     type="button"
-                    variant={confianca === c ? 'primary' : 'outline'}
+                    role="radio"
+                    aria-checked={confianca === c.v}
+                    variant={confianca === c.v ? 'primary' : 'outline'}
                     size="sm"
-                    onClick={() => setConfianca(c)}
+                    onClick={() => setConfianca(c.v)}
                   >
-                    {c === 'CHUTE' ? 'Chutando' : c === 'INCERTO' ? 'Incerto' : 'Confiante'}
+                    {c.label}
                   </Button>
                 ))}
               </div>

@@ -4,43 +4,21 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 import { supabaseBrowser } from '@/lib/supabase/client'
-import {
-  BookOpen,
-  Building2,
-  Calendar,
-  ChartLine,
-  CreditCard,
-  MessageSquare,
-  Radio,
-  Repeat2,
-  Stethoscope,
-  Target,
-  Sparkles,
-} from 'lucide-react'
+import { Sparkles, Stethoscope } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { NotificacoesSino } from '@/components/notificacoes-sino'
 import { RegistrarSW } from '@/components/registrar-sw'
 import { SafeBoundary } from '@/components/safe-boundary'
+import { NAV, itemAtivo } from './nav-itens'
+import { NavMobile } from './nav-mobile'
 
 type Props = {
   user: { nome: string; email: string }
   onboardingCompleto: boolean
   children: ReactNode
 }
-
-const NAV = [
-  { href: '/dashboard', icon: ChartLine, label: 'Painel' },
-  { href: '/questoes', icon: BookOpen, label: 'Questões' },
-  { href: '/simulado', icon: Target, label: 'Simulado' },
-  { href: '/live', icon: Radio, label: 'Ao vivo' },
-  { href: '/revisao', icon: Repeat2, label: 'Revisão' },
-  { href: '/plano', icon: Calendar, label: 'Plano' },
-  { href: '/mentor', icon: MessageSquare, label: 'Mentor' },
-  { href: '/org', icon: Building2, label: 'Organização' },
-  { href: '/conta', icon: CreditCard, label: 'Conta' },
-] as const
 
 export function AppShell({ user, onboardingCompleto, children }: Props) {
   const pathname = usePathname()
@@ -66,7 +44,7 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
 
         <nav className="flex-1 px-3 py-4">
           {NAV.map((item) => {
-            const ativo = pathname.startsWith(item.href)
+            const ativo = itemAtivo(pathname, item.href)
             return (
               <Link
                 key={item.href}
@@ -112,7 +90,16 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-x-hidden">
+      <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/95 px-4 py-2.5 backdrop-blur md:hidden">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Stethoscope className="size-5 text-primary" />
+            <span className="font-bold">Residência Med</span>
+          </Link>
+          <SafeBoundary name="notificacoes-sino-mobile">
+            <NotificacoesSino />
+          </SafeBoundary>
+        </header>
         {!onboardingCompleto && naoEhOnboarding ? (
           <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 text-sm text-amber-900 flex items-center gap-2">
             <Sparkles className="size-4" />
@@ -124,6 +111,7 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
         ) : null}
         {children}
       </main>
+      <NavMobile nome={user.nome} email={user.email} onSair={sair} />
     </div>
   )
 }

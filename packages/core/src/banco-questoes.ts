@@ -4,7 +4,7 @@
  * Lógica pura — o router busca o histórico e traduz a restrição em query.
  */
 
-export type ConfiancaResposta = 'CHUTE' | 'INCERTO' | 'CONFIANTE' | null
+export type ConfiancaResposta = 'CHUTE' | 'INCERTO' | 'CONFIANTE' | 'NAO_SEI' | null
 
 export type RespostaHistorico = {
   questaoId: string
@@ -80,7 +80,11 @@ export function restricaoPorSituacao(
     case 'CHUTES_CERTOS':
       return {
         tipo: 'incluir',
-        ids: filtrar(historico, (r) => r.ultimaCorreta && r.ultimaConfianca === 'CHUTE'),
+        ids: filtrar(
+          historico,
+          (r) =>
+            r.ultimaCorreta && (r.ultimaConfianca === 'CHUTE' || r.ultimaConfianca === 'NAO_SEI'),
+        ),
       }
     case 'CERTEZA_ERRADA':
       return {

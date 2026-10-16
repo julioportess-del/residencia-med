@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import type { AppRouter } from '@/server/routers/_app'
+import { PlanoDoDia } from './plano-do-dia'
 
 type DadosHoje = inferRouterOutputs<AppRouter>['dashboard']['hoje']
 
@@ -39,6 +40,14 @@ export function PainelHoje({ dados, loading }: { dados?: DadosHoje; loading: boo
 
   return (
     <div className="space-y-4">
+      <PlanoDoDia
+        nome={dados.nome}
+        revisoesPendentes={dados.revisoesPendentes}
+        errosAbertos={dados.errosAbertos}
+        ineditasBancaAlvo={dados.ineditasBancaAlvo}
+        filtrosIneditas={dados.filtrosIneditas}
+        bancaAlvo={dados.bancaAlvo}
+      />
       <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <ContagemRegressiva dados={dados} />
         <SemanaCard dados={dados} />

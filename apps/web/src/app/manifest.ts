@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Residência Med',
     description:
       'Plataforma de estudo para residência médica baseada em análise de bancas, repetição espaçada e IA.',
-    start_url: '/',
+    start_url: '/dashboard',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#ffffff',

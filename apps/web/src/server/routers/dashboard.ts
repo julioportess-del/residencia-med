@@ -5,9 +5,11 @@ import {
   metaDiariaQuestoes,
   primeirosPassos,
   priorizarEstudo,
+  resumirHistorico,
   visaoSemanal,
 } from '@residencia-med/core'
 import { router, procedureProtegida } from '../trpc'
+import { montarWhereQuestoes } from '../lib/filtro-questoes'
 
 export type ComparacaoParesOutput = null | {
   bancaAlvo: string
@@ -36,6 +38,8 @@ export const dashboardRouter = router({
       ctx.prisma.user.findUnique({
         where: { id: userId },
         select: {
+          name: true,
+          email: true,
           metaResidencia: true,
           bancasAlvo: true,
           dataProva: true,
@@ -63,13 +67,43 @@ export const dashboardRouter = router({
     )
     const metaDiaria = metaDiariaQuestoes(user?.cargaHorariaSemanal)
 
+    const [historicoCompleto, resolvidos] = await Promise.all([
+      ctx.prisma.resposta.findMany({
+        where: { userId },
+        select: { questaoId: true, correta: true, confianca: true, createdAt: true },
+      }),
+      ctx.prisma.registroErro.findMany({
+        where: { userId, resolvido: true },
+        select: { questaoId: true },
+      }),
+    ])
+    const idsResolvidos = new Set(resolvidos.map((r) => r.questaoId))
+    const errosAbertos = [...resumirHistorico(historicoCompleto).entries()].filter(
+      ([id, r]) => !r.ultimaCorreta && !idsResolvidos.has(id),
+    ).length
+    const bancasAlvo = user?.bancasAlvo ?? []
+    const filtrosIneditas = {
+      situacao: 'INEDITAS' as const,
+      ...(bancasAlvo.length ? { bancaIds: bancasAlvo } : {}),
+    }
+    const ineditasBancaAlvo = await ctx.prisma.questao.count({
+      where: await montarWhereQuestoes(ctx.prisma, userId, filtrosIneditas),
+    })
+
     return {
+      nome: user?.name ?? user?.email.split('@')[0] ?? 'estudante',
       bancaAlvo: user?.metaResidencia ?? null,
       dataProva: user?.dataProva ?? null,
       diasAteProva: diasAteProva(user?.dataProva, agora),
       metaDiaria,
       semana: visaoSemanal(respostasRecentes, agora, metaDiaria),
       revisoesPendentes,
+      errosAbertos,
+      ineditasBancaAlvo,
+      filtrosIneditas,
+      minutosDiarios: user?.cargaHorariaSemanal
+        ? Math.round((user.cargaHorariaSemanal * 60) / 7)
+        : null,
       totalRespostas,
       passos: primeirosPassos({
         onboardingCompleto,

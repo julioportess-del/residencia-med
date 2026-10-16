@@ -4,7 +4,7 @@
  * que mais merecem atenção (e os que mais se corrigem quando revisados).
  */
 
-export type NivelConfianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE'
+export type NivelConfianca = 'CHUTE' | 'INCERTO' | 'CONFIANTE' | 'NAO_SEI'
 
 export type CategoriaConfianca =
   | 'FALSA_COMPREENSAO'
@@ -51,17 +51,20 @@ export function interpretarConfianca(
   if (!correta) {
     return {
       categoria: 'LACUNA',
-      titulo: 'Lacuna reconhecida',
-      orientacao: 'Você já desconfiava. A questão volta em breve na sua revisão.',
+      titulo: confianca === 'NAO_SEI' ? 'Conteúdo que você ainda não domina' : 'Lacuna reconhecida',
+      orientacao:
+        confianca === 'NAO_SEI'
+          ? 'Estude o conceito pelo comentário antes de seguir. A questão volta em breve na revisão.'
+          : 'Você já desconfiava. A questão volta em breve na sua revisão.',
       gravidade: 'media',
       contaComoDominio: false,
     }
   }
 
-  if (confianca === 'CHUTE') {
+  if (confianca === 'CHUTE' || confianca === 'NAO_SEI') {
     return {
       categoria: 'ACERTO_SEM_DOMINIO',
-      titulo: 'Acerto no chute',
+      titulo: confianca === 'NAO_SEI' ? 'Acertou sem saber' : 'Acerto no chute',
       orientacao: 'Não conta como domínio do assunto. Vale revisar o porquê da resposta.',
       gravidade: 'media',
       contaComoDominio: false,

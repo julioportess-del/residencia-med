@@ -4,6 +4,7 @@ import { AlertTriangle, BookMarked, Check, ExternalLink, FileText, Repeat2, X } 
 import { interpretarConfianca, type NivelConfianca } from '@residencia-med/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExplicarComIA } from '@/components/explicar-ia-dialog'
+import { RegistroErroForm } from '@/components/registro-erro-form'
 import { cn } from '@/lib/cn'
 
 type Correcao = {
@@ -90,6 +91,8 @@ export function CorrecaoPainel({
           Próxima revisão desta questão: {formatoData.format(correcao.proximaRevisao)}
         </p>
       </div>
+
+      {!correcao.correta && <RegistroErroForm questaoId={questaoId} />}
 
       <Card>
         <CardHeader className="pb-2">

@@ -20,6 +20,6 @@ export function calcularQualidade(resposta: Resposta): number {
   if (resposta.confianca === 'CONFIANTE' && rapidoOk) return 5
   if (resposta.confianca === 'CONFIANTE') return 4
   if (resposta.confianca === 'INCERTO') return 3
-  if (resposta.confianca === 'CHUTE') return 3
+  if (resposta.confianca === 'CHUTE' || resposta.confianca === 'NAO_SEI') return 3
   return 4
 }

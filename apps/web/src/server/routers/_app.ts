@@ -18,6 +18,7 @@ import { proficienciaRouter } from './proficiencia'
 import { notificacoesRouter } from './notificacoes'
 import { pushRouter } from './push'
 import { experimentosRouter } from './experimentos'
+import { cadernoRouter } from './caderno'
 
 export const appRouter = router({
   banca: bancaRouter,
@@ -40,6 +41,7 @@ export const appRouter = router({
   notificacoes: notificacoesRouter,
   push: pushRouter,
   experimentos: experimentosRouter,
+  caderno: cadernoRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -34,3 +34,12 @@ describe('calcularQualidade', () => {
     expect(calcularQualidade({ correta: true, tempoSegundos: 60, confianca: 'CHUTE' })).toBe(3)
   })
 })
+
+describe('calcularQualidade — "não sei"', () => {
+  it('acerto declarando "não sei" vale como chute (3), não como domínio', () => {
+    expect(calcularQualidade({ correta: true, tempoSegundos: 30, confianca: 'NAO_SEI' })).toBe(3)
+  })
+  it('erro declarando "não sei" é lacuna reconhecida (2)', () => {
+    expect(calcularQualidade({ correta: false, tempoSegundos: 30, confianca: 'NAO_SEI' })).toBe(2)
+  })
+})

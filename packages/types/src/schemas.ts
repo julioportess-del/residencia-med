@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const ConfiancaSchema = z.enum(['CHUTE', 'INCERTO', 'CONFIANTE'])
+export const ConfiancaSchema = z.enum(['CHUTE', 'INCERTO', 'CONFIANTE', 'NAO_SEI'])
 export type Confianca = z.infer<typeof ConfiancaSchema>
 
 export const DificuldadeSchema = z.enum(['FACIL', 'MEDIO', 'DIFICIL', 'MUITO_DIFICIL'])

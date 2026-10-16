@@ -33,3 +33,14 @@ describe('interpretarConfianca', () => {
     expect(interpretarConfianca(null, true).categoria).toBe('SEM_REGISTRO')
   })
 })
+
+describe('interpretarConfianca — "não sei"', () => {
+  it('não sei + erro = lacuna (estudar o conceito)', () => {
+    expect(interpretarConfianca('NAO_SEI', false).categoria).toBe('LACUNA')
+  })
+  it('não sei + acerto = acerto sem domínio', () => {
+    const r = interpretarConfianca('NAO_SEI', true)
+    expect(r.categoria).toBe('ACERTO_SEM_DOMINIO')
+    expect(r.contaComoDominio).toBe(false)
+  })
+})

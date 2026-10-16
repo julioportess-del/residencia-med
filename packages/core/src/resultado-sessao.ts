@@ -7,7 +7,7 @@ export type RespostaSessao = {
   questaoId: string
   correta: boolean
   tempoSegundos: number
-  confianca: 'CHUTE' | 'INCERTO' | 'CONFIANTE' | null
+  confianca: 'CHUTE' | 'INCERTO' | 'CONFIANTE' | 'NAO_SEI' | null
   area: string | null
   dificuldade: string
   respondidaEm: Date

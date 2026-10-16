@@ -34,6 +34,7 @@ const PROTECTED_DEMO_PREFIXES = [
   '/dashboard',
   '/questoes',
   '/estudo',
+  '/caderno',
   '/simulado',
   '/revisao',
   '/plano',

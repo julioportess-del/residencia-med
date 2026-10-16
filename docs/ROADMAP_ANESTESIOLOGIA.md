@@ -23,12 +23,14 @@ Outras: PSU-MG 2027 (possivelmente também em 22/11, confirmar), UNIFESP (29/11,
 - **Resultado**: acertos, erros, em branco, tempo total e médio, desempenho por área, dificuldade e confiança, questão a questão.
 - Pendente desta etapa: confiança com 4 níveis ("não sei"), que exige migration; vai junto com a próxima migration.
 
-## Etapa 2 — Estudar no celular e aprender com o erro
+## Etapa 2 — Estudar no celular e aprender com o erro ✅ (16/10/2026)
 
-1. Navegação mobile + PWA instalável (ícones).
-2. **Caderno de erros** automático: motivo do erro, conceito correto, anotação, próxima revisão.
-3. Bloco "Hoje" com recomendação calculada (tempo disponível → nº de questões + revisões).
-4. Diagnóstico inicial (≈40 questões estratificadas).
+- **Navegação mobile**: barra inferior fixa (Painel, Questões, Simulado, Revisão, Mais) e cabeçalho com notificações. PWA já instalável (ícones e manifest ok); abre direto no painel.
+- **Caderno de erros** (`/caderno`): toda questão errada entra sozinha; motivo do erro (7 tipos), conceito correto e anotação; status aberto / acertei depois / resolvido; **padrões detectados** (3+ erros abertos no mesmo tema → recomendação); "Refazer erros abertos". Também dá para registrar direto na correção.
+- **Confiança com 4 níveis**: Tenho certeza · Estou em dúvida · Chutei · Não sei responder ("não sei" + acerto não conta como domínio).
+- **Plano de hoje** no painel: saudação, modos Rápido (10 min), Padrão (40 min) e Aprofundado (90 min), com tarefas calculadas dos seus dados (revisões vencidas → erros → inéditas da banca-alvo) e botão "Começar".
+- Migration aditiva `20261016120000_caderno_erros` aplicada em produção via SQL e registrada em `_prisma_migrations`.
+- Pendente: diagnóstico inicial (vai para a Etapa 3, junto com o domínio por tema, que depende da classificação das questões).
 
 ## Etapa 3 — Memória de longo prazo
 
