@@ -54,6 +54,7 @@ export function ContaCliente() {
   const plano = meu.data?.plano ?? 'FREE'
   const ass = meu.data?.assinatura
   const ehFree = plano === 'FREE'
+  const ehMaster = meu.data?.master === true
 
   return (
     <div className="mt-6 space-y-6">
@@ -67,8 +68,15 @@ export function ContaCliente() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Badge className={COR_PLANO[plano] ?? COR_PLANO.FREE}>{plano}</Badge>
-              {ass?.status && ass.status !== 'ATIVA' && (
+              <Badge className={COR_PLANO[plano] ?? COR_PLANO.FREE}>
+                {ehMaster ? 'MASTER' : plano}
+              </Badge>
+              {ehMaster && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  Acesso total, sem assinatura
+                </span>
+              )}
+              {!ehMaster && ass?.status && ass.status !== 'ATIVA' && (
                 <Badge variant="outline" className="ml-2">
                   {ass.status}
                 </Badge>
@@ -82,7 +90,7 @@ export function ContaCliente() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {ehFree ? (
+            {ehMaster ? null : ehFree ? (
               <Button asChild>
                 <Link href="/precos">Fazer upgrade</Link>
               </Button>

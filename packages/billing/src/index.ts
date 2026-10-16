@@ -9,3 +9,4 @@ export {
   criarSessaoPortalOrg,
 } from './checkout'
 export { processarEventoStripe } from './webhook'
+export * from './conta-master'

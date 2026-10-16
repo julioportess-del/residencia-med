@@ -6,6 +6,7 @@
 
 import { startOfMonth, startOfWeek } from 'date-fns'
 import { prisma } from '@residencia-med/db'
+import { ehContaMaster } from './conta-master'
 import { PLANOS_B2C, type LimitesPlano, type PlanoCodigo } from './plans'
 
 export type ResultadoLimite = {
@@ -23,6 +24,10 @@ export function temAcesso(plano: PlanoCodigo, recurso: keyof LimitesPlano): bool
 }
 
 export async function obterPlanoUsuario(userId: string): Promise<PlanoCodigo> {
+  // 0) Conta master: acesso total sem assinatura
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } })
+  if (ehContaMaster(user?.email)) return 'PREMIUM'
+
   // 1) Plano herdado da organização tem prioridade
   const orgPlano = await planoHerdadoDaOrg(userId)
   if (orgPlano) return orgPlano

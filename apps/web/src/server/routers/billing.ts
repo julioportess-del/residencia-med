@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   criarSessaoCheckout,
   criarSessaoPortal,
+  ehContaMaster,
   obterPlanoUsuario,
   PLANOS_B2C,
 } from '@residencia-med/billing'
@@ -24,7 +25,7 @@ export const billingRouter = router({
         stripeSubscriptionId: true,
       },
     })
-    return { plano, assinatura: ass }
+    return { plano, assinatura: ass, master: ehContaMaster(ctx.user.email) }
   }),
 
   iniciarCheckout: procedureProtegida
