@@ -93,7 +93,7 @@ export default function GlobalError({
               onClick={reset}
               style={{
                 padding: '8px 16px',
-                background: '#1d4ed8',
+                background: '#3e7a72',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
@@ -108,8 +108,8 @@ export default function GlobalError({
               style={{
                 padding: '8px 16px',
                 background: 'white',
-                color: '#1d4ed8',
-                border: '1px solid #1d4ed8',
+                color: '#3e7a72',
+                border: '1px solid #3e7a72',
                 borderRadius: 6,
                 textDecoration: 'none',
                 fontSize: 14,

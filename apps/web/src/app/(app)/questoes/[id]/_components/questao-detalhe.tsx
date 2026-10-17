@@ -97,7 +97,7 @@ export function QuestaoDetalhe({ id, sessaoId, onProxima, progresso }: Props) {
   const q = questao.data
   const respondida = responder.data
   const correta = respondida?.correta
-  const corBanca = q.banca?.cor ?? '#1d4ed8'
+  const corBanca = q.banca?.cor ?? '#3e7a72'
   const codigoBanca = q.banca?.codigo ?? '?'
   const alternativas = q.alternativas ?? []
 

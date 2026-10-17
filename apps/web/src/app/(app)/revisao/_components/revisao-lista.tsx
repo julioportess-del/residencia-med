@@ -52,7 +52,7 @@ export function RevisaoLista() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Badge style={{ background: i.questao.banca.cor ?? '#1d4ed8', color: 'white' }}>
+                    <Badge style={{ background: i.questao.banca.cor ?? '#3e7a72', color: 'white' }}>
                       {i.questao.banca.codigo}
                     </Badge>
                     <span>{i.questao.ano}</span>

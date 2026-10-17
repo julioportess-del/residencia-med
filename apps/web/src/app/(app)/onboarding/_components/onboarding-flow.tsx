@@ -109,7 +109,7 @@ export function OnboardingFlow({ bancas }: { bancas: Banca[] }) {
                     {sel && (
                       <span
                         className="size-2 rounded-full"
-                        style={{ background: b.cor ?? '#1d4ed8' }}
+                        style={{ background: b.cor ?? '#3e7a72' }}
                       />
                     )}
                   </button>

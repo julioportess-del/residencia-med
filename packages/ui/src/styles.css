@@ -1,39 +1,51 @@
-/* Tokens de design — base para Tailwind no app web. */
+/*
+ * Tokens de design — paleta "Sálvia": confortável para horas de estudo.
+ * Fundo off-white quente (sem branco puro), texto grafite (sem preto puro),
+ * primária verde-azulada dessaturada no lugar do azul saturado.
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --background: 40 23% 95%;
+    --foreground: 200 15% 20%;
+    --card: 40 30% 98%;
+    --card-foreground: 200 15% 20%;
+    --popover: 40 30% 98%;
+    --popover-foreground: 200 15% 20%;
+    --primary: 172 32% 36%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 38 18% 90%;
+    --secondary-foreground: 200 15% 22%;
+    --muted: 38 18% 90%;
+    --muted-foreground: 200 8% 40%;
+    --accent: 168 20% 88%;
+    --accent-foreground: 172 35% 22%;
+    --destructive: 4 55% 50%;
+    --destructive-foreground: 40 33% 98%;
+    --border: 36 16% 84%;
+    --input: 36 16% 82%;
+    --ring: 172 32% 40%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --background: 195 14% 11%;
+    --foreground: 40 15% 86%;
+    --card: 195 13% 14%;
+    --card-foreground: 40 15% 86%;
+    --popover: 195 13% 14%;
+    --popover-foreground: 40 15% 86%;
+    --primary: 168 30% 52%;
+    --primary-foreground: 195 20% 10%;
+    --secondary: 195 10% 19%;
+    --secondary-foreground: 40 15% 86%;
+    --muted: 195 10% 19%;
+    --muted-foreground: 40 6% 62%;
+    --accent: 172 18% 22%;
+    --accent-foreground: 40 15% 90%;
+    --destructive: 4 50% 50%;
+    --destructive-foreground: 40 15% 95%;
+    --border: 195 10% 22%;
+    --input: 195 10% 24%;
+    --ring: 168 30% 52%;
   }
 }

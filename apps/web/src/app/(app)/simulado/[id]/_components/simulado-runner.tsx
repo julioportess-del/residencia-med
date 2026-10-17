@@ -184,7 +184,7 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
       ) : (
         <>
           <div className="flex items-center gap-2 text-xs">
-            <Badge style={{ background: questao.data.banca.cor ?? '#1d4ed8', color: 'white' }}>
+            <Badge style={{ background: questao.data.banca.cor ?? '#3e7a72', color: 'white' }}>
               {questao.data.banca.codigo}
             </Badge>
             <span className="text-muted-foreground">{questao.data.ano}</span>
