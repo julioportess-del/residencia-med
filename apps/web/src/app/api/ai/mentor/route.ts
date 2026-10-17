@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { mentorStream, ANTHROPIC_HABILITADO } from '@residencia-med/ai'
+import { mentorStream, ANTHROPIC_HABILITADO, mensagemErroIA } from '@residencia-med/ai'
 import { checarLimiteIA } from '@residencia-med/billing'
 import { prisma } from '@residencia-med/db'
 import { supabaseUserAtual } from '@/lib/supabase/server'
@@ -122,7 +122,8 @@ export async function POST(req: Request) {
         }
         controller.close()
       } catch (e) {
-        controller.enqueue(encoder.encode(`\n\n[erro: ${(e as Error).message}]`))
+        console.error('[ia] falha ao gerar resposta', e)
+        controller.enqueue(encoder.encode(`\n\n⚠️ ${mensagemErroIA(e)}`))
         controller.close()
       }
     },

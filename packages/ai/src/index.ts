@@ -30,3 +30,4 @@ export type { ComentarioQuestao, RequisicaoLote } from './funcoes/comentar-quest
 export { extrairJsonClassificacao } from './funcoes/classificar-tema'
 export { enviarLote, consultarLote, lerResultadosLote } from './funcoes/lote'
 export type { ResultadoLote, EstadoLote } from './funcoes/lote'
+export { mensagemErroIA } from './erros'
