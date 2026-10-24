@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import type { AppRouter } from '@/server/routers/_app'
 import { PlanoDoDia } from './plano-do-dia'
+import { ProximasProvasCard } from './proximas-provas-card'
 
 type DadosHoje = inferRouterOutputs<AppRouter>['dashboard']['hoje']
 
@@ -22,6 +23,13 @@ const formatoDataProva = new Intl.DateTimeFormat('pt-BR', {
   month: 'long',
   year: 'numeric',
   timeZone: 'America/Sao_Paulo',
+})
+
+const formatoDataCalendario = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
 })
 
 function dataCurta(chave: string): string {
@@ -53,42 +61,54 @@ export function PainelHoje({ dados, loading }: { dados?: DadosHoje; loading: boo
         <ContagemRegressiva dados={dados} />
         <SemanaCard dados={dados} />
       </div>
+      <ProximasProvasCard provas={dados.proximasProvas} />
       <PrimeirosPassos passos={dados.passos} />
     </div>
   )
 }
 
 function ContagemRegressiva({ dados }: { dados: DadosHoje }) {
+  // Próxima prova cadastrada em "Minhas provas" tem prioridade sobre a data do onboarding
+  const proxima = dados.proximasProvas[0]
+  const rotulo = proxima
+    ? `Prova ${proxima.instituicao}`
+    : dados.bancaAlvo
+      ? `Prova ${dados.bancaAlvo}`
+      : 'Sua prova'
+  const dias = proxima ? proxima.diasAteProva : dados.diasAteProva
+  const dataTexto = proxima
+    ? formatoDataCalendario.format(new Date(`${proxima.dataProva}T00:00:00Z`))
+    : dados.dataProva
+      ? formatoDataProva.format(dados.dataProva)
+      : null
+
   return (
     <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
       <CardContent className="flex h-full flex-col justify-between gap-5 pt-6">
         <div>
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
             <CalendarClock className="size-4" />
-            {dados.bancaAlvo ? `Prova ${dados.bancaAlvo}` : 'Sua prova'}
+            {rotulo}
           </div>
-          {dados.dataProva && dados.diasAteProva !== null ? (
+          {dataTexto && dias !== null ? (
             <>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-5xl font-bold tabular-nums tracking-tight">
-                  {dados.diasAteProva}
-                </span>
-                <span className="text-lg text-muted-foreground">
-                  {dados.diasAteProva === 1 ? 'dia' : 'dias'}
-                </span>
+                <span className="text-5xl font-bold tabular-nums tracking-tight">{dias}</span>
+                <span className="text-lg text-muted-foreground">{dias === 1 ? 'dia' : 'dias'}</span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {formatoDataProva.format(dados.dataProva)}
+                {dataTexto}
+                {proxima && ` · ${proxima.especialidade}`}
               </p>
             </>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
-              Cadastre a data da prova para acompanhar a contagem regressiva.{' '}
+              Cadastre suas provas para acompanhar a contagem regressiva.{' '}
               <Link
-                href="/onboarding"
+                href="/provas"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
-                Definir agora
+                Adicionar prova
               </Link>
             </p>
           )}

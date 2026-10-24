@@ -87,6 +87,14 @@ Indice critico: `(userId, proximaRevisao)` — query "items vencidos hoje" e a m
 
 ---
 
+### ProcessoSeletivo ("Minhas provas")
+
+Cada processo seletivo que o candidato vai prestar: instituicao, especialidade, nº de inscricao, edital/inscricao/pagamento/logistica (booleanos), datas de inscricao e prova, prova realizada e acertos. Nome diferente de `Prova` porque aquela e a prova importada com questoes.
+
+- Datas sao `@db.Date` (calendario, sem fuso); trafegam como `YYYY-MM-DD` na API.
+- Etapa (aguardando edital, inscricoes abertas, inscrito...) e pendencias sao **derivadas** em `packages/core/src/minhas-provas.ts`, sem enum no banco.
+- `bancaId` opcional liga a uma `Banca` cadastrada; o painel usa a proxima prova cadastrada na contagem regressiva e cai em `User.dataProva` se nao houver.
+
 ## Computado
 
 ### AnaliseIncidencia

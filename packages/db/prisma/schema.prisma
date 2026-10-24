@@ -155,6 +155,7 @@ model User {
   registrosErro       RegistroErro[]
   decks               Deck[]
   flashcards          Flashcard[]
+  processosSeletivos  ProcessoSeletivo[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -270,6 +271,47 @@ model SubmissaoQuestao {
   @@index([status, createdAt])
 }
 
+// ==================== MINHAS PROVAS ====================
+
+/// Processo seletivo que o candidato acompanha (edital, inscricao, logistica, prova, resultado).
+/// Nao confundir com `Prova`, que e a prova importada com questoes.
+/// Status (aguardando edital, inscricoes abertas...) e derivado em packages/core/src/minhas-provas.ts.
+model ProcessoSeletivo {
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  instituicao         String // "HCPA", "ENARE", "USP" (texto livre)
+  bancaId             String? // vinculo opcional a Banca cadastrada
+  banca               Banca?    @relation(fields: [bancaId], references: [id], onDelete: SetNull)
+  especialidade       String // especialidade da residencia ("Cirurgia Geral")
+  numeroInscricao     String?
+
+  editalPublicado     Boolean   @default(false)
+  linkEdital          String?
+  inscricaoFeita      Boolean   @default(false)
+  inscricaoPaga       Boolean   @default(false)
+  taxaInscricaoCentavos Int?
+  logisticaOrganizada Boolean   @default(false)
+  cidadeProva         String?
+
+  // Datas de calendario (sem hora/fuso)
+  inicioInscricoes    DateTime? @db.Date
+  fimInscricoes       DateTime? @db.Date
+  dataProva           DateTime? @db.Date
+
+  provaRealizada      Boolean   @default(false)
+  acertos             Int?
+  totalQuestoes       Int?
+  observacoes         String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId, dataProva])
+  @@index([bancaId])
+}
+
 // ==================== CONTEUDO ====================
 
 model Banca {
@@ -286,6 +328,7 @@ model Banca {
   analises    AnaliseIncidencia[]
   submissoes  SubmissaoQuestao[]
   simuladosLive SimuladoLive[]
+  processosSeletivos ProcessoSeletivo[]
   createdAt   DateTime            @default(now())
 
   @@index([codigo])

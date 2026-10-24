@@ -6,6 +6,7 @@ import {
   primeirosPassos,
   priorizarEstudo,
   resumirHistorico,
+  proximasProvas,
   visaoSemanal,
 } from '@residencia-med/core'
 import { router, procedureProtegida } from '../trpc'
@@ -21,7 +22,7 @@ export type ComparacaoParesOutput = null | {
 }
 
 export const dashboardRouter = router({
-  /** Bloco "Hoje": contagem regressiva, meta da semana (seg-dom), revisões pendentes, primeiros passos. */
+  /** Bloco "Hoje": contagem regressiva (próximas provas cadastradas, ou User.dataProva), meta da semana (seg-dom), revisões pendentes, primeiros passos. */
   hoje: procedureProtegida.query(async ({ ctx }) => {
     const userId = ctx.userId
     const agora = new Date()
@@ -34,6 +35,7 @@ export const dashboardRouter = router({
       totalRevisoes,
       plano,
       totalSimulados,
+      processos,
     ] = await Promise.all([
       ctx.prisma.user.findUnique({
         where: { id: userId },
@@ -56,6 +58,11 @@ export const dashboardRouter = router({
       ctx.prisma.itemRevisao.count({ where: { userId, ultimaRevisao: { not: null } } }),
       ctx.prisma.planoEstudo.findUnique({ where: { userId }, select: { id: true } }),
       ctx.prisma.sessao.count({ where: { userId, tipo: 'SIMULADO', finalizadaEm: { not: null } } }),
+      ctx.prisma.processoSeletivo.findMany({
+        where: { userId, provaRealizada: false, dataProva: { gte: subDays(agora, 1) } },
+        orderBy: { dataProva: 'asc' },
+        take: 10,
+      }),
     ])
 
     const onboardingCompleto = Boolean(
@@ -98,6 +105,7 @@ export const dashboardRouter = router({
       bancaAlvo: user?.metaResidencia ?? null,
       dataProva: user?.dataProva ?? null,
       diasAteProva: diasAteProva(user?.dataProva, agora),
+      proximasProvas: proximasProvas(processos, agora),
       metaDiaria,
       semana: visaoSemanal(respostasRecentes, agora, metaDiaria),
       revisoesPendentes,

@@ -68,3 +68,55 @@ export const FiltroQuestoesInput = FiltrosBancoSchema.extend({
   limit: z.number().int().min(1).max(100).default(20),
 })
 export type FiltroQuestoesInput = z.infer<typeof FiltroQuestoesInput>
+
+// ==================== MINHAS PROVAS ====================
+
+const DataCalendario = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida')
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), 'Data inválida')
+
+const textoOpcional = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((s) => (s === '' ? null : s))
+    .nullable()
+
+export const ProcessoSeletivoInput = z
+  .object({
+    instituicao: z.string().trim().min(1, 'Informe a instituição').max(120),
+    bancaId: z.string().cuid().nullable(),
+    especialidade: z.string().trim().min(1, 'Informe a especialidade').max(120),
+    numeroInscricao: textoOpcional(60),
+    editalPublicado: z.boolean(),
+    linkEdital: z
+      .string()
+      .trim()
+      .max(500)
+      .refine((s) => s === '' || /^https?:\/\//i.test(s), 'Use um link http(s)')
+      .transform((s) => (s === '' ? null : s))
+      .nullable(),
+    inscricaoFeita: z.boolean(),
+    inscricaoPaga: z.boolean(),
+    taxaInscricaoCentavos: z.number().int().min(0).max(10_000_000).nullable(),
+    logisticaOrganizada: z.boolean(),
+    cidadeProva: textoOpcional(120),
+    inicioInscricoes: DataCalendario.nullable(),
+    fimInscricoes: DataCalendario.nullable(),
+    dataProva: DataCalendario.nullable(),
+    provaRealizada: z.boolean(),
+    acertos: z.number().int().min(0).max(1000).nullable(),
+    totalQuestoes: z.number().int().min(1).max(1000).nullable(),
+    observacoes: textoOpcional(2000),
+  })
+  .refine((v) => !v.inicioInscricoes || !v.fimInscricoes || v.inicioInscricoes <= v.fimInscricoes, {
+    message: 'O fim das inscrições deve ser depois do início',
+    path: ['fimInscricoes'],
+  })
+  .refine((v) => v.acertos === null || v.totalQuestoes === null || v.acertos <= v.totalQuestoes, {
+    message: 'Acertos não pode passar do total de questões',
+    path: ['acertos'],
+  })
+export type ProcessoSeletivoInput = z.infer<typeof ProcessoSeletivoInput>

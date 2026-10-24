@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Calendar,
+  CalendarCheck,
   ChartLine,
   Layers,
   CreditCard,
@@ -22,6 +23,7 @@ export const NAV: readonly ItemNav[] = [
   { href: '/simulado', icon: Target, label: 'Simulado', principal: false },
   { href: '/caderno', icon: NotebookPen, label: 'Caderno de erros', principal: false },
   { href: '/plano', icon: Calendar, label: 'Plano', principal: false },
+  { href: '/provas', icon: CalendarCheck, label: 'Minhas provas', principal: false },
   { href: '/mentor', icon: MessageSquare, label: 'Mentor', principal: false },
   { href: '/conta', icon: CreditCard, label: 'Conta', principal: false },
 ]
