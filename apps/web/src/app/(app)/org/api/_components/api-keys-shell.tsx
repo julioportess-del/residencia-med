@@ -232,7 +232,7 @@ function UsoApi() {
               />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" fill="#3e7a72" name="Chamadas" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total" fill="#AB5D21" name="Chamadas" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

@@ -288,7 +288,7 @@ function Proficiencia({
 
   const score = Math.round(dados.scoreGlobal)
   const cor =
-    score >= 75 ? '#10b981' : score >= 55 ? '#3e7a72' : score >= 35 ? '#f59e0b' : '#dc2626'
+    score >= 75 ? '#10b981' : score >= 55 ? '#AB5D21' : score >= 35 ? '#f59e0b' : '#dc2626'
   const interpretacao =
     score >= 75
       ? 'Você está num nível avançado. Mantenha o ritmo e foque em pontos fracos específicos.'
@@ -337,7 +337,7 @@ function Proficiencia({
                         e.score >= 75
                           ? '#10b981'
                           : e.score >= 55
-                            ? '#3e7a72'
+                            ? '#AB5D21'
                             : e.score >= 35
                               ? '#f59e0b'
                               : '#dc2626',

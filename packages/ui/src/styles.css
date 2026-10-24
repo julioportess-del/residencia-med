@@ -1,51 +1,51 @@
 /*
- * Tokens de design — paleta "Sálvia": confortável para horas de estudo.
- * Fundo off-white quente (sem branco puro), texto grafite (sem preto puro),
- * primária verde-azulada dessaturada no lugar do azul saturado.
+ * Tokens de design — paleta "Cobre": laranja editorial com viés dourado.
+ * Fundo off-white quente, texto grafite neutro-marrom, primária cobre que atravessa
+ * light e dark passando no contraste WCAG AA (4.5:1 em texto normal).
  */
 @layer base {
   :root {
     --background: 40 23% 95%;
-    --foreground: 200 15% 20%;
+    --foreground: 30 12% 18%;
     --card: 40 30% 98%;
-    --card-foreground: 200 15% 20%;
+    --card-foreground: 30 12% 18%;
     --popover: 40 30% 98%;
-    --popover-foreground: 200 15% 20%;
-    --primary: 172 32% 36%;
+    --popover-foreground: 30 12% 18%;
+    --primary: 26 68% 40%;
     --primary-foreground: 40 33% 98%;
-    --secondary: 38 18% 90%;
-    --secondary-foreground: 200 15% 22%;
-    --muted: 38 18% 90%;
-    --muted-foreground: 200 8% 40%;
-    --accent: 168 20% 88%;
-    --accent-foreground: 172 35% 22%;
-    --destructive: 4 55% 50%;
+    --secondary: 32 18% 90%;
+    --secondary-foreground: 30 12% 20%;
+    --muted: 32 18% 90%;
+    --muted-foreground: 30 8% 42%;
+    --accent: 26 30% 90%;
+    --accent-foreground: 26 55% 22%;
+    --destructive: 358 65% 48%;
     --destructive-foreground: 40 33% 98%;
-    --border: 36 16% 84%;
-    --input: 36 16% 82%;
-    --ring: 172 32% 40%;
+    --border: 30 14% 84%;
+    --input: 30 14% 82%;
+    --ring: 26 68% 40%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 195 14% 11%;
-    --foreground: 40 15% 86%;
-    --card: 195 13% 14%;
-    --card-foreground: 40 15% 86%;
-    --popover: 195 13% 14%;
-    --popover-foreground: 40 15% 86%;
-    --primary: 168 30% 52%;
-    --primary-foreground: 195 20% 10%;
-    --secondary: 195 10% 19%;
-    --secondary-foreground: 40 15% 86%;
-    --muted: 195 10% 19%;
-    --muted-foreground: 40 6% 62%;
-    --accent: 172 18% 22%;
-    --accent-foreground: 40 15% 90%;
-    --destructive: 4 50% 50%;
+    --background: 20 10% 10%;
+    --foreground: 40 15% 88%;
+    --card: 20 10% 13%;
+    --card-foreground: 40 15% 88%;
+    --popover: 20 10% 13%;
+    --popover-foreground: 40 15% 88%;
+    --primary: 28 55% 62%;
+    --primary-foreground: 20 20% 10%;
+    --secondary: 20 8% 18%;
+    --secondary-foreground: 40 15% 88%;
+    --muted: 20 8% 18%;
+    --muted-foreground: 40 6% 64%;
+    --accent: 26 25% 24%;
+    --accent-foreground: 40 15% 92%;
+    --destructive: 358 60% 56%;
     --destructive-foreground: 40 15% 95%;
-    --border: 195 10% 22%;
-    --input: 195 10% 24%;
-    --ring: 168 30% 52%;
+    --border: 20 8% 22%;
+    --input: 20 8% 24%;
+    --ring: 28 55% 62%;
   }
 }

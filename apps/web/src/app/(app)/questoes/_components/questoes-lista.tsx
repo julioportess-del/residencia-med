@@ -307,7 +307,7 @@ export function QuestoesLista() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <Badge style={{ background: q.banca.cor ?? '#3e7a72', color: 'white' }}>
+                          <Badge style={{ background: q.banca.cor ?? '#AB5D21', color: 'white' }}>
                             {q.banca.codigo}
                           </Badge>
                           <span>{q.ano}</span>

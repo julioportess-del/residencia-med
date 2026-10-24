@@ -15,7 +15,7 @@ export default async function OgImage() {
         flexDirection: 'column',
         justifyContent: 'space-between',
         padding: 64,
-        background: 'linear-gradient(135deg, #3e7a72 0%, #4a8a81 50%, #2f5f59 100%)',
+        background: 'linear-gradient(135deg, #AB5D21 0%, #C47130 50%, #784117 100%)',
         color: 'white',
         fontFamily: 'system-ui',
       }}
