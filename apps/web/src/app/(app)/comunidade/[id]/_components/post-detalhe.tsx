@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
+import { BotaoDenunciar } from '../../_components/botao-denunciar'
 
 export function PostDetalhe({ id }: { id: string }) {
   const utils = trpc.useUtils()
@@ -33,7 +34,10 @@ export function PostDetalhe({ id }: { id: string }) {
         <div className="mb-2 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
           {data.categoria}
         </div>
-        <h1 className="text-2xl font-bold">{data.titulo}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold">{data.titulo}</h1>
+          <BotaoDenunciar postId={data.id} variant="link" />
+        </div>
         <div className="mt-1 text-xs text-muted-foreground">
           por {autor} ·{' '}
           {formatDistanceToNow(new Date(data.createdAt), { addSuffix: true, locale: ptBR })}
@@ -51,12 +55,15 @@ export function PostDetalhe({ id }: { id: string }) {
             return (
               <Card key={c.id}>
                 <CardContent className="pt-4">
-                  <div className="text-xs text-muted-foreground">
-                    {nome} ·{' '}
-                    {formatDistanceToNow(new Date(c.createdAt), {
-                      addSuffix: true,
-                      locale: ptBR,
-                    })}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-xs text-muted-foreground">
+                      {nome} ·{' '}
+                      {formatDistanceToNow(new Date(c.createdAt), {
+                        addSuffix: true,
+                        locale: ptBR,
+                      })}
+                    </div>
+                    <BotaoDenunciar comentarioId={c.id} variant="icon" />
                   </div>
                   <div className="mt-2 whitespace-pre-wrap text-sm">{c.corpo}</div>
                 </CardContent>

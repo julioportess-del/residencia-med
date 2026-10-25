@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BarChart3, BookOpen, FlaskConical, LifeBuoy, MessageSquarePlus } from 'lucide-react'
+import { BarChart3, BookOpen, Flag, FlaskConical, LifeBuoy, MessageSquarePlus } from 'lucide-react'
 import { exigirAdmin } from '@/lib/auth'
 import { Card, CardContent } from '@/components/ui/card'
 import { AdminDashboard } from './_components/admin-dashboard'
@@ -18,6 +18,12 @@ const ATALHOS = [
     icone: LifeBuoy,
     titulo: 'Suporte',
     descricao: 'Fila de tickets abertos pelos usuários.',
+  },
+  {
+    href: '/admin/comunidade',
+    icone: Flag,
+    titulo: 'Moderação',
+    descricao: 'Fila de denúncias de posts e comentários.',
   },
   {
     href: '/admin/contribuicoes',
