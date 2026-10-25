@@ -34,8 +34,7 @@ describe('calcularCinturao sem stats (compat legada)', () => {
   it('xp 500 -> PRATA', () => expect(calcularCinturao(500)).toBe('PRATA'))
   it('xp 2000 -> OURO', () => expect(calcularCinturao(2000)).toBe('OURO'))
   it('xp 20000 -> DIAMANTE', () => expect(calcularCinturao(20_000)).toBe('DIAMANTE'))
-  it('xp absurdo não ultrapassa DIAMANTE', () =>
-    expect(calcularCinturao(999_999)).toBe('DIAMANTE'))
+  it('xp absurdo não ultrapassa DIAMANTE', () => expect(calcularCinturao(999_999)).toBe('DIAMANTE'))
 })
 
 describe('calcularCinturao com stats (requisitos compostos)', () => {
