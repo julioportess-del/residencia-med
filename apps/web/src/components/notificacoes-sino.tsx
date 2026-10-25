@@ -18,6 +18,8 @@ const ICONE_TIPO: Record<string, string> = {
   CONTRIBUICAO_REJEITADA: '❌',
   CONTRIBUICAO_VALIDADA_IA: '🤖',
   PROFICIENCIA_MARCO: '📈',
+  COMENTARIO_COMUNIDADE: '💬',
+  RESPOSTA_SUPORTE: '🎫',
   SISTEMA: '📢',
 }
 

@@ -79,8 +79,34 @@ export const comunidadeRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.comentarioComunidade.create({
+      const post = await ctx.prisma.postComunidade.findUnique({
+        where: { id: input.postId },
+        select: { id: true, userId: true, titulo: true },
+      })
+      if (!post) throw new TRPCError({ code: 'NOT_FOUND' })
+
+      const comentario = await ctx.prisma.comentarioComunidade.create({
         data: { postId: input.postId, userId: ctx.userId, corpo: input.corpo },
       })
+
+      // Notifica o autor do post — exceto se for ele mesmo comentando
+      if (post.userId !== ctx.userId) {
+        const autor = ctx.user.name ?? ctx.user.email.split('@')[0] ?? 'alguém'
+        const previa = input.corpo.length > 140 ? input.corpo.slice(0, 137) + '…' : input.corpo
+        await ctx.prisma.notificacao
+          .create({
+            data: {
+              userId: post.userId,
+              tipo: 'COMENTARIO_COMUNIDADE',
+              titulo: `${autor} comentou em "${post.titulo}"`,
+              conteudo: previa,
+              link: `/comunidade/${post.id}`,
+            },
+          })
+          // Notificação é side-effect — não falha o comentário se a criação der ruim
+          .catch(() => undefined)
+      }
+
+      return comentario
     }),
 })

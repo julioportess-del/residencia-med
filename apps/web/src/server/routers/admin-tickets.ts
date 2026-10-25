@@ -92,7 +92,7 @@ export const adminTicketsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const ticket = await ctx.prisma.ticket.findUnique({
         where: { id: input.ticketId },
-        select: { id: true, status: true },
+        select: { id: true, status: true, userId: true, titulo: true },
       })
       if (!ticket) throw new TRPCError({ code: 'NOT_FOUND' })
 
@@ -113,6 +113,23 @@ export const adminTicketsRouter = router({
           },
         }),
       ])
+
+      // Notifica o autor do ticket — equipe não notifica a si mesma
+      if (ticket.userId !== ctx.userId) {
+        const previa = input.corpo.length > 140 ? input.corpo.slice(0, 137) + '…' : input.corpo
+        await ctx.prisma.notificacao
+          .create({
+            data: {
+              userId: ticket.userId,
+              tipo: 'RESPOSTA_SUPORTE',
+              titulo: `Equipe respondeu: "${ticket.titulo}"`,
+              conteudo: previa,
+              link: `/suporte/${ticket.id}`,
+            },
+          })
+          .catch(() => undefined)
+      }
+
       return resposta
     }),
 
