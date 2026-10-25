@@ -195,6 +195,22 @@ enum TipoMaterialAula {
   OUTRO
 }
 
+/// Categoria de um post na comunidade.
+enum CategoriaPost {
+  DISCUSSAO
+  DUVIDA
+  DICA
+  DESABAFO
+}
+
+/// Status do ticket de suporte.
+enum StatusTicket {
+  ABERTO
+  EM_ANDAMENTO
+  RESOLVIDO
+  FECHADO
+}
+
 // ==================== USUARIO ====================
 
 model User {
@@ -253,6 +269,10 @@ model User {
   nivel               Nivel?
   perfilCandidato     PerfilCandidato?
   progressoAulas      ProgressoAula[]
+  postsComunidade     PostComunidade[]
+  comentariosComunidade ComentarioComunidade[]
+  tickets             Ticket[]
+  respostasTicket     RespostaTicket[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -537,6 +557,65 @@ model ProgressoAula {
 
   @@unique([userId, aulaId])
   @@index([userId, concluida])
+}
+
+// ==================== COMUNIDADE E SUPORTE ====================
+
+model PostComunidade {
+  id          String                 @id @default(cuid())
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoria   CategoriaPost          @default(DISCUSSAO)
+  titulo      String
+  corpo       String                 @db.Text
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  comentarios ComentarioComunidade[]
+
+  @@index([createdAt])
+  @@index([categoria, createdAt])
+  @@index([userId])
+}
+
+model ComentarioComunidade {
+  id        String         @id @default(cuid())
+  postId    String
+  post      PostComunidade @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  corpo     String         @db.Text
+  createdAt DateTime       @default(now())
+
+  @@index([postId, createdAt])
+}
+
+model Ticket {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo    String
+  corpo     String           @db.Text
+  categoria String? // texto livre curto (ex: "cobrança", "bug", "sugestão")
+  status    StatusTicket     @default(ABERTO)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  respostas RespostaTicket[]
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+model RespostaTicket {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  corpo     String   @db.Text
+  deEquipe  Boolean  @default(false) // true se foi admin/suporte respondendo
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
 }
 
 // ==================== CONTEUDO ====================

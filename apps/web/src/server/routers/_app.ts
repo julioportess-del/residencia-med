@@ -21,9 +21,11 @@ import { experimentosRouter } from './experimentos'
 import { cadernoRouter } from './caderno'
 import { flashcardsRouter } from './flashcards'
 import { minhasProvasRouter } from './minhas-provas'
+import { comunidadeRouter } from './comunidade'
 import { cursosRouter } from './cursos'
 import { nivelRouter } from './nivel'
 import { perfilCandidatoRouter } from './perfil-candidato'
+import { suporteRouter } from './suporte'
 
 export const appRouter = router({
   banca: bancaRouter,
@@ -52,6 +54,8 @@ export const appRouter = router({
   nivel: nivelRouter,
   perfilCandidato: perfilCandidatoRouter,
   cursos: cursosRouter,
+  comunidade: comunidadeRouter,
+  suporte: suporteRouter,
 })
 
 export type AppRouter = typeof appRouter
