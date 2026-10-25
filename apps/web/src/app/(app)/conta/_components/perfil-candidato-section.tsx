@@ -1,56 +1,47 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { HeartPulse } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { HeartPulse, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  calcularPerfilLape,
+  ITENS_DISC,
+  ITENS_MEMORIA,
+  ITENS_PROCRASTINACAO,
+  ITENS_SOCIO,
+  type RespostasLape,
+  type ValorLikert,
+} from '@residencia-med/core'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
 
-type Disc = 'ANALISTA' | 'COMUNICADOR' | 'EXECUTOR' | 'CONCILIADOR' | null
-type Socio = 'TAREFAS' | 'PESSOAS' | 'IDEIAS' | 'SISTEMAS' | null
-type Procrast = 'LEVE' | 'MODERADA' | 'SEVERA' | null
-type Memoria = 'BAIXA' | 'MEDIA' | 'ACIMA_DA_MEDIA' | 'ALTA' | null
+const ROTULOS_LIKERT = ['Discordo totalmente', 'Discordo', 'Neutro', 'Concordo', 'Concordo muito']
 
-const PERGUNTA_DISC = {
-  titulo: 'Qual frase mais descreve você no estudo?',
-  opcoes: [
-    { v: 'ANALISTA' as const, texto: 'Prefiro analisar tudo em profundidade antes de agir.' },
-    { v: 'COMUNICADOR' as const, texto: 'Aprendo melhor explicando para alguém ou em grupo.' },
-    { v: 'EXECUTOR' as const, texto: 'Vou direto à ação — faço, depois ajusto.' },
-    { v: 'CONCILIADOR' as const, texto: 'Mantenho ritmo estável e priorizo equilíbrio.' },
-  ],
+const ROTULO_DISC: Record<string, string> = {
+  ANALISTA: 'Analista',
+  COMUNICADOR: 'Comunicador',
+  EXECUTOR: 'Executor',
+  CONCILIADOR: 'Conciliador',
 }
-
-const PERGUNTA_SOCIO = {
-  titulo: 'O que te motiva mais no dia a dia?',
-  opcoes: [
-    { v: 'TAREFAS' as const, texto: 'Tarefas e metas concretas.' },
-    { v: 'PESSOAS' as const, texto: 'Pessoas e relações.' },
-    { v: 'IDEIAS' as const, texto: 'Ideias e aprendizado novo.' },
-    { v: 'SISTEMAS' as const, texto: 'Sistemas, processos e organização.' },
-  ],
+const ROTULO_SOCIO: Record<string, string> = {
+  TAREFAS: 'Tarefas e metas',
+  PESSOAS: 'Pessoas e relações',
+  IDEIAS: 'Ideias e aprendizado',
+  SISTEMAS: 'Sistemas e processos',
 }
-
-const PERGUNTA_PROCRAST = {
-  titulo: 'Com que frequência você posterga o estudo?',
-  opcoes: [
-    { v: 'LEVE' as const, texto: 'Quase nunca — bato minhas metas.' },
-    { v: 'MODERADA' as const, texto: 'Às vezes — depende do assunto.' },
-    { v: 'SEVERA' as const, texto: 'Frequente — tenho dificuldade de começar.' },
-  ],
+const ROTULO_PROCRAST: Record<string, string> = {
+  LEVE: 'Leve',
+  MODERADA: 'Moderada',
+  SEVERA: 'Severa',
 }
-
-const PERGUNTA_MEMORIA = {
-  titulo: 'Como você avalia sua memória para o que estuda?',
-  opcoes: [
-    { v: 'BAIXA' as const, texto: 'Esqueço rápido — preciso de muita revisão.' },
-    { v: 'MEDIA' as const, texto: 'Mediana — depende do interesse.' },
-    { v: 'ACIMA_DA_MEDIA' as const, texto: 'Boa — lembro bem com uma ou duas revisões.' },
-    { v: 'ALTA' as const, texto: 'Excelente — fixo bem já na primeira passada.' },
-  ],
+const ROTULO_MEMORIA: Record<string, string> = {
+  BAIXA: 'Baixa',
+  MEDIA: 'Média',
+  ACIMA_DA_MEDIA: 'Acima da média',
+  ALTA: 'Alta',
 }
 
 export function PerfilCandidatoSection() {
@@ -60,115 +51,235 @@ export function PerfilCandidatoSection() {
     onSuccess: () => {
       toast.success('Perfil salvo.')
       utils.perfilCandidato.atual.invalidate()
+      setRespostas({})
+      setRefazendo(false)
     },
     onError: (e) => toast.error(e.message ?? 'Erro ao salvar'),
   })
 
-  const [disc, setDisc] = useState<Disc>(null)
-  const [socio, setSocio] = useState<Socio>(null)
-  const [procrast, setProcrast] = useState<Procrast>(null)
-  const [memoria, setMemoria] = useState<Memoria>(null)
+  const [respostas, setRespostas] = useState<RespostasLape>({})
+  const [refazendo, setRefazendo] = useState(false)
 
-  useEffect(() => {
-    if (dados.data) {
-      setDisc(dados.data.disc ?? null)
-      setSocio(dados.data.socioemocional ?? null)
-      setProcrast(dados.data.procrastinacao ?? null)
-      setMemoria(dados.data.memoria ?? null)
-    }
-  }, [dados.data])
+  const resultadoCalc = useMemo(() => calcularPerfilLape(respostas), [respostas])
 
   if (dados.isLoading) return <Skeleton className="h-80" />
+
+  const jaRespondeu = dados.data?.concluidoEm != null
+  const mostraFormulario = !jaRespondeu || refazendo
 
   return (
     <Card id="perfil-candidato">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <HeartPulse className="size-4" />
-          Perfil do Candidato (teste rápido)
+          Perfil do Candidato
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Quatro perguntas rápidas que ajudam a adequar o seu plano ao seu perfil. Pode refazer a
-          qualquer momento.
-        </p>
-        <div className="space-y-6">
-          <Pergunta<Disc> dados={PERGUNTA_DISC} selecionado={disc} onChange={(v) => setDisc(v)} />
-          <Pergunta<Socio>
-            dados={PERGUNTA_SOCIO}
-            selecionado={socio}
-            onChange={(v) => setSocio(v)}
-          />
-          <Pergunta<Procrast>
-            dados={PERGUNTA_PROCRAST}
-            selecionado={procrast}
-            onChange={(v) => setProcrast(v)}
-          />
-          <Pergunta<Memoria>
-            dados={PERGUNTA_MEMORIA}
-            selecionado={memoria}
-            onChange={(v) => setMemoria(v)}
-          />
-          <Button
-            onClick={() =>
-              salvar.mutate({
-                disc,
-                socioemocional: socio,
-                procrastinacao: procrast,
-                memoria,
-              })
-            }
-            loading={salvar.isPending}
-          >
-            Salvar perfil
-          </Button>
-        </div>
+        {!mostraFormulario && dados.data && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Seu perfil atual — baseado nas suas respostas{' '}
+              {dados.data.concluidoEm
+                ? `em ${new Date(dados.data.concluidoEm).toLocaleDateString('pt-BR')}`
+                : ''}
+              . Pode refazer quando quiser.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ResumoDimensao
+                titulo="Estilo"
+                valor={dados.data.disc ? (ROTULO_DISC[dados.data.disc] ?? null) : null}
+              />
+              <ResumoDimensao
+                titulo="Motivação"
+                valor={
+                  dados.data.socioemocional
+                    ? (ROTULO_SOCIO[dados.data.socioemocional] ?? null)
+                    : null
+                }
+              />
+              <ResumoDimensao
+                titulo="Procrastinação"
+                valor={
+                  dados.data.procrastinacao
+                    ? (ROTULO_PROCRAST[dados.data.procrastinacao] ?? null)
+                    : null
+                }
+              />
+              <ResumoDimensao
+                titulo="Memória (autoavaliação)"
+                valor={dados.data.memoria ? (ROTULO_MEMORIA[dados.data.memoria] ?? null) : null}
+              />
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setRefazendo(true)} className="mt-2">
+              <RotateCcw className="mr-2 size-3.5" />
+              Refazer teste
+            </Button>
+          </div>
+        )}
+
+        {mostraFormulario && (
+          <>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Autoavaliação em quatro dimensões — concorde ou discorde de cada frase. O resultado
+              calibra sugestões do plano. Não é instrumento clínico.
+            </p>
+
+            <div className="space-y-8">
+              <GrupoItens
+                titulo="Como você estuda"
+                itens={ITENS_DISC}
+                respostas={respostas}
+                onChange={(id, v) => setRespostas((r) => ({ ...r, [id]: v }))}
+              />
+              <GrupoItens
+                titulo="O que te motiva"
+                itens={ITENS_SOCIO}
+                respostas={respostas}
+                onChange={(id, v) => setRespostas((r) => ({ ...r, [id]: v }))}
+              />
+              <GrupoItens
+                titulo="Procrastinação"
+                itens={ITENS_PROCRASTINACAO}
+                respostas={respostas}
+                onChange={(id, v) => setRespostas((r) => ({ ...r, [id]: v }))}
+              />
+              <GrupoItens
+                titulo="Memória (autopercepção)"
+                itens={ITENS_MEMORIA}
+                respostas={respostas}
+                onChange={(id, v) => setRespostas((r) => ({ ...r, [id]: v }))}
+              />
+            </div>
+
+            {resultadoCalc.completo && (
+              <div className="mt-6 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                <p className="font-medium">Resultado parcial:</p>
+                <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                  <li>
+                    Estilo:{' '}
+                    <span className="font-medium text-foreground">
+                      {resultadoCalc.disc ? ROTULO_DISC[resultadoCalc.disc] : '—'}
+                    </span>
+                  </li>
+                  <li>
+                    Motivação:{' '}
+                    <span className="font-medium text-foreground">
+                      {resultadoCalc.socioemocional
+                        ? ROTULO_SOCIO[resultadoCalc.socioemocional]
+                        : '—'}
+                    </span>
+                  </li>
+                  <li>
+                    Procrastinação:{' '}
+                    <span className="font-medium text-foreground">
+                      {resultadoCalc.procrastinacao
+                        ? ROTULO_PROCRAST[resultadoCalc.procrastinacao]
+                        : '—'}
+                    </span>
+                  </li>
+                  <li>
+                    Memória:{' '}
+                    <span className="font-medium text-foreground">
+                      {resultadoCalc.memoria ? ROTULO_MEMORIA[resultadoCalc.memoria] : '—'}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            <div className="mt-6 flex gap-2">
+              <Button
+                onClick={() =>
+                  salvar.mutate({
+                    disc: resultadoCalc.disc,
+                    socioemocional: resultadoCalc.socioemocional,
+                    procrastinacao: resultadoCalc.procrastinacao,
+                    memoria: resultadoCalc.memoria,
+                  })
+                }
+                loading={salvar.isPending}
+                disabled={!resultadoCalc.completo}
+              >
+                Salvar perfil
+              </Button>
+              {refazendo && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setRefazendo(false)
+                    setRespostas({})
+                  }}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )
 }
 
-function Pergunta<T extends string | null>({
-  dados,
-  selecionado,
+function GrupoItens({
+  titulo,
+  itens,
+  respostas,
   onChange,
 }: {
-  dados: { titulo: string; opcoes: ReadonlyArray<{ v: NonNullable<T>; texto: string }> }
-  selecionado: T
-  onChange: (v: T) => void
+  titulo: string
+  itens: ReadonlyArray<{ id: string; texto: string }>
+  respostas: RespostasLape
+  onChange: (id: string, v: ValorLikert) => void
 }) {
   return (
     <div>
-      <Label className="text-sm font-medium">{dados.titulo}</Label>
-      <div className="mt-2 space-y-1.5">
-        {dados.opcoes.map((o) => {
-          const marcado = selecionado === o.v
-          return (
-            <button
-              key={o.v}
-              type="button"
-              onClick={() => onChange(o.v as T)}
-              className={
-                'flex w-full items-start gap-3 rounded-md border p-3 text-left text-sm transition-colors ' +
-                (marcado
-                  ? 'border-primary bg-primary/5 text-foreground'
-                  : 'border-border hover:bg-secondary')
-              }
-            >
-              <span
-                className={
-                  'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ' +
-                  (marcado ? 'border-primary bg-primary' : 'border-muted-foreground')
-                }
-              >
-                {marcado && <span className="size-1.5 rounded-full bg-primary-foreground" />}
-              </span>
-              {o.texto}
-            </button>
-          )
-        })}
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {titulo}
+      </h3>
+      <div className="mt-3 space-y-4">
+        {itens.map((item) => (
+          <div key={item.id}>
+            <Label className="text-sm">{item.texto}</Label>
+            <div className="mt-2 grid grid-cols-5 gap-1">
+              {([1, 2, 3, 4, 5] as const).map((v) => {
+                const marcado = respostas[item.id] === v
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => onChange(item.id, v)}
+                    aria-label={ROTULOS_LIKERT[v - 1]}
+                    title={ROTULOS_LIKERT[v - 1]}
+                    className={
+                      'rounded-md border py-2 text-xs transition-colors ' +
+                      (marcado
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border hover:bg-secondary')
+                    }
+                  >
+                    {v}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+              <span>Discordo</span>
+              <span>Concordo</span>
+            </div>
+          </div>
+        ))}
       </div>
+    </div>
+  )
+}
+
+function ResumoDimensao({ titulo, valor }: { titulo: string; valor: string | null }) {
+  return (
+    <div className="rounded-md border bg-muted/30 p-3">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{titulo}</div>
+      <div className="mt-1 text-sm font-medium">{valor ?? '—'}</div>
     </div>
   )
 }
