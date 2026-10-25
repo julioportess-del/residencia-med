@@ -41,6 +41,7 @@ const PROTECTED_DEMO_PREFIXES = [
   '/plano',
   '/provas',
   '/foco',
+  '/cursos',
   '/conta',
   '/admin',
   '/mentor',
