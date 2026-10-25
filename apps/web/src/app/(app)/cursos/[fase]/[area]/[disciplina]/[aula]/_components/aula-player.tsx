@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import { trpc } from '@/lib/trpc/client'
+import { VigiliaToggle } from './vigilia-toggle'
 
 // Mux Player é client-only — carrega dinamicamente para não quebrar SSR.
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react').then((m) => m.default), {
@@ -76,11 +77,16 @@ export function AulaPlayer({
 
   return (
     <>
-      <div className="mt-2 text-xs text-muted-foreground">
-        {aula.disciplina.grandeArea.nome} · {aula.disciplina.nome}
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs text-muted-foreground">
+            {aula.disciplina.grandeArea.nome} · {aula.disciplina.nome}
+          </div>
+          <h1 className="mt-1 text-2xl font-bold">{aula.titulo}</h1>
+          {aula.descricao && <p className="mt-2 text-sm text-muted-foreground">{aula.descricao}</p>}
+        </div>
+        <VigiliaToggle />
       </div>
-      <h1 className="mt-1 text-2xl font-bold">{aula.titulo}</h1>
-      {aula.descricao && <p className="mt-2 text-sm text-muted-foreground">{aula.descricao}</p>}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
         <div>

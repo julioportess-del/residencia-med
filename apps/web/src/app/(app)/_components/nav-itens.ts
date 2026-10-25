@@ -8,10 +8,12 @@ import {
   Gauge,
   GraduationCap,
   Layers,
+  LifeBuoy,
   MessageSquare,
   NotebookPen,
   Repeat2,
   Target,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -70,8 +72,16 @@ export const GRUPOS_NAV: readonly GrupoNav[] = [
     itens: [{ href: '/provas', icon: CalendarCheck, label: 'Minhas provas', principal: false }],
   },
   {
-    id: 'suporte',
-    label: 'Suporte',
+    id: 'ambiente',
+    label: 'Ambiente',
+    itens: [
+      { href: '/comunidade', icon: Users, label: 'Comunidade', principal: false },
+      { href: '/suporte', icon: LifeBuoy, label: 'Suporte', principal: false },
+    ],
+  },
+  {
+    id: 'conta',
+    label: 'Conta',
     itens: [
       { href: '/mentor', icon: MessageSquare, label: 'Mentor', principal: false },
       { href: '/conta', icon: CreditCard, label: 'Conta', principal: false },
