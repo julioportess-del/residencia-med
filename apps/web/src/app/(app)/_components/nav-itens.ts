@@ -1,10 +1,10 @@
 import {
   BookOpen,
-  Calendar,
   CalendarCheck,
   ChartLine,
-  Layers,
+  Compass,
   CreditCard,
+  Layers,
   MessageSquare,
   NotebookPen,
   Repeat2,
@@ -14,19 +14,62 @@ import {
 
 export type ItemNav = { href: string; icon: LucideIcon; label: string; principal: boolean }
 
-/** `principal` = aparece na barra inferior do celular; o resto fica em "Mais". */
-export const NAV: readonly ItemNav[] = [
-  { href: '/dashboard', icon: ChartLine, label: 'Painel', principal: true },
-  { href: '/questoes', icon: BookOpen, label: 'Questões', principal: true },
-  { href: '/flashcards', icon: Layers, label: 'Flashcards', principal: true },
-  { href: '/revisao', icon: Repeat2, label: 'Revisão', principal: true },
-  { href: '/simulado', icon: Target, label: 'Simulado', principal: false },
-  { href: '/caderno', icon: NotebookPen, label: 'Caderno de erros', principal: false },
-  { href: '/plano', icon: Calendar, label: 'Plano', principal: false },
-  { href: '/provas', icon: CalendarCheck, label: 'Minhas provas', principal: false },
-  { href: '/mentor', icon: MessageSquare, label: 'Mentor', principal: false },
-  { href: '/conta', icon: CreditCard, label: 'Conta', principal: false },
+/**
+ * Grupo da sidebar. `label: null` desenha o item solto, sem título de seção
+ * (usado para "Início" e para áreas que ainda têm só um item).
+ */
+export type GrupoNav = {
+  id: string
+  label: string | null
+  itens: readonly ItemNav[]
+}
+
+/**
+ * Sidebar organizada em grupos no estilo cursinho premium: Início, Método,
+ * Execução, Agenda, Mentor, Conta. Alguns grupos têm um item só por enquanto;
+ * o layout já suporta o crescimento das ondas 2–4 (dashboards de Foco,
+ * vídeo-aulas em Execução, comunidade/suporte, etc).
+ */
+export const GRUPOS_NAV: readonly GrupoNav[] = [
+  {
+    id: 'inicio',
+    label: null,
+    itens: [{ href: '/dashboard', icon: ChartLine, label: 'Painel', principal: true }],
+  },
+  {
+    id: 'metodo',
+    label: 'Método',
+    itens: [{ href: '/plano', icon: Compass, label: 'Plano', principal: false }],
+  },
+  {
+    id: 'execucao',
+    label: 'Execução',
+    itens: [
+      { href: '/questoes', icon: BookOpen, label: 'Questões', principal: true },
+      { href: '/flashcards', icon: Layers, label: 'Flashcards', principal: true },
+      { href: '/revisao', icon: Repeat2, label: 'Revisão', principal: true },
+      { href: '/simulado', icon: Target, label: 'Simulado', principal: false },
+      { href: '/caderno', icon: NotebookPen, label: 'Caderno de erros', principal: false },
+    ],
+  },
+  {
+    id: 'agenda',
+    label: 'Agenda',
+    itens: [{ href: '/provas', icon: CalendarCheck, label: 'Minhas provas', principal: false }],
+  },
+  {
+    id: 'suporte',
+    label: 'Suporte',
+    itens: [
+      { href: '/mentor', icon: MessageSquare, label: 'Mentor', principal: false },
+      { href: '/conta', icon: CreditCard, label: 'Conta', principal: false },
+    ],
+  },
 ]
+
+/** Lista flat para a NavMobile (que não exibe grupos). `principal` = aparece
+ *  na barra inferior do celular; o resto fica em "Mais". */
+export const NAV: readonly ItemNav[] = GRUPOS_NAV.flatMap((g) => g.itens)
 
 export function itemAtivo(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)
