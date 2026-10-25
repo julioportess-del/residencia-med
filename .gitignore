@@ -18,6 +18,9 @@ build/
 # Supabase CLI (local-only artifacts)
 **/supabase/.temp/
 **/supabase/.branches/
+
+# Projetos separados que vivem dentro do checkout mas não pertencem ao repo
+mcp-consulta-processual-tjes/
 **/supabase/.env
 
 # Logs
