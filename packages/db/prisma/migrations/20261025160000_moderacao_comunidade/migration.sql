@@ -2,7 +2,7 @@
 CREATE TYPE "MotivoReporte" AS ENUM ('SPAM', 'OFENSIVO', 'FORA_DO_TEMA', 'INFO_INCORRETA', 'OUTRO');
 
 -- CreateEnum
-CREATE TYPE "StatusReporte" AS ENUM ('PENDENTE', 'RESOLVIDO_OCULTO', 'RESOLVIDO_MANTIDO');
+CREATE TYPE "StatusReporteComunidade" AS ENUM ('PENDENTE', 'RESOLVIDO_OCULTO', 'RESOLVIDO_MANTIDO');
 
 -- AlterTable
 ALTER TABLE "PostComunidade" ADD COLUMN "ocultoEm" TIMESTAMP(3);
@@ -19,7 +19,7 @@ CREATE TABLE "ReporteComunidade" (
     "comentarioId" TEXT,
     "motivo" "MotivoReporte" NOT NULL,
     "detalhes" TEXT,
-    "status" "StatusReporte" NOT NULL DEFAULT 'PENDENTE',
+    "status" "StatusReporteComunidade" NOT NULL DEFAULT 'PENDENTE',
     "resolvidoEm" TIMESTAMP(3),
     "resolvidoPor" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

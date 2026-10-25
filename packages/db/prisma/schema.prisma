@@ -603,23 +603,23 @@ enum MotivoReporte {
   OUTRO
 }
 
-enum StatusReporte {
+enum StatusReporteComunidade {
   PENDENTE
   RESOLVIDO_OCULTO
   RESOLVIDO_MANTIDO
 }
 
 model ReporteComunidade {
-  id            String                @id @default(cuid())
+  id            String                 @id @default(cuid())
   userId        String // quem denunciou
-  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   postId        String?
-  post          PostComunidade?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post          PostComunidade?        @relation(fields: [postId], references: [id], onDelete: Cascade)
   comentarioId  String?
-  comentario    ComentarioComunidade? @relation(fields: [comentarioId], references: [id], onDelete: Cascade)
+  comentario    ComentarioComunidade?  @relation(fields: [comentarioId], references: [id], onDelete: Cascade)
   motivo        MotivoReporte
-  detalhes      String?               @db.Text
-  status        StatusReporte         @default(PENDENTE)
+  detalhes      String?                @db.Text
+  status        StatusReporteComunidade @default(PENDENTE)
   resolvidoEm   DateTime?
   resolvidoPor  String?
   createdAt     DateTime              @default(now())
