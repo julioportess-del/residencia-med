@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import { trpc } from '@/lib/trpc/client'
+import { useAutosaveProgresso } from '@/hooks/use-autosave-progresso'
 import { VigiliaToggle } from './vigilia-toggle'
 
 // Mux Player é client-only — carrega dinamicamente para não quebrar SSR.
@@ -32,6 +33,46 @@ const LABEL_MATERIAL = {
   SLIDE_AULA: 'Slide da Aula',
   OUTRO: 'Material',
 } as const
+
+function MuxAulaPlayer({
+  aulaId,
+  playbackId,
+  titulo,
+  videoId,
+  thumbUrl,
+  startTime,
+  duracaoS,
+  concluida,
+}: {
+  aulaId: string
+  playbackId: string
+  titulo: string
+  videoId: string
+  thumbUrl: string | null
+  startTime: number
+  duracaoS: number
+  concluida: boolean
+}) {
+  const { onTimeUpdate, onPause, onEnded } = useAutosaveProgresso({
+    aulaId,
+    duracaoS,
+    concluida,
+  })
+  return (
+    <MuxPlayer
+      streamType="on-demand"
+      playbackId={playbackId}
+      metadata={{ video_title: titulo, video_id: videoId }}
+      accentColor="#AB5D21"
+      poster={thumbUrl ?? undefined}
+      startTime={startTime > 0 ? startTime : undefined}
+      onTimeUpdate={onTimeUpdate}
+      onPause={onPause}
+      onEnded={onEnded}
+      style={{ width: '100%', aspectRatio: '16 / 9' }}
+    />
+  )
+}
 
 export function AulaPlayer({
   fase,
@@ -73,7 +114,10 @@ export function AulaPlayer({
 
   const videos = aula.videos
   const videoAtivo = videos.find((v) => v.id === videoAtivoId) ?? videos[0] ?? null
-  const concluida = aula.progresso.some((p) => p.concluida)
+  const progressoAtual = aula.progresso[0] ?? null
+  const concluida = progressoAtual?.concluida ?? false
+  const tempoAssistidoInicial = progressoAtual?.tempoAssistidoS ?? 0
+  const duracaoAtiva = videoAtivo?.duracaoS ?? 0
 
   return (
     <>
@@ -93,13 +137,15 @@ export function AulaPlayer({
           {videoAtivo ? (
             <div className="overflow-hidden rounded-lg bg-black">
               {videoAtivo.provider === 'mux' ? (
-                <MuxPlayer
-                  streamType="on-demand"
+                <MuxAulaPlayer
+                  aulaId={aula.id}
                   playbackId={videoAtivo.providerId}
-                  metadata={{ video_title: videoAtivo.titulo, video_id: videoAtivo.id }}
-                  accentColor="#AB5D21"
-                  poster={videoAtivo.thumbUrl ?? undefined}
-                  style={{ width: '100%', aspectRatio: '16 / 9' }}
+                  titulo={videoAtivo.titulo}
+                  videoId={videoAtivo.id}
+                  thumbUrl={videoAtivo.thumbUrl}
+                  startTime={tempoAssistidoInicial}
+                  duracaoS={duracaoAtiva}
+                  concluida={concluida}
                 />
               ) : (
                 <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">
