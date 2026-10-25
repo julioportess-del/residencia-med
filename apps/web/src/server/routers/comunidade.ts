@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { router, procedureProtegida } from '../trpc'
 
 const CategoriaZ = z.enum(['DISCUSSAO', 'DUVIDA', 'DICA', 'DESABAFO'])
+const MotivoZ = z.enum(['SPAM', 'OFENSIVO', 'FORA_DO_TEMA', 'INFO_INCORRETA', 'OUTRO'])
 
 export const comunidadeRouter = router({
   listar: procedureProtegida
@@ -16,12 +17,15 @@ export const comunidadeRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const posts = await ctx.prisma.postComunidade.findMany({
-        where: input?.categoria ? { categoria: input.categoria } : undefined,
+        where: {
+          ocultoEm: null, // esconde posts moderados
+          ...(input?.categoria ? { categoria: input.categoria } : {}),
+        },
         orderBy: { createdAt: 'desc' },
         take: input?.limit ?? 20,
         include: {
           user: { select: { name: true, email: true } },
-          _count: { select: { comentarios: true } },
+          _count: { select: { comentarios: { where: { ocultoEm: null } } } },
         },
       })
       return posts.map((p) => ({
@@ -38,11 +42,12 @@ export const comunidadeRouter = router({
   obter: procedureProtegida
     .input(z.object({ id: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
-      const post = await ctx.prisma.postComunidade.findUnique({
-        where: { id: input.id },
+      const post = await ctx.prisma.postComunidade.findFirst({
+        where: { id: input.id, ocultoEm: null },
         include: {
           user: { select: { name: true, email: true } },
           comentarios: {
+            where: { ocultoEm: null },
             orderBy: { createdAt: 'asc' },
             include: { user: { select: { name: true, email: true } } },
           },
@@ -50,6 +55,43 @@ export const comunidadeRouter = router({
       })
       if (!post) throw new TRPCError({ code: 'NOT_FOUND' })
       return post
+    }),
+
+  reportar: procedureProtegida
+    .input(
+      z
+        .object({
+          postId: z.string().cuid().optional(),
+          comentarioId: z.string().cuid().optional(),
+          motivo: MotivoZ,
+          detalhes: z.string().trim().max(1000).optional(),
+        })
+        .refine((d) => Boolean(d.postId) !== Boolean(d.comentarioId), {
+          message: 'Passe postId OU comentarioId, não ambos.',
+        }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Dedupe: se o user já reportou esse mesmo alvo com status PENDENTE, não cria outro.
+      const existente = await ctx.prisma.reporteComunidade.findFirst({
+        where: {
+          userId: ctx.userId,
+          status: 'PENDENTE',
+          postId: input.postId ?? null,
+          comentarioId: input.comentarioId ?? null,
+        },
+      })
+      if (existente) return { ok: true, dedupe: true }
+
+      await ctx.prisma.reporteComunidade.create({
+        data: {
+          userId: ctx.userId,
+          postId: input.postId ?? null,
+          comentarioId: input.comentarioId ?? null,
+          motivo: input.motivo,
+          detalhes: input.detalhes || null,
+        },
+      })
+      return { ok: true }
     }),
 
   criar: procedureProtegida
