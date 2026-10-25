@@ -120,6 +120,8 @@ jobs:
           node-version: '20.11.0'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - name: Generate Prisma Client
+        run: pnpm --filter @residencia-med/db db:generate
       - run: pnpm --filter @residencia-med/web e2e:install
       - name: Run Playwright tests
         env:

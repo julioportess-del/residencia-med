@@ -16,17 +16,19 @@ test.describe('rotas públicas', () => {
 
   test('landing lista as bancas cobertas', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('AMRIGS')).toBeVisible()
-    await expect(page.getByText('ENARE')).toBeVisible()
-    await expect(page.getByText('USP')).toBeVisible()
+    await expect(page.getByText('AMRIGS', { exact: true })).toBeVisible()
+    await expect(page.getByText('ENARE', { exact: true })).toBeVisible()
+    // exact: true evita colisão com "FMRP-USP"
+    await expect(page.getByText('USP', { exact: true })).toBeVisible()
   })
 
   test('/precos mostra os 3 planos com preços', async ({ page }) => {
     await page.goto('/precos')
     await expect(page.getByRole('heading', { name: /Escolha o ritmo/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Free' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Premium' })).toBeVisible()
+    // exact: true evita que 'Pro' colida com o h1 'Escolha o ritmo da sua aprovação' (contém 'pro')
+    await expect(page.getByRole('heading', { name: 'Free', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Pro', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Premium', exact: true })).toBeVisible()
     // Preços formatados em BRL
     await expect(page.getByText(/R\$\s*0,00/)).toBeVisible()
     await expect(page.getByText(/R\$\s*19,00/)).toBeVisible()
