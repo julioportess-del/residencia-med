@@ -590,6 +590,7 @@ model ComentarioComunidade {
   corpo     String              @db.Text
   ocultoEm  DateTime?
   createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
   reportes  ReporteComunidade[]
 
   @@index([postId, createdAt])
