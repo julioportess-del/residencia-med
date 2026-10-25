@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
-import { MapaClinicoPlaceholder } from './mapa-clinico-placeholder'
+import { MapaClinico } from './mapa-clinico'
 import { MetodoTabs } from './metodo-tabs'
 import { PainelHoje } from './painel-hoje'
 import { PerfilClinicoCards } from './perfil-clinico-cards'
@@ -54,7 +54,7 @@ export function DashboardClient() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <MapaClinicoPlaceholder />
+        <MapaClinico dados={profic} loading={r5} />
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
