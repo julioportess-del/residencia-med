@@ -21,6 +21,10 @@ build/
 
 # Projetos separados que vivem dentro do checkout mas não pertencem ao repo
 mcp-consulta-processual-tjes/
+
+# Artefatos de CLIs locais (Codex, agentes) — não pertencem ao repo
+.codex/
+AGENTS.md
 **/supabase/.env
 
 # Logs

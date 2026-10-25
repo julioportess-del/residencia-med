@@ -1,6 +1,0 @@
-[mcp_servers.claude-flow]
-command = "claude-flow"
-args = [
-    "mcp",
-    "start",
-]
