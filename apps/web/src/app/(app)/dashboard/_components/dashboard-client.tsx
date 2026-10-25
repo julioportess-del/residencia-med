@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
+import { MapaClinicoPlaceholder } from './mapa-clinico-placeholder'
+import { MetodoTabs } from './metodo-tabs'
 import { PainelHoje } from './painel-hoje'
+import { PerfilClinicoCards } from './perfil-clinico-cards'
 import { PrioridadesCard } from './prioridades-card'
 
 export function DashboardClient() {
@@ -15,10 +18,13 @@ export function DashboardClient() {
   const { data: pf, isLoading: r3 } = trpc.dashboard.pontosFortesEFracos.useQuery()
   const { data: pares, isLoading: r4 } = trpc.dashboard.comparacaoPares.useQuery()
   const { data: profic, isLoading: r5 } = trpc.proficiencia.atual.useQuery()
+  const { data: diagnostico, isLoading: r6 } = trpc.dashboard.diagnostico.useQuery()
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="mt-6 space-y-8">
       <PainelHoje dados={hoje} loading={r0} />
+
+      <PerfilClinicoCards dados={hoje} diagnostico={diagnostico} loadingDiagnostico={r6} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
@@ -47,17 +53,22 @@ export function DashboardClient() {
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gauge className="size-4" />
-            Estimativa de proficiência
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Proficiencia dados={profic} loading={r5} />
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <MapaClinicoPlaceholder />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gauge className="size-4" />
+              Estimativa de proficiência
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Proficiencia dados={profic} loading={r5} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <MetodoTabs dados={hoje} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <PrioridadesCard dados={prioridades} loading={r2} />

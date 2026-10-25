@@ -46,6 +46,7 @@ export const dashboardRouter = router({
           bancasAlvo: true,
           dataProva: true,
           cargaHorariaSemanal: true,
+          faseJornada: true,
         },
       }),
       // 8 dias cobre a semana corrente inteira (seg-hoje) em qualquer fuso
@@ -100,6 +101,28 @@ export const dashboardRouter = router({
       where: await montarWhereQuestoes(ctx.prisma, userId, filtrosIneditas),
     })
 
+    // Agrega sessões dos últimos 30 dias por tipo metodológico (clínico).
+    // Sessões sem tipoAtividadeMetodo definido não entram — pela natureza
+    // da query (group by nulls são excluídos por default no Prisma count).
+    const sessoesPorMetodoBruto = await ctx.prisma.sessao.groupBy({
+      by: ['tipoAtividadeMetodo'],
+      where: {
+        userId,
+        iniciadaEm: { gte: subDays(agora, 30) },
+        tipoAtividadeMetodo: { not: null },
+      },
+      _count: { _all: true },
+    })
+    const sessoesPorMetodo: Record<
+      'ANAMNESE' | 'EXAME' | 'HIPOTESE' | 'CONDUTA' | 'PRONTUARIO',
+      number
+    > = { ANAMNESE: 0, EXAME: 0, HIPOTESE: 0, CONDUTA: 0, PRONTUARIO: 0 }
+    for (const linha of sessoesPorMetodoBruto) {
+      if (linha.tipoAtividadeMetodo) {
+        sessoesPorMetodo[linha.tipoAtividadeMetodo] = linha._count._all
+      }
+    }
+
     return {
       nome: user?.name ?? user?.email.split('@')[0] ?? 'estudante',
       bancaAlvo: user?.metaResidencia ?? null,
@@ -117,6 +140,8 @@ export const dashboardRouter = router({
         ? Math.round((user.cargaHorariaSemanal * 60) / 7)
         : null,
       totalRespostas,
+      faseJornada: user?.faseJornada ?? 'EXTENSIVO',
+      sessoesPorMetodo,
       passos: primeirosPassos({
         onboardingCompleto,
         totalRespostas,
@@ -217,6 +242,24 @@ export const dashboardRouter = router({
     ).map((i) => ({ ...i, cor: cores.get(i.id) ?? null }))
 
     return { bancaAlvo: codigoBanca, fonteIncidencia, itens }
+  }),
+
+  /** Primeiro simulado finalizado do usuário — serve de "simulado diagnóstico" do dashboard. */
+  diagnostico: procedureProtegida.query(async ({ ctx }) => {
+    const primeiro = await ctx.prisma.sessao.findFirst({
+      where: { userId: ctx.userId, tipo: 'SIMULADO', finalizadaEm: { not: null } },
+      orderBy: { finalizadaEm: 'asc' },
+      select: { acertos: true, erros: true, pulos: true, finalizadaEm: true },
+    })
+    if (!primeiro) return null
+    const total = primeiro.acertos + primeiro.erros + primeiro.pulos
+    return {
+      acertos: primeiro.acertos,
+      erros: primeiro.erros,
+      total,
+      taxaAcerto: total > 0 ? primeiro.acertos / total : 0,
+      data: primeiro.finalizadaEm,
+    }
   }),
 
   resumo: procedureProtegida.query(async ({ ctx }) => {
