@@ -62,6 +62,7 @@ function DisciplinaAccordion({
     nome: string
     codigo: string | null
     _count: { aulas: number }
+    aulasConcluidas: number
   }
   corArea: string | null
 }) {
@@ -71,6 +72,11 @@ function DisciplinaAccordion({
     { enabled: aberta },
   )
 
+  const totalAulas = disciplina._count.aulas
+  const concluidas = disciplina.aulasConcluidas
+  const pct = totalAulas > 0 ? Math.round((concluidas / totalAulas) * 100) : 0
+  const todasConcluidas = totalAulas > 0 && concluidas === totalAulas
+
   return (
     <Card>
       <CardHeader
@@ -78,12 +84,16 @@ function DisciplinaAccordion({
         onClick={() => setAberta((v) => !v)}
         className="cursor-pointer select-none"
       >
-        <CardTitle className="flex items-center justify-between text-base">
-          <span className="flex items-center gap-2">
-            {aberta ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+        <CardTitle className="flex items-center justify-between gap-3 text-base">
+          <span className="flex min-w-0 items-center gap-2">
+            {aberta ? (
+              <ChevronDown className="size-4 shrink-0" />
+            ) : (
+              <ChevronRight className="size-4 shrink-0" />
+            )}
             {disciplina.codigo && (
               <span
-                className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
+                className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
                 style={{
                   background: corArea ? `${corArea}20` : 'hsl(var(--muted))',
                   color: corArea ?? 'hsl(var(--muted-foreground))',
@@ -92,12 +102,31 @@ function DisciplinaAccordion({
                 {disciplina.codigo}
               </span>
             )}
-            {disciplina.nome}
+            <span className="truncate">{disciplina.nome}</span>
           </span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {disciplina._count.aulas} {disciplina._count.aulas === 1 ? 'aula' : 'aulas'}
+          <span className="flex shrink-0 items-center gap-3 text-xs font-normal text-muted-foreground">
+            {totalAulas > 0 && (
+              <span
+                className={cn('tabular-nums', todasConcluidas && 'font-semibold text-emerald-600')}
+              >
+                {concluidas}/{totalAulas}
+              </span>
+            )}
+            <span>{totalAulas === 1 ? 'aula' : 'aulas'}</span>
           </span>
         </CardTitle>
+        {totalAulas > 0 && (
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn(
+                'h-full transition-all',
+                todasConcluidas ? 'bg-emerald-600' : 'bg-primary',
+              )}
+              style={{ width: `${pct}%` }}
+              aria-label={`${pct}% das aulas concluídas`}
+            />
+          </div>
+        )}
       </CardHeader>
       {aberta && (
         <CardContent>
