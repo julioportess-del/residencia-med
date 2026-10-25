@@ -11,7 +11,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { NotificacoesSino } from '@/components/notificacoes-sino'
 import { RegistrarSW } from '@/components/registrar-sw'
 import { SafeBoundary } from '@/components/safe-boundary'
-import { NAV, itemAtivo } from './nav-itens'
+import { GRUPOS_NAV, itemAtivo } from './nav-itens'
 import { NavMobile } from './nav-mobile'
 
 type Props = {
@@ -42,25 +42,34 @@ export function AppShell({ user, onboardingCompleto, children }: Props) {
           <span className="font-bold">Residência Med</span>
         </Link>
 
-        <nav className="flex-1 px-3 py-4">
-          {NAV.map((item) => {
-            const ativo = itemAtivo(pathname, item.href)
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  ativo
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
-                )}
-              >
-                <item.icon className="size-4" />
-                {item.label}
-              </Link>
-            )
-          })}
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          {GRUPOS_NAV.map((grupo, i) => (
+            <div key={grupo.id} className={cn(i > 0 && 'mt-5')}>
+              {grupo.label ? (
+                <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {grupo.label}
+                </div>
+              ) : null}
+              {grupo.itens.map((item) => {
+                const ativo = itemAtivo(pathname, item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      ativo
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                    )}
+                  >
+                    <item.icon className="size-4" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="border-t px-3 py-3 space-y-3">

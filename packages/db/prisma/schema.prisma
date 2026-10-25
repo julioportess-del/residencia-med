@@ -115,6 +115,29 @@ enum PapelOrg {
   MEMBRO
 }
 
+/// Fase da jornada do candidato dentro do ciclo anual.
+/// EXTENSIVO = construção de base ao longo do ano.
+/// RETA_FINAL = sprint pré-prova.
+enum FaseJornada {
+  EXTENSIVO
+  RETA_FINAL
+}
+
+/// Classificação metodológica (clínica) da atividade de estudo.
+/// Camada semântica sobre TipoSessao/TipoBloco funcionais; opcional.
+/// ANAMNESE   = primeiro contato com conteúdo novo.
+/// EXAME      = revisão espaçada ativa.
+/// HIPOTESE   = simulado de antecipação (testar o que o candidato acha que vai cair).
+/// CONDUTA    = fechamento/consolidação final no pré-prova.
+/// PRONTUARIO = registro histórico de erros para consulta.
+enum TipoAtividadeMetodo {
+  ANAMNESE
+  EXAME
+  HIPOTESE
+  CONDUTA
+  PRONTUARIO
+}
+
 // ==================== USUARIO ====================
 
 model User {
@@ -129,6 +152,7 @@ model User {
   bancasAlvo          String[]      @default([]) // multi-banca
   dataProva           DateTime?
   cargaHorariaSemanal Int? // horas por semana
+  faseJornada         FaseJornada   @default(EXTENSIVO)
 
   // Multi-tenant
   organizationId      String?
@@ -544,22 +568,24 @@ model Resposta {
 }
 
 model Sessao {
-  id           String     @id @default(cuid())
-  userId       String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tipo         TipoSessao
-  bancaId      String?
-  configuracao Json // filtros, n. questoes, tempo, etc.
-  iniciadaEm   DateTime   @default(now())
-  finalizadaEm DateTime?
-  acertos      Int        @default(0)
-  erros        Int        @default(0)
-  pulos        Int        @default(0)
-  tempoTotal   Int        @default(0)
-  respostas    Resposta[]
+  id                  String               @id @default(cuid())
+  userId              String
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipo                TipoSessao
+  tipoAtividadeMetodo TipoAtividadeMetodo? // classificação metodológica (opcional)
+  bancaId             String?
+  configuracao        Json // filtros, n. questoes, tempo, etc.
+  iniciadaEm          DateTime             @default(now())
+  finalizadaEm        DateTime?
+  acertos             Int                  @default(0)
+  erros               Int                  @default(0)
+  pulos               Int                  @default(0)
+  tempoTotal          Int                  @default(0)
+  respostas           Resposta[]
 
   @@index([userId, iniciadaEm])
   @@index([tipo])
+  @@index([tipoAtividadeMetodo])
 }
 
 model PlanoEstudo {
@@ -576,22 +602,24 @@ model PlanoEstudo {
 }
 
 model BlocoEstudo {
-  id          String      @id @default(cuid())
-  planoId     String
-  plano       PlanoEstudo @relation(fields: [planoId], references: [id], onDelete: Cascade)
-  semana      Int
-  diaSemana   Int // 0 = domingo, 6 = sabado
-  ordem       Int         @default(0)
-  duracaoMin  Int
-  tipo        TipoBloco
-  temaId      String?
-  tema        Tema?       @relation(fields: [temaId], references: [id], onDelete: SetNull)
-  titulo      String
-  descricao   String?     @db.Text
-  status      StatusBloco @default(PENDENTE)
-  concluidoEm DateTime?
+  id                  String               @id @default(cuid())
+  planoId             String
+  plano               PlanoEstudo          @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  semana              Int
+  diaSemana           Int // 0 = domingo, 6 = sabado
+  ordem               Int                  @default(0)
+  duracaoMin          Int
+  tipo                TipoBloco
+  tipoAtividadeMetodo TipoAtividadeMetodo? // classificação metodológica (opcional)
+  temaId              String?
+  tema                Tema?                @relation(fields: [temaId], references: [id], onDelete: SetNull)
+  titulo              String
+  descricao           String?              @db.Text
+  status              StatusBloco          @default(PENDENTE)
+  concluidoEm         DateTime?
 
   @@index([planoId, semana, diaSemana])
+  @@index([tipoAtividadeMetodo])
 }
 
 model ItemRevisao {
