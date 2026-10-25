@@ -54,7 +54,37 @@ export const cursosRouter = router({
         },
       })
       if (!area) throw new TRPCError({ code: 'NOT_FOUND' })
-      return area
+
+      // Agrega aulas concluídas por disciplina (uma query por grande área, não N+1).
+      const concluidasPorDisciplina = await ctx.prisma.progressoAula.groupBy({
+        by: ['aulaId'],
+        where: {
+          userId: ctx.userId,
+          concluida: true,
+          aula: { disciplina: { grandeAreaId: area.id } },
+        },
+        _count: { _all: true },
+      })
+
+      const aulasPorDisciplina = await ctx.prisma.aula.findMany({
+        where: { id: { in: concluidasPorDisciplina.map((c) => c.aulaId) } },
+        select: { id: true, disciplinaId: true },
+      })
+      const disciplinaPorAula = new Map(aulasPorDisciplina.map((a) => [a.id, a.disciplinaId]))
+      const concluidasPorDisc = new Map<string, number>()
+      for (const c of concluidasPorDisciplina) {
+        const disc = disciplinaPorAula.get(c.aulaId)
+        if (!disc) continue
+        concluidasPorDisc.set(disc, (concluidasPorDisc.get(disc) ?? 0) + 1)
+      }
+
+      return {
+        ...area,
+        disciplinas: area.disciplinas.map((d) => ({
+          ...d,
+          aulasConcluidas: concluidasPorDisc.get(d.id) ?? 0,
+        })),
+      }
     }),
 
   obterDisciplina: procedureProtegida
