@@ -9,6 +9,7 @@ import { revisaoRouter } from './revisao'
 import { billingRouter, planosPublicosRouter } from './billing'
 import { adminRouter } from './admin'
 import { adminCursosRouter } from './admin-cursos'
+import { adminTicketsRouter } from './admin-tickets'
 import { contaRouter } from './conta'
 import { mentorRouter } from './mentor'
 import { orgRouter } from './org'
@@ -40,6 +41,7 @@ export const appRouter = router({
   planos: planosPublicosRouter,
   admin: adminRouter,
   adminCursos: adminCursosRouter,
+  adminTickets: adminTicketsRouter,
   conta: contaRouter,
   mentor: mentorRouter,
   org: orgRouter,

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BarChart3, BookOpen, FlaskConical, MessageSquarePlus } from 'lucide-react'
+import { BarChart3, BookOpen, FlaskConical, LifeBuoy, MessageSquarePlus } from 'lucide-react'
 import { exigirAdmin } from '@/lib/auth'
 import { Card, CardContent } from '@/components/ui/card'
 import { AdminDashboard } from './_components/admin-dashboard'
@@ -12,6 +12,12 @@ const ATALHOS = [
     icone: BookOpen,
     titulo: 'Cursos',
     descricao: 'Grandes áreas, disciplinas, aulas, vídeos e materiais.',
+  },
+  {
+    href: '/admin/tickets',
+    icone: LifeBuoy,
+    titulo: 'Suporte',
+    descricao: 'Fila de tickets abertos pelos usuários.',
   },
   {
     href: '/admin/contribuicoes',
@@ -40,7 +46,7 @@ export default async function AdminPage() {
       <h1 className="text-3xl font-bold">Painel admin</h1>
       <p className="mt-2 text-muted-foreground">MRR, ativos e custo de IA.</p>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {ATALHOS.map((a) => (
           <Link key={a.href} href={a.href} className="block">
             <Card className="h-full transition-colors hover:border-primary">
