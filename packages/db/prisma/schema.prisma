@@ -178,6 +178,23 @@ enum PerfilMemoria {
   ALTA
 }
 
+/// Tipo do vídeo dentro de uma aula.
+/// BASE        = aula principal, cobertura essencial do tema.
+/// APROFUNDADA = aula adicional, aprofundamento opcional.
+enum TipoVideoAula {
+  BASE
+  APROFUNDADA
+}
+
+/// Tipo do material complementar de uma aula (PDF, slide, etc).
+enum TipoMaterialAula {
+  MAPA_MENTAL
+  APOSTILA
+  RESUMO_ESTRATEGICO
+  SLIDE_AULA
+  OUTRO
+}
+
 // ==================== USUARIO ====================
 
 model User {
@@ -235,6 +252,7 @@ model User {
   processosSeletivos  ProcessoSeletivo[]
   nivel               Nivel?
   perfilCandidato     PerfilCandidato?
+  progressoAulas      ProgressoAula[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -417,6 +435,108 @@ model PerfilCandidato {
   memoria        PerfilMemoria?
   concluidoEm    DateTime?
   atualizadoEm   DateTime              @updatedAt
+}
+
+// ==================== VIDEO-AULAS (LMS) ====================
+// Hierarquia: GrandeArea → Disciplina → Aula → VideoAula / MaterialAula
+// Progresso por aula registrado em ProgressoAula.
+
+model GrandeArea {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  nome        String
+  descricao   String?      @db.Text
+  capaUrl     String?
+  corTema     String?      // hex opcional para colorir cards
+  fase        FaseJornada  @default(EXTENSIVO)
+  ordem       Int          @default(0)
+  publicado   Boolean      @default(false)
+  disciplinas Disciplina[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([fase, publicado, ordem])
+}
+
+model Disciplina {
+  id            String     @id @default(cuid())
+  grandeAreaId  String
+  grandeArea    GrandeArea @relation(fields: [grandeAreaId], references: [id], onDelete: Cascade)
+  slug          String
+  nome          String
+  codigo        String?    // ex: "PREV 8"
+  ordem         Int        @default(0)
+  aulas         Aula[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([grandeAreaId, slug])
+  @@index([grandeAreaId, ordem])
+}
+
+model Aula {
+  id            String          @id @default(cuid())
+  disciplinaId  String
+  disciplina    Disciplina      @relation(fields: [disciplinaId], references: [id], onDelete: Cascade)
+  slug          String
+  titulo        String
+  descricao     String?         @db.Text
+  ordem         Int             @default(0)
+  videos        VideoAula[]
+  materiais     MaterialAula[]
+  progresso     ProgressoAula[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([disciplinaId, slug])
+  @@index([disciplinaId, ordem])
+}
+
+/// Vídeo da aula. `provider` + `providerId` identificam onde está o asset
+/// (Mux é o default — providerId é o Mux Playback ID). Trocar para outro
+/// provider (Cloudflare Stream, self-hosted) é só mudar provider+id.
+model VideoAula {
+  id           String        @id @default(cuid())
+  aulaId       String
+  aula         Aula          @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  tipo         TipoVideoAula
+  titulo       String
+  duracaoS     Int           @default(0)
+  provider     String        @default("mux") // "mux" | "cloudflare-stream" | "self-hosted"
+  providerId   String        // Mux Playback ID / Cloudflare UID / URL
+  thumbUrl     String?
+  apresentador String?
+  createdAt    DateTime      @default(now())
+
+  @@index([aulaId, tipo])
+}
+
+model MaterialAula {
+  id           String           @id @default(cuid())
+  aulaId       String
+  aula         Aula             @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  tipo         TipoMaterialAula
+  titulo       String
+  url          String           // CDN own-domain ou S3/R2
+  tamanhoBytes Int?
+  createdAt    DateTime         @default(now())
+
+  @@index([aulaId])
+}
+
+model ProgressoAula {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aulaId          String
+  aula            Aula      @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  concluida       Boolean   @default(false)
+  concluidaEm     DateTime?
+  tempoAssistidoS Int       @default(0)
+  atualizadoEm    DateTime  @updatedAt
+
+  @@unique([userId, aulaId])
+  @@index([userId, concluida])
 }
 
 // ==================== CONTEUDO ====================
