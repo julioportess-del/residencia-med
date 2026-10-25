@@ -82,7 +82,7 @@ export function LiveSala({ codigo }: { codigo: string }) {
                     {' · '}
                     <span
                       className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
-                      style={{ background: s.banca.cor ?? '#3e7a72' }}
+                      style={{ background: s.banca.cor ?? '#AB5D21' }}
                     >
                       {s.banca.codigo}
                     </span>

@@ -12,7 +12,7 @@ export function GET() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #3e7a72, #2f5f59)',
+        background: 'linear-gradient(135deg, #AB5D21, #784117)',
         color: '#fff',
         fontSize: 320,
         fontWeight: 900,

@@ -47,7 +47,11 @@ describe('decidirClassificacao', () => {
 
   it('rejeita código inventado que não existe na taxonomia', () => {
     const d = decidirClassificacao('q1', { codigoTema: 'NEURO_AVC', confianca: 0.95 }, TAXONOMIA)
-    expect(d).toMatchObject({ aceita: false, motivo: 'CODIGO_INVALIDO', codigoSugerido: 'NEURO_AVC' })
+    expect(d).toMatchObject({
+      aceita: false,
+      motivo: 'CODIGO_INVALIDO',
+      codigoSugerido: 'NEURO_AVC',
+    })
   })
 
   it('rejeita confiança abaixo do limiar (padrão e customizado)', () => {
@@ -73,7 +77,14 @@ describe('decidirClassificacao', () => {
       {
         codigoTema: 'CARDIO_IC',
         confianca: 0.9,
-        secundarios: ['cardio_ic', 'CARDIO_ARRITMIAS_FA', 'INEXISTENTE', 'cardio_arritmias_fa', 'GO_PRENATAL', 'PEDIA_NEO'],
+        secundarios: [
+          'cardio_ic',
+          'CARDIO_ARRITMIAS_FA',
+          'INEXISTENTE',
+          'cardio_arritmias_fa',
+          'GO_PRENATAL',
+          'PEDIA_NEO',
+        ],
       },
       TAXONOMIA,
     )
