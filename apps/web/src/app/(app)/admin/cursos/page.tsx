@@ -17,7 +17,8 @@ export default async function AdminCursosPage() {
       </Link>
       <h1 className="mt-2 text-3xl font-bold">Grandes áreas</h1>
       <p className="mt-2 text-muted-foreground">
-        Estruture o LMS: cadastre grandes áreas, suas disciplinas e aulas, e publique quando estiver pronto.
+        Estruture o LMS: cadastre grandes áreas, suas disciplinas e aulas, e publique quando estiver
+        pronto.
       </p>
       <GrandesAreasAdmin />
     </div>

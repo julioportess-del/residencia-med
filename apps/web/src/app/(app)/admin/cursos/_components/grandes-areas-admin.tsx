@@ -34,9 +34,7 @@ export function GrandesAreasAdmin() {
   const [criando, setCriando] = useState(false)
   const [editando, setEditando] = useState<string | null>(null)
 
-  const q = trpc.adminCursos.listarGrandesAreas.useQuery(
-    fase === 'TODAS' ? undefined : { fase },
-  )
+  const q = trpc.adminCursos.listarGrandesAreas.useQuery(fase === 'TODAS' ? undefined : { fase })
 
   return (
     <div className="mt-6 space-y-4">
@@ -68,10 +66,7 @@ export function GrandesAreasAdmin() {
             <li key={a.id}>
               <Card>
                 <CardContent className="flex items-center justify-between gap-3 py-4">
-                  <Link
-                    href={`/admin/cursos/${a.id}`}
-                    className="flex-1 min-w-0 hover:underline"
-                  >
+                  <Link href={`/admin/cursos/${a.id}`} className="flex-1 min-w-0 hover:underline">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{a.nome}</span>
                       <Badge variant="outline" className="text-xs">
@@ -80,7 +75,9 @@ export function GrandesAreasAdmin() {
                       {a.publicado ? (
                         <Badge className="bg-green-600 hover:bg-green-600 text-xs">Publicado</Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs">Rascunho</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          Rascunho
+                        </Badge>
                       )}
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -107,9 +104,7 @@ export function GrandesAreasAdmin() {
       )}
 
       {criando && <ModalGrandeArea onClose={() => setCriando(false)} />}
-      {editando && (
-        <ModalGrandeArea id={editando} onClose={() => setEditando(null)} />
-      )}
+      {editando && <ModalGrandeArea id={editando} onClose={() => setEditando(null)} />}
     </div>
   )
 }
@@ -141,10 +136,7 @@ function RemoverGrandeAreaBtn({ id, nome }: { id: string; nome: string }) {
 }
 
 function ModalGrandeArea({ id, onClose }: { id?: string; onClose: () => void }) {
-  const existente = trpc.adminCursos.obterGrandeArea.useQuery(
-    { id: id ?? '' },
-    { enabled: !!id },
-  )
+  const existente = trpc.adminCursos.obterGrandeArea.useQuery({ id: id ?? '' }, { enabled: !!id })
 
   if (id && existente.isLoading) {
     return (
@@ -156,12 +148,7 @@ function ModalGrandeArea({ id, onClose }: { id?: string; onClose: () => void }) 
     )
   }
 
-  return (
-    <FormGrandeArea
-      inicial={id && existente.data ? existente.data : null}
-      onClose={onClose}
-    />
-  )
+  return <FormGrandeArea inicial={id && existente.data ? existente.data : null} onClose={onClose} />
 }
 
 type GAInicial = {
@@ -176,22 +163,14 @@ type GAInicial = {
   publicado: boolean
 }
 
-function FormGrandeArea({
-  inicial,
-  onClose,
-}: {
-  inicial: GAInicial | null
-  onClose: () => void
-}) {
+function FormGrandeArea({ inicial, onClose }: { inicial: GAInicial | null; onClose: () => void }) {
   const utils = trpc.useUtils()
   const [nome, setNome] = useState(inicial?.nome ?? '')
   const [slug, setSlug] = useState(inicial?.slug ?? '')
   const [descricao, setDescricao] = useState(inicial?.descricao ?? '')
   const [capaUrl, setCapaUrl] = useState(inicial?.capaUrl ?? '')
   const [corTema, setCorTema] = useState(inicial?.corTema ?? '')
-  const [fase, setFase] = useState<'EXTENSIVO' | 'RETA_FINAL'>(
-    inicial?.fase ?? 'EXTENSIVO',
-  )
+  const [fase, setFase] = useState<'EXTENSIVO' | 'RETA_FINAL'>(inicial?.fase ?? 'EXTENSIVO')
   const [ordem, setOrdem] = useState(inicial?.ordem ?? 0)
   const [publicado, setPublicado] = useState(inicial?.publicado ?? false)
 
@@ -248,9 +227,7 @@ function FormGrandeArea({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {inicial ? 'Editar grande área' : 'Nova grande área'}
-          </DialogTitle>
+          <DialogTitle>{inicial ? 'Editar grande área' : 'Nova grande área'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -274,10 +251,7 @@ function FormGrandeArea({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Fase</Label>
-              <Select
-                value={fase}
-                onValueChange={(v) => setFase(v as 'EXTENSIVO' | 'RETA_FINAL')}
-              >
+              <Select value={fase} onValueChange={(v) => setFase(v as 'EXTENSIVO' | 'RETA_FINAL')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

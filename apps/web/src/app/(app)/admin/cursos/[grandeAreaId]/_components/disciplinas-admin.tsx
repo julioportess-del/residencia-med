@@ -28,12 +28,8 @@ export function DisciplinasAdmin({ grandeAreaId }: { grandeAreaId: string }) {
     <>
       <div className="mt-2 flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">
-            {area.data?.nome ?? 'Carregando…'}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Disciplinas desta grande área.
-          </p>
+          <h1 className="text-3xl font-bold">{area.data?.nome ?? 'Carregando…'}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Disciplinas desta grande área.</p>
         </div>
         <Button onClick={() => setCriando(true)}>
           <Plus className="mr-2 h-4 w-4" /> Nova disciplina
@@ -87,12 +83,8 @@ export function DisciplinasAdmin({ grandeAreaId }: { grandeAreaId: string }) {
         )}
       </div>
 
-      {criando && (
-        <FormDisciplina grandeAreaId={grandeAreaId} onClose={() => setCriando(false)} />
-      )}
-      {editando && (
-        <FormDisciplinaEditar id={editando} onClose={() => setEditando(null)} />
-      )}
+      {criando && <FormDisciplina grandeAreaId={grandeAreaId} onClose={() => setCriando(false)} />}
+      {editando && <FormDisciplinaEditar id={editando} onClose={() => setEditando(null)} />}
     </>
   )
 }
@@ -198,7 +190,13 @@ function FormDisciplina({
       return
     }
     if (inicial) {
-      editar.mutate({ id: inicial.id, nome, slug: slug || undefined, codigo: codigo || null, ordem })
+      editar.mutate({
+        id: inicial.id,
+        nome,
+        slug: slug || undefined,
+        codigo: codigo || null,
+        ordem,
+      })
     } else {
       criar.mutate({
         grandeAreaId,

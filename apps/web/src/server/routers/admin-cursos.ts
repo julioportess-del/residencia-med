@@ -252,22 +252,20 @@ export const adminCursosRouter = router({
       }))
     }),
 
-  obterAula: procedureAdmin
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const aula = await ctx.prisma.aula.findUnique({
-        where: { id: input.id },
-        include: {
-          disciplina: {
-            include: { grandeArea: { select: { id: true, nome: true } } },
-          },
-          videos: { orderBy: { tipo: 'asc' } },
-          materiais: { orderBy: { createdAt: 'asc' } },
+  obterAula: procedureAdmin.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const aula = await ctx.prisma.aula.findUnique({
+      where: { id: input.id },
+      include: {
+        disciplina: {
+          include: { grandeArea: { select: { id: true, nome: true } } },
         },
-      })
-      if (!aula) throw new TRPCError({ code: 'NOT_FOUND' })
-      return aula
-    }),
+        videos: { orderBy: { tipo: 'asc' } },
+        materiais: { orderBy: { createdAt: 'asc' } },
+      },
+    })
+    if (!aula) throw new TRPCError({ code: 'NOT_FOUND' })
+    return aula
+  }),
 
   criarAula: procedureAdmin
     .input(
@@ -401,6 +399,9 @@ export const adminCursosRouter = router({
 
 function ehUnicoViolado(erro: unknown): boolean {
   return (
-    typeof erro === 'object' && erro !== null && 'code' in erro && (erro as { code: unknown }).code === 'P2002'
+    typeof erro === 'object' &&
+    erro !== null &&
+    'code' in erro &&
+    (erro as { code: unknown }).code === 'P2002'
   )
 }

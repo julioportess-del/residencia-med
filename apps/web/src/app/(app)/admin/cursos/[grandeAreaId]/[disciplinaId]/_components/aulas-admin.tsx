@@ -38,18 +38,16 @@ export function AulasAdmin({
           <h1 className="text-3xl font-bold">
             {d.data ? (
               <>
-                {d.data.codigo ? <span className="text-muted-foreground">{d.data.codigo} · </span> : null}
+                {d.data.codigo ? (
+                  <span className="text-muted-foreground">{d.data.codigo} · </span>
+                ) : null}
                 {d.data.nome}
               </>
             ) : (
               'Carregando…'
             )}
           </h1>
-          {d.data && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {d.data.grandeArea.nome}
-            </p>
-          )}
+          {d.data && <p className="mt-1 text-sm text-muted-foreground">{d.data.grandeArea.nome}</p>}
         </div>
         <Button onClick={() => setCriando(true)}>
           <Plus className="mr-2 h-4 w-4" /> Nova aula
@@ -230,7 +228,13 @@ function FormAula({
         ordem,
       })
     } else {
-      criar.mutate({ disciplinaId, titulo, slug: slug || undefined, descricao: descricao || undefined, ordem })
+      criar.mutate({
+        disciplinaId,
+        titulo,
+        slug: slug || undefined,
+        descricao: descricao || undefined,
+        ordem,
+      })
     }
   }
 

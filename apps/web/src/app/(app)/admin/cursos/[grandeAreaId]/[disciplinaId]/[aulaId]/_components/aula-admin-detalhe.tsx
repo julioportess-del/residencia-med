@@ -56,9 +56,7 @@ export function AulaAdminDetalhe({ aulaId }: { aulaId: string }) {
           {aula.disciplina.codigo ? `${aula.disciplina.codigo} · ` : ''}
           {aula.disciplina.nome}
         </p>
-        {aula.descricao && (
-          <p className="mt-3 text-sm text-foreground/80">{aula.descricao}</p>
-        )}
+        {aula.descricao && <p className="mt-3 text-sm text-foreground/80">{aula.descricao}</p>}
       </header>
 
       <Card>
@@ -78,7 +76,10 @@ export function AulaAdminDetalhe({ aulaId }: { aulaId: string }) {
           ) : (
             <ul className="space-y-2">
               {aula.videos.map((v) => (
-                <li key={v.id} className="flex items-center justify-between gap-3 rounded border p-3">
+                <li
+                  key={v.id}
+                  className="flex items-center justify-between gap-3 rounded border p-3"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <Badge variant={v.tipo === 'BASE' ? 'default' : 'secondary'}>
@@ -117,7 +118,10 @@ export function AulaAdminDetalhe({ aulaId }: { aulaId: string }) {
           ) : (
             <ul className="space-y-2">
               {aula.materiais.map((m) => (
-                <li key={m.id} className="flex items-center justify-between gap-3 rounded border p-3">
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between gap-3 rounded border p-3"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{ROTULOS_MATERIAL[m.tipo as TipoMaterial]}</Badge>
@@ -141,9 +145,7 @@ export function AulaAdminDetalhe({ aulaId }: { aulaId: string }) {
       </Card>
 
       {novoVideo && <FormVideo aulaId={aulaId} onClose={() => setNovoVideo(false)} />}
-      {novoMaterial && (
-        <FormMaterial aulaId={aulaId} onClose={() => setNovoMaterial(false)} />
-      )}
+      {novoMaterial && <FormMaterial aulaId={aulaId} onClose={() => setNovoMaterial(false)} />}
     </div>
   )
 }
@@ -178,7 +180,15 @@ function RemoverVideoBtn({ id, titulo, aulaId }: { id: string; titulo: string; a
   )
 }
 
-function RemoverMaterialBtn({ id, titulo, aulaId }: { id: string; titulo: string; aulaId: string }) {
+function RemoverMaterialBtn({
+  id,
+  titulo,
+  aulaId,
+}: {
+  id: string
+  titulo: string
+  aulaId: string
+}) {
   const utils = trpc.useUtils()
   const remover = trpc.adminCursos.removerMaterial.useMutation({
     onSuccess: async () => {
@@ -301,7 +311,11 @@ function FormVideo({ aulaId, onClose }: { aulaId: string; onClose: () => void })
           </div>
           <div>
             <Label>Thumb URL (opcional)</Label>
-            <Input value={thumbUrl} onChange={(e) => setThumbUrl(e.target.value)} placeholder="https://..." />
+            <Input
+              value={thumbUrl}
+              onChange={(e) => setThumbUrl(e.target.value)}
+              placeholder="https://..."
+            />
           </div>
         </div>
         <DialogFooter>
