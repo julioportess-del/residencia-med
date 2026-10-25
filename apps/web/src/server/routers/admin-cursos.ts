@@ -35,6 +35,156 @@ function toSlug(input: string): string {
 }
 
 export const adminCursosRouter = router({
+  // ==================== ANALYTICS ====================
+
+  analytics: procedureAdmin.query(async ({ ctx }) => {
+    const [
+      totalGrandesAreas,
+      totalGrandesAreasPublicadas,
+      totalDisciplinas,
+      totalAulas,
+      totalVideos,
+      progressoAgregado,
+    ] = await Promise.all([
+      ctx.prisma.grandeArea.count(),
+      ctx.prisma.grandeArea.count({ where: { publicado: true } }),
+      ctx.prisma.disciplina.count(),
+      ctx.prisma.aula.count(),
+      ctx.prisma.videoAula.count(),
+      ctx.prisma.progressoAula.aggregate({
+        _count: { _all: true },
+        _sum: { tempoAssistidoS: true },
+      }),
+    ])
+
+    const progressosConcluidos = await ctx.prisma.progressoAula.count({
+      where: { concluida: true },
+    })
+    const alunosDistintos = await ctx.prisma.progressoAula.groupBy({
+      by: ['userId'],
+      _count: { _all: true },
+    })
+
+    return {
+      conteudo: {
+        grandesAreas: totalGrandesAreas,
+        grandesAreasPublicadas: totalGrandesAreasPublicadas,
+        disciplinas: totalDisciplinas,
+        aulas: totalAulas,
+        videos: totalVideos,
+      },
+      consumo: {
+        progressosTotais: progressoAgregado._count._all,
+        progressosConcluidos,
+        taxaConclusao:
+          progressoAgregado._count._all > 0
+            ? progressosConcluidos / progressoAgregado._count._all
+            : 0,
+        alunosDistintos: alunosDistintos.length,
+        horasAssistidas: Math.round((progressoAgregado._sum.tempoAssistidoS ?? 0) / 3600),
+      },
+    }
+  }),
+
+  aulasMaisAssistidas: procedureAdmin
+    .input(z.object({ limit: z.number().int().min(1).max(50).default(10) }).optional())
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 10
+      const grupos = await ctx.prisma.progressoAula.groupBy({
+        by: ['aulaId'],
+        _count: { _all: true },
+        _sum: { tempoAssistidoS: true },
+        orderBy: { _count: { aulaId: 'desc' } },
+        take: limit,
+      })
+
+      const aulasIds = grupos.map((g) => g.aulaId)
+      const aulas = await ctx.prisma.aula.findMany({
+        where: { id: { in: aulasIds } },
+        select: {
+          id: true,
+          titulo: true,
+          disciplina: {
+            select: {
+              nome: true,
+              grandeArea: { select: { nome: true } },
+            },
+          },
+        },
+      })
+      const porId = new Map(aulas.map((a) => [a.id, a]))
+
+      return grupos
+        .map((g) => {
+          const a = porId.get(g.aulaId)
+          if (!a) return null
+          return {
+            aulaId: g.aulaId,
+            titulo: a.titulo,
+            disciplina: a.disciplina.nome,
+            grandeArea: a.disciplina.grandeArea.nome,
+            alunos: g._count._all,
+            horasAssistidas: Math.round((g._sum.tempoAssistidoS ?? 0) / 3600),
+          }
+        })
+        .filter((v): v is NonNullable<typeof v> => v !== null)
+    }),
+
+  aulasMaisConcluidas: procedureAdmin
+    .input(z.object({ limit: z.number().int().min(1).max(50).default(10) }).optional())
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 10
+      const grupos = await ctx.prisma.progressoAula.groupBy({
+        by: ['aulaId'],
+        where: { concluida: true },
+        _count: { _all: true },
+        orderBy: { _count: { aulaId: 'desc' } },
+        take: limit,
+      })
+
+      const aulasIds = grupos.map((g) => g.aulaId)
+      const [aulas, iniciadas] = await Promise.all([
+        ctx.prisma.aula.findMany({
+          where: { id: { in: aulasIds } },
+          select: {
+            id: true,
+            titulo: true,
+            disciplina: {
+              select: {
+                nome: true,
+                grandeArea: { select: { nome: true } },
+              },
+            },
+          },
+        }),
+        ctx.prisma.progressoAula.groupBy({
+          by: ['aulaId'],
+          where: { aulaId: { in: aulasIds } },
+          _count: { _all: true },
+        }),
+      ])
+
+      const porId = new Map(aulas.map((a) => [a.id, a]))
+      const iniciadasPorId = new Map(iniciadas.map((i) => [i.aulaId, i._count._all]))
+
+      return grupos
+        .map((g) => {
+          const a = porId.get(g.aulaId)
+          if (!a) return null
+          const total = iniciadasPorId.get(g.aulaId) ?? g._count._all
+          return {
+            aulaId: g.aulaId,
+            titulo: a.titulo,
+            disciplina: a.disciplina.nome,
+            grandeArea: a.disciplina.grandeArea.nome,
+            concluidos: g._count._all,
+            iniciados: total,
+            taxaConclusao: total > 0 ? g._count._all / total : 0,
+          }
+        })
+        .filter((v): v is NonNullable<typeof v> => v !== null)
+    }),
+
   // ==================== GRANDE AREA ====================
 
   listarGrandesAreas: procedureAdmin
