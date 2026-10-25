@@ -3,7 +3,63 @@ import { z } from 'zod'
 import { stripe } from '@residencia-med/billing'
 import { router, procedureProtegida } from '../trpc'
 
+const textoOpc = z
+  .string()
+  .trim()
+  .max(300)
+  .transform((s) => (s === '' ? null : s))
+  .nullable()
+
+const PerfilEstendidoInput = z.object({
+  cpf: textoOpc,
+  whatsapp: textoOpc,
+  instagram: textoOpc,
+  tiktok: textoOpc,
+  cep: textoOpc,
+  cidade: textoOpc,
+  uf: z
+    .string()
+    .trim()
+    .max(2)
+    .transform((s) => (s === '' ? null : s.toUpperCase()))
+    .nullable(),
+  rua: textoOpc,
+  numero: textoOpc,
+  bairro: textoOpc,
+  complemento: textoOpc,
+})
+
 export const contaRouter = router({
+  perfilEstendido: procedureProtegida.query(async ({ ctx }) => {
+    const u = await ctx.prisma.user.findUnique({
+      where: { id: ctx.userId },
+      select: {
+        cpf: true,
+        whatsapp: true,
+        instagram: true,
+        tiktok: true,
+        cep: true,
+        cidade: true,
+        uf: true,
+        rua: true,
+        numero: true,
+        bairro: true,
+        complemento: true,
+      },
+    })
+    return u ?? null
+  }),
+
+  atualizarPerfilEstendido: procedureProtegida
+    .input(PerfilEstendidoInput)
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.user.update({
+        where: { id: ctx.userId },
+        data: input,
+      })
+      return { ok: true }
+    }),
+
   excluir: procedureProtegida
     .input(z.object({ confirmacao: z.literal('EXCLUIR') }))
     .mutation(async ({ ctx, input }) => {

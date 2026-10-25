@@ -22,6 +22,8 @@ import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PushOptIn } from '@/components/push-opt-in'
 import { trpc } from '@/lib/trpc/client'
+import { PerfilCandidatoSection } from './perfil-candidato-section'
+import { PerfilEstendidoSection } from './perfil-estendido-section'
 
 const COR_PLANO: Record<string, string> = {
   FREE: 'bg-secondary text-secondary-foreground',
@@ -192,6 +194,9 @@ export function ContaCliente() {
           </div>
         </CardContent>
       </Card>
+
+      <PerfilCandidatoSection />
+      <PerfilEstendidoSection />
 
       <Dialog open={dialogExcluir} onOpenChange={setDialogExcluir}>
         <DialogContent>

@@ -1,9 +1,11 @@
 import {
+  BarChart3,
   BookOpen,
   CalendarCheck,
   ChartLine,
   Compass,
   CreditCard,
+  Gauge,
   Layers,
   MessageSquare,
   NotebookPen,
@@ -40,6 +42,14 @@ export const GRUPOS_NAV: readonly GrupoNav[] = [
     id: 'metodo',
     label: 'Método',
     itens: [{ href: '/plano', icon: Compass, label: 'Plano', principal: false }],
+  },
+  {
+    id: 'foco',
+    label: 'Foco',
+    itens: [
+      { href: '/foco/indicadores', icon: Gauge, label: 'Indicadores', principal: false },
+      { href: '/foco/desempenho', icon: BarChart3, label: 'Desempenho', principal: false },
+    ],
   },
   {
     id: 'execucao',

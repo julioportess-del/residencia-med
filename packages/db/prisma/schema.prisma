@@ -138,6 +138,46 @@ enum TipoAtividadeMetodo {
   PRONTUARIO
 }
 
+/// Cinturões de gamificação em ordem crescente. Faixas de XP calculadas
+/// em packages/core/src/gamificacao.ts (não dependem do schema).
+enum Cinturao {
+  BRONZE
+  PRATA
+  OURO
+  ESMERALDA
+  PLATINA
+  DIAMANTE
+}
+
+/// Perfil psicológico do candidato — 4 dimensões independentes.
+/// Equivalente clínico ao LAPE do IPM, com nomes próprios.
+enum PerfilDisc {
+  ANALISTA
+  COMUNICADOR
+  EXECUTOR
+  CONCILIADOR
+}
+
+enum PerfilSocioemocional {
+  TAREFAS
+  PESSOAS
+  IDEIAS
+  SISTEMAS
+}
+
+enum PerfilProcrastinacao {
+  LEVE
+  MODERADA
+  SEVERA
+}
+
+enum PerfilMemoria {
+  BAIXA
+  MEDIA
+  ACIMA_DA_MEDIA
+  ALTA
+}
+
 // ==================== USUARIO ====================
 
 model User {
@@ -153,6 +193,19 @@ model User {
   dataProva           DateTime?
   cargaHorariaSemanal Int? // horas por semana
   faseJornada         FaseJornada   @default(EXTENSIVO)
+
+  // Perfil estendido (contato / endereço)
+  cpf                 String?
+  whatsapp            String?
+  instagram           String?
+  tiktok              String?
+  cep                 String?
+  cidade              String?
+  uf                  String?
+  rua                 String?
+  numero              String?
+  bairro              String?
+  complemento         String?
 
   // Multi-tenant
   organizationId      String?
@@ -180,6 +233,8 @@ model User {
   decks               Deck[]
   flashcards          Flashcard[]
   processosSeletivos  ProcessoSeletivo[]
+  nivel               Nivel?
+  perfilCandidato     PerfilCandidato?
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -334,6 +389,34 @@ model ProcessoSeletivo {
 
   @@index([userId, dataProva])
   @@index([bancaId])
+}
+
+// ==================== GAMIFICACAO E PERFIL ====================
+
+/// Nível de gamificação do candidato. XP é recalculado on-demand a partir
+/// das respostas/revisões/sessões; esta tabela só persiste o estado atual
+/// (cinturão + xp cacheado) para o dashboard não ter que agregar toda vez.
+model Nivel {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cinturao     Cinturao @default(BRONZE)
+  xp           Int      @default(0)
+  atualizadoEm DateTime @updatedAt
+}
+
+/// Perfil psicológico do candidato — 4 dimensões, respondidas no onboarding.
+/// Equivalente clínico ao LAPE do IPM com nomes próprios.
+model PerfilCandidato {
+  id             String                @id @default(cuid())
+  userId         String                @unique
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  disc           PerfilDisc?
+  socioemocional PerfilSocioemocional?
+  procrastinacao PerfilProcrastinacao?
+  memoria        PerfilMemoria?
+  concluidoEm    DateTime?
+  atualizadoEm   DateTime              @updatedAt
 }
 
 // ==================== CONTEUDO ====================
