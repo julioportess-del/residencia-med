@@ -255,6 +255,24 @@ function NivelCard({ nivel, loading }: { nivel?: NivelAtual; loading: boolean })
                 ? ` · ${(nivel.xpProximaFaixa - nivel.xp).toLocaleString('pt-BR')} para ${nivel.proximoCinturao.toLowerCase()}`
                 : ' · nível máximo'}
             </p>
+            {nivel.requisitosFaltantes.length > 0 && nivel.proximoCinturao && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                  Requisitos p/ {nivel.proximoCinturao.toLowerCase()} (
+                  {nivel.requisitosFaltantes.length} faltando)
+                </summary>
+                <ul className="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
+                  {nivel.requisitosFaltantes.map((r) => (
+                    <li key={r.chave} className="flex justify-between tabular-nums">
+                      <span>{r.rotulo}</span>
+                      <span>
+                        {r.atual}/{r.necessario}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </div>
         ) : null}
       </CardContent>
