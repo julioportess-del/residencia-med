@@ -35,8 +35,18 @@ export function useAutosaveProgresso({
   deltaMinS = 10,
   limiarConclusao = 0.9,
 }: Params) {
+  const utils = trpc.useUtils()
   const salvar = trpc.cursos.salvarProgresso.useMutation()
-  const marcar = trpc.cursos.marcarConcluida.useMutation()
+  const marcar = trpc.cursos.marcarConcluida.useMutation({
+    onSuccess: async () => {
+      // Garante que o badge "Concluída" aparece imediatamente, sem precisar
+      // recarregar a página.
+      await Promise.all([
+        utils.cursos.obterAula.invalidate(),
+        utils.cursos.obterDisciplina.invalidate(),
+      ])
+    },
+  })
 
   const tempoAtualRef = useRef(0)
   const ultimoSalvoRef = useRef(0)

@@ -116,7 +116,8 @@ export function AulaPlayer({
   const videoAtivo = videos.find((v) => v.id === videoAtivoId) ?? videos[0] ?? null
   const progressoAtual = aula.progresso[0] ?? null
   const concluida = progressoAtual?.concluida ?? false
-  const tempoAssistidoInicial = progressoAtual?.tempoAssistidoS ?? 0
+  // Aula já concluída → reassiste do começo. Caso contrário, retoma de onde parou.
+  const tempoAssistidoInicial = concluida ? 0 : (progressoAtual?.tempoAssistidoS ?? 0)
   const duracaoAtiva = videoAtivo?.duracaoS ?? 0
 
   return (
