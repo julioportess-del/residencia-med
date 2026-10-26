@@ -13,17 +13,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/cn'
+import { trpc } from '@/lib/trpc/client'
 
 /**
  * Vigília — monitor de presença cognitiva (nome clínico do IPC).
- * MVP: ativa a webcam localmente para auto-accountability, SEM enviar
- * frames pro backend. Consent explícito LGPD-compliant antes de ligar.
+ * Câmera roda LOCAL no navegador; o backend só recebe duração da sessão
+ * (não frames, não features biométricas). Consent explícito antes de ligar.
  */
-export function VigiliaToggle() {
+export function VigiliaToggle({ aulaId }: { aulaId?: string }) {
   const [consentModal, setConsentModal] = useState(false)
   const [ativa, setAtiva] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const sessaoIdRef = useRef<string | null>(null)
+  const utils = trpc.useUtils()
+
+  const iniciarMut = trpc.vigilia.iniciar.useMutation()
+  const encerrarMut = trpc.vigilia.encerrar.useMutation()
 
   async function ligar() {
     try {
@@ -39,22 +45,46 @@ export function VigiliaToggle() {
       setAtiva(true)
       setConsentModal(false)
       toast.success('Vigília ativada — a câmera só roda localmente.')
+      // Registra início no backend (best-effort — não bloqueia o modo local)
+      try {
+        const res = await iniciarMut.mutateAsync({ aulaId })
+        sessaoIdRef.current = res.id
+      } catch {
+        // Falha de rede não deve derrubar a Vigília local
+      }
     } catch {
       toast.error('Não consegui acessar a câmera.')
     }
   }
 
-  function desligar() {
+  async function desligar() {
     streamRef.current?.getTracks().forEach((t) => t.stop())
     streamRef.current = null
     if (videoRef.current) videoRef.current.srcObject = null
     setAtiva(false)
+    const id = sessaoIdRef.current
+    sessaoIdRef.current = null
+    if (id) {
+      try {
+        await encerrarMut.mutateAsync({ id })
+        utils.vigilia.resumo.invalidate()
+      } catch {
+        // Silencioso — métrica
+      }
+    }
   }
 
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop())
+      // Encerra métrica em background ao desmontar (não await — unmount é síncrono)
+      const id = sessaoIdRef.current
+      if (id) {
+        encerrarMut.mutate({ id })
+        sessaoIdRef.current = null
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -110,7 +140,11 @@ export function VigiliaToggle() {
                 • A câmera roda <strong>só no seu navegador</strong>.
               </li>
               <li>
-                • <strong>Nenhum frame</strong> é enviado para nossos servidores nesta versão.
+                • <strong>Nenhum frame</strong> é enviado para nossos servidores.
+              </li>
+              <li>
+                • Guardamos apenas a <strong>duração</strong> da sessão (segundos), pra você ver seu
+                tempo acumulado em foco. Nenhum vídeo, nenhuma biometria.
               </li>
               <li>
                 • Você pode desligar a qualquer momento no botão da Vigília ou no painel pequeno que

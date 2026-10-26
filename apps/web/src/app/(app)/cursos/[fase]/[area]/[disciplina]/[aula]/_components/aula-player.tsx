@@ -130,7 +130,7 @@ export function AulaPlayer({
           <h1 className="mt-1 text-2xl font-bold">{aula.titulo}</h1>
           {aula.descricao && <p className="mt-2 text-sm text-muted-foreground">{aula.descricao}</p>}
         </div>
-        <VigiliaToggle />
+        <VigiliaToggle aulaId={aula.id} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">

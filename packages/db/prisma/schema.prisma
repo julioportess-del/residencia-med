@@ -274,6 +274,7 @@ model User {
   reportesComunidade  ReporteComunidade[]
   tickets             Ticket[]
   respostasTicket     RespostaTicket[]
+  sessoesVigilia      SessaoVigilia[]
 
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -1356,4 +1357,21 @@ model RevisaoFlashcard {
 
   @@index([userId, revisadoEm])
   @@index([flashcardId])
+}
+
+/// Métrica de uso da Vigília (monitor local de atenção).
+/// Guarda só duração — nenhum frame ou feature biométrica é persistido.
+/// Permite ao aluno ver tempo acumulado e séries, sem risco LGPD.
+model SessaoVigilia {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aulaId           String?  // contexto opcional — qual aula estava assistindo
+  iniciadaEm       DateTime @default(now())
+  encerradaEm      DateTime?
+  duracaoSegundos  Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, iniciadaEm])
+  @@index([aulaId])
 }
