@@ -30,6 +30,7 @@ pnpm --filter workers dev   # so workers
 - **IA**: nunca chamar Claude/OpenAI direto de codigo de produto. Sempre via `packages/ai`. Toda chamada deve passar por cache (hash do input).
 - **Multi-tenant**: toda query de dados de usuario filtra por `userId`. Para org admins, query filtra por `userId IN (SELECT id FROM users WHERE organizationId = ...)`.
 - **Migrations**: nunca editar migration ja aplicada em prod. Sempre criar nova.
+- **RLS / API REST do Supabase**: o schema public fica fechado para `anon`/`authenticated` (migration 20261105130000). O app acessa so via Prisma (papel postgres, bypassrls). Tabela nova criada por migration ja nasce sem grant para esses papeis, mas inclua `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` na migration. Nunca ler tabelas de public via supabase-js.
 
 ## Modelo de dados — pontos sensiveis
 
