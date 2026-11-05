@@ -1,2 +1,8 @@
 mcp-consulta-processual-tjes
 .codex
+# .env locais (localhost, DEV_USER_EMAIL desliga a auth) nunca sobem: prod usa as envs do painel Vercel
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
