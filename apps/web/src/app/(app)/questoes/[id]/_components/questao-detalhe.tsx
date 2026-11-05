@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Clock, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { QuestaoImagens } from '@/components/questao/questao-imagens'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc/client'
@@ -156,7 +157,8 @@ export function QuestaoDetalhe({ id, sessaoId, onProxima, progresso }: Props) {
         </Card>
       ) : null}
 
-      <p className="font-medium leading-relaxed">{q.enunciado}</p>
+      <p className="whitespace-pre-line font-medium leading-relaxed">{q.enunciado}</p>
+      <QuestaoImagens imagens={q.imagens} />
 
       <div className="space-y-2" role="radiogroup" aria-label="Alternativas">
         {alternativas.map((a) => {
