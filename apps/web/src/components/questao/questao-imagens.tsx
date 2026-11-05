@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element -- figuras vêm do Storage com tamanhos variados */
-
 /** Figuras da questão (ECG, radiografia, foto, tabela em imagem), na ordem do enunciado. */
 export function QuestaoImagens({ imagens }: { imagens: readonly string[] }) {
   if (imagens.length === 0) return null
