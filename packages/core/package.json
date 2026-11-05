@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./spaced-repetition": "./src/spaced-repetition.ts",
     "./incidencia": "./src/incidencia.ts",
-    "./plano-estudo": "./src/plano-estudo.ts"
+    "./plano-estudo": "./src/plano-estudo.ts",
+    "./importacao-prova": "./src/importacao-prova.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

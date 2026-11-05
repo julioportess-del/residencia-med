@@ -23,7 +23,7 @@ import {
   ProvaTranscritaSchema,
   validarProvaTranscrita,
   type FiguraTranscrita,
-} from '@residencia-med/core'
+} from '@residencia-med/core/importacao-prova'
 import { logger } from '../logger'
 
 const BUCKET = 'questoes'

@@ -1,4 +1,7 @@
 /**
+ * Fora do barril de @residencia-med/core (usa node:crypto): importar de
+ * "@residencia-med/core/importacao-prova", só em código de servidor.
+ *
  * Importacao de prova transcrita (JSON produzido a partir dos cadernos) para
  * Prova + Questao + Alternativa. Funcoes puras: validacao, normalizacao, hash
  * e geracao de SQL idempotente (aplicado por fora, ex.: `supabase db query`).
