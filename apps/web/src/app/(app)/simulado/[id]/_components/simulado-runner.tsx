@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { QuestaoImagens } from '@/components/questao/questao-imagens'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -196,7 +197,8 @@ export function SimuladoRunner({ sessaoId, questaoIds, tempoMinutos }: Props) {
               </CardContent>
             </Card>
           )}
-          <p className="font-medium">{questao.data.enunciado}</p>
+          <p className="whitespace-pre-line font-medium">{questao.data.enunciado}</p>
+          <QuestaoImagens imagens={questao.data.imagens} />
           <RadioGroup
             value={respostas[idAtual] ?? undefined}
             onValueChange={(v) => setRespostas((r) => ({ ...r, [idAtual]: v }))}

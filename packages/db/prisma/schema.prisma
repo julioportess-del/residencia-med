@@ -746,6 +746,9 @@ model Questao {
   explicacaoMd      String              @db.Text
   dificuldade       Dificuldade         @default(MEDIO)
 
+  // Figuras da questao (ECG, imagem, tabela): URLs publicas no Storage, na ordem do enunciado
+  imagens           String[]            @default([])
+
   // Metadata
   ano               Int
   numeroOriginal    Int?
