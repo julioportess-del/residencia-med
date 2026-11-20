@@ -47,3 +47,18 @@ export {
   type RevisaoConsulta,
   type ApontamentoRevisao,
 } from './revisar-consulta'
+export {
+  buscarEvidencias,
+  formatarEvidenciasParaPrompt,
+  type Evidencia,
+  type ConectorEvidencia,
+} from './evidencias'
+export {
+  analisarConsultaClinica,
+  analiseClinicaSchema,
+  AnaliseInvalidaError,
+  VERSAO_PROMPT_ANALISE,
+  type AnaliseClinica,
+  type ResultadoAnalise,
+  type EntradaAnalise,
+} from './analisar-consulta'

@@ -16,6 +16,7 @@ import { ConsultaConteudo } from './_components/consulta-conteudo'
 import { ProcessandoPoll } from './_components/processando-poll'
 import { ReestruturarBotao } from './_components/reestruturar-botao'
 import { ConsultaAnexos, type AnexoHistorico } from './_components/consulta-anexos'
+import { AnaliseClinica } from './_components/analise-clinica'
 
 export const dynamic = 'force-dynamic'
 
@@ -148,6 +149,8 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
           </CardContent>
         </Card>
       ) : null}
+
+      {consulta.transcricao?.texto ? <AnaliseClinica consultaId={consulta.id} /> : null}
     </div>
   )
 }
