@@ -7,6 +7,7 @@
  *   pnpm --filter @residencia-med/workers lote-ia -- --entrada amostra.json --dir saida/teste-20
  *
  * `--entrada`: JSON { questoes: QuestaoLote[] } exportado do banco.
+ * `--so-classificar`: envia só a classificação de tema (sem comentário).
  * `--dir`: pasta de trabalho. Se já houver `lote.json`, retoma o mesmo lote
  * (não reenvia e não cobra de novo).
  */
@@ -58,7 +59,7 @@ const temasDisponiveis = TAXONOMIA_R1.map(({ codigo, nome, especialidade }) => (
 }))
 const taxonomia = indexarTaxonomia(TAXONOMIA_R1.map((t) => ({ ...t, id: t.codigo })))
 
-function requisicoes(questoes: QuestaoLote[]) {
+function requisicoes(questoes: QuestaoLote[], soClassificar: boolean) {
   return questoes.flatMap((q) => [
     montarRequisicaoClassificacao(q.id, {
       enunciado: q.enunciado,
@@ -66,14 +67,18 @@ function requisicoes(questoes: QuestaoLote[]) {
       alternativas: q.alternativas,
       temasDisponiveis,
     }),
-    montarRequisicaoComentario(q.id, {
-      banca: q.banca,
-      ano: q.ano,
-      enunciado: q.enunciado,
-      vignette: q.enunciadoVignette,
-      alternativas: q.alternativas,
-      gabaritoLetra: q.gabaritoLetra,
-    }),
+    ...(soClassificar
+      ? []
+      : [
+          montarRequisicaoComentario(q.id, {
+            banca: q.banca,
+            ano: q.ano,
+            enunciado: q.enunciado,
+            vignette: q.enunciadoVignette,
+            alternativas: q.alternativas,
+            gabaritoLetra: q.gabaritoLetra,
+          }),
+        ]),
   ])
 }
 
@@ -197,6 +202,8 @@ async function main(): Promise<void> {
       entrada: { type: 'string' },
       dir: { type: 'string' },
       limite: { type: 'string' },
+      // Só classifica o tema (sem comentário Opus): ~8x mais barato.
+      'so-classificar': { type: 'boolean', default: false },
     },
   })
   if (!values.entrada || !values.dir) throw new Error('Use --entrada <json> --dir <pasta>')
@@ -213,7 +220,7 @@ async function main(): Promise<void> {
     loteId = (JSON.parse(readFileSync(arquivoLote, 'utf8')) as { id: string }).id
     logger.info({ loteId }, 'lote-ia: retomando lote existente (sem reenviar)')
   } else {
-    const reqs = requisicoes(questoes)
+    const reqs = requisicoes(questoes, values['so-classificar'] ?? false)
     writeFileSync(join(values.dir, 'requisicoes.json'), JSON.stringify(reqs, null, 2))
     loteId = await enviarLote(reqs)
     writeFileSync(arquivoLote, JSON.stringify({ id: loteId, enviadoEm: new Date().toISOString() }))
