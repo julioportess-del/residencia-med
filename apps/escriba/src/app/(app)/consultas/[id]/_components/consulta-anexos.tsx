@@ -6,6 +6,7 @@ import { Paperclip, FileText, Loader2, ChevronDown, ChevronRight } from 'lucide-
 import { Button } from '@residencia-med/ui'
 import { useAnexosUpload } from '@/components/anexos/use-anexos-upload'
 import { AnexosChips } from '@/components/anexos/anexos-chips'
+import { MarkdownClinico } from '@/components/markdown-clinico'
 import { EXTENSOES_ACEITAS, type StatusAnexoTipo } from '@/lib/anexos-tipos'
 
 export interface AnexoHistorico {
@@ -109,8 +110,8 @@ export function ConsultaAnexos({ consultaId, anexosIniciais }: ConsultaAnexosPro
                   ) : null}
                 </button>
                 {aberto && a.resumoAnalise ? (
-                  <div className="whitespace-pre-wrap border-t border-border px-3 py-2.5 text-sm leading-relaxed">
-                    {a.resumoAnalise}
+                  <div className="border-t border-border px-3 py-2.5 text-sm leading-relaxed">
+                    <MarkdownClinico texto={a.resumoAnalise} />
                   </div>
                 ) : null}
               </li>
@@ -121,8 +122,8 @@ export function ConsultaAnexos({ consultaId, anexosIniciais }: ConsultaAnexosPro
 
       {/* Resposta da análise recém-feita */}
       {respostaAtual ? (
-        <div className="whitespace-pre-wrap rounded-lg border border-border bg-card px-4 py-3 text-sm leading-relaxed">
-          {respostaAtual}
+        <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm leading-relaxed">
+          <MarkdownClinico texto={respostaAtual} />
         </div>
       ) : null}
 

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { ChevronDown, Loader2, Paperclip, Send, Sparkles } from 'lucide-react'
 import { useAnexosUpload } from '@/components/anexos/use-anexos-upload'
+import { MarkdownClinico } from '@/components/markdown-clinico'
 import { AnexosChips } from '@/components/anexos/anexos-chips'
 import { EXTENSOES_ACEITAS } from '@/lib/anexos-tipos'
 
@@ -116,10 +117,10 @@ export function AssistenteChatCaso({ consultaId }: { consultaId: string }) {
               className={
                 m.papel === 'user'
                   ? 'ml-8 rounded-lg bg-primary/10 px-3 py-2 text-sm'
-                  : 'mr-4 whitespace-pre-wrap rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed'
+                  : 'mr-4 rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed'
               }
             >
-              {m.conteudo}
+              {m.papel === 'assistant' ? <MarkdownClinico texto={m.conteudo} /> : m.conteudo}
               {m.anexos && m.anexos.length > 0 ? (
                 <span className="mt-1 flex flex-wrap gap-1.5">
                   {m.anexos.map((a) => (
