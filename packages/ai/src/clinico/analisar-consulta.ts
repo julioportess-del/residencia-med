@@ -18,7 +18,10 @@ export const VERSAO_PROMPT_ANALISE = '2026-11-20.2'
 const MODELO_ANALISE =
   process.env.ANALISE_MODEL ?? process.env.MODELO_ANTHROPIC ?? 'claude-sonnet-4-6'
 const MODELO_TERMOS = process.env.ESTRUTURAR_MODEL ?? 'claude-haiku-4-5-20251001'
-const TIMEOUT_MS = Number(process.env.ANALISE_TIMEOUT_MS ?? 40_000)
+const TIMEOUT_MS = Number(process.env.ANALISE_TIMEOUT_MS ?? 50_000)
+// Transcrições muito longas estouram o tempo: corta mantendo o início
+// (anamnese) e o fim (conduta), onde está o essencial.
+const MAX_CHARS_TRANSCRICAO = 16_000
 
 export const analiseClinicaSchema = z.object({
   resumoCaso: z.string().default(''),
@@ -139,6 +142,37 @@ export interface EntradaAnalise {
   transcricao: string
   /** Contexto clínico desidentificado (listas de alergias/medicamentos etc.). */
   contextoClinico?: string
+  /** Evidências já buscadas (fluxo em 2 etapas) — pula termos+busca. */
+  fontesPreBuscadas?: Evidencia[]
+  termosPreExtraidos?: string
+}
+
+function limitarTranscricao(t: string): string {
+  if (t.length <= MAX_CHARS_TRANSCRICAO) return t
+  const metade = MAX_CHARS_TRANSCRICAO / 2
+  return `${t.slice(0, metade)}\n[... trecho intermediário omitido para caber na análise ...]\n${t.slice(-metade)}`
+}
+
+/**
+ * Etapa 1 do fluxo em duas requisições: extrai termos desidentificados e
+ * busca evidências. Rápida (~10s), deixa a requisição de geração com o
+ * orçamento de tempo inteiro do serverless.
+ */
+export async function prepararEvidenciasAnalise(
+  transcricao: string,
+  contextoClinico?: string,
+): Promise<{ termosBusca: string; fontes: Evidencia[] }> {
+  let termosBusca = ''
+  let fontes: Evidencia[] = []
+  try {
+    termosBusca = await extrairTermosBuscaClinica(
+      `${transcricao.slice(0, 1500)}\n${contextoClinico ?? ''}`,
+    )
+    if (termosBusca) fontes = await buscarEvidencias(termosBusca, 4)
+  } catch {
+    fontes = []
+  }
+  return { termosBusca, fontes }
 }
 
 export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<ResultadoAnalise> {
@@ -154,16 +188,14 @@ export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<
   const cacheado = await getCache<ResultadoAnalise>(chave)
   if (cacheado) return cacheado
 
-  // 1) Questão de busca desidentificada → 2) Evidence Engine (falha ≠ bloqueio).
-  let fontes: Evidencia[] = []
-  let termosBusca = ''
-  try {
-    termosBusca = await extrairTermosBuscaClinica(
-      `${transcricao.slice(0, 1500)}\n${entrada.contextoClinico ?? ''}`,
-    )
-    if (termosBusca) fontes = await buscarEvidencias(termosBusca, 4)
-  } catch {
-    fontes = []
+  // 1) Evidence Engine: usa o que a etapa "preparar" já trouxe; senão busca
+  // aqui mesmo (fluxo antigo em 1 requisição).
+  let fontes: Evidencia[] = entrada.fontesPreBuscadas ?? []
+  let termosBusca = entrada.termosPreExtraidos ?? ''
+  if (!entrada.fontesPreBuscadas) {
+    const prep = await prepararEvidenciasAnalise(transcricao, entrada.contextoClinico)
+    fontes = prep.fontes
+    termosBusca = prep.termosBusca
   }
 
   // 3) Análise principal com as evidências numeradas no contexto.
@@ -173,7 +205,7 @@ export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<
     blocoEvidencias
       ? `EVIDENCIAS DISPONIVEIS (cite apenas estas, como [n]):\n${blocoEvidencias}`
       : 'EVIDENCIAS DISPONIVEIS: nenhuma fonte foi recuperada — declare essa limitacao.',
-    `TRANSCRICAO DA CONSULTA:\n<<<\n${transcricao}\n>>>`,
+    `TRANSCRICAO DA CONSULTA:\n<<<\n${limitarTranscricao(transcricao)}\n>>>`,
     'Produza o JSON da analise conforme as regras.',
   ]
     .filter(Boolean)
@@ -182,7 +214,7 @@ export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<
   const resposta = await anthropic.messages.create(
     {
       model: MODELO_ANALISE,
-      max_tokens: 4096,
+      max_tokens: 3072,
       system: SYSTEM_ANALISE,
       messages: [{ role: 'user', content: usuario }],
     },

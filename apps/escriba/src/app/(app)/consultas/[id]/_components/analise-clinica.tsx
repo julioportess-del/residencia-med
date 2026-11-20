@@ -76,6 +76,7 @@ function Lista({ itens, classe = '' }: { itens: string[]; classe?: string }) {
 
 export function AnaliseClinica({ consultaId }: { consultaId: string }) {
   const [carregando, setCarregando] = useState(false)
+  const [etapa, setEtapa] = useState<'fontes' | 'analise' | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [analise, setAnalise] = useState<Analise | null>(null)
   const [fontes, setFontes] = useState<Fonte[]>([])
@@ -87,7 +88,40 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
     setCarregando(true)
     setErro(null)
     try {
-      const resp = await fetch(`/api/consultas/${consultaId}/analisar`, { method: 'POST' })
+      // Etapa 1: evidências + segurança (rápida) — etapa 2 fica com o tempo
+      // inteiro do servidor só para a geração da análise.
+      setEtapa('fontes')
+      const prepResp = await fetch(`/api/consultas/${consultaId}/analisar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ etapa: 'preparar' }),
+      })
+      const prep = (await prepResp.json().catch(() => null)) as
+        | (
+            | {
+                ok: true
+                fontes: Fonte[]
+                termosBusca: string
+                alertasSeguranca?: AlertaSeguranca[]
+              }
+            | { ok: false; erro: string }
+          )
+        | null
+      if (!prepResp.ok || !prep || prep.ok === false) {
+        setErro((prep && 'erro' in prep && prep.erro) || 'Falha ao buscar evidências.')
+        return
+      }
+
+      setEtapa('analise')
+      const resp = await fetch(`/api/consultas/${consultaId}/analisar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          etapa: 'gerar',
+          fontes: prep.fontes,
+          termosBusca: prep.termosBusca,
+        }),
+      })
       const dados = (await resp.json().catch(() => null)) as
         | (
             | {
@@ -112,6 +146,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
       setErro('Falha de rede. Tente novamente.')
     } finally {
       setCarregando(false)
+      setEtapa(null)
     }
   }
 
@@ -182,7 +217,9 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
             {carregando ? (
               <p className="text-xs text-muted-foreground">
                 <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
-                Consultando PubMed/Europe PMC e gerando a análise — até ~1 minuto.
+                {etapa === 'fontes'
+                  ? 'Etapa 1/2: buscando evidências reais e verificando segurança…'
+                  : 'Etapa 2/2: gerando hipóteses, tratamento e exames — até ~50s.'}
               </p>
             ) : null}
             {erro ? (

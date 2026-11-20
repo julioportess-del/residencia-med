@@ -75,3 +75,4 @@ export {
   type EntradaSeguranca,
   type TipoAlertaSeguranca,
 } from './seguranca'
+export { prepararEvidenciasAnalise } from './analisar-consulta'

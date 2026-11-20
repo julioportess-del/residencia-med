@@ -3,7 +3,9 @@ import {
   analisarConsultaClinica,
   AnaliseInvalidaError,
   estruturaClinicaSchema,
+  prepararEvidenciasAnalise,
   verificarSegurancaClinica,
+  type Evidencia,
 } from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 import { mensagemFalhaIA } from '@/lib/erros-ia'
@@ -89,8 +91,31 @@ export async function POST(req: Request, { params }: Contexto) {
     prescricoes: estrutura?.plano.prescricoes ?? [],
   })
 
+  // Fluxo em DUAS requisições para caber no limite de 60s do serverless:
+  // etapa "preparar" (termos + fontes + segurança, ~10s) e etapa "gerar"
+  // (só a chamada do modelo, com o orçamento de tempo inteiro).
+  const corpo = (await req.json().catch(() => ({}))) as {
+    etapa?: 'preparar' | 'gerar'
+    fontes?: Evidencia[]
+    termosBusca?: string
+  }
+
   try {
-    const resultado = await analisarConsultaClinica({ transcricao, contextoClinico })
+    if (corpo.etapa === 'preparar') {
+      const prep = await prepararEvidenciasAnalise(transcricao, contextoClinico)
+      return Response.json({ ok: true, ...prep, alertasSeguranca })
+    }
+
+    const resultado = await analisarConsultaClinica({
+      transcricao,
+      contextoClinico,
+      ...(corpo.etapa === 'gerar'
+        ? {
+            fontesPreBuscadas: Array.isArray(corpo.fontes) ? corpo.fontes : [],
+            termosPreExtraidos: typeof corpo.termosBusca === 'string' ? corpo.termosBusca : '',
+          }
+        : {}),
+    })
 
     await prismaClinico.logAcesso.create({
       data: { usuarioAuthId: user.id, acao: 'ANALISAR_CONSULTA_IA', consultaId: consulta.id },
