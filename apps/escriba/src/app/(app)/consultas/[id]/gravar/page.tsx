@@ -35,7 +35,10 @@ export default async function GravarConsultaPage({ params }: { params: Promise<{
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <GravadorConsulta consultaId={consulta.id} />
+          <GravadorConsulta
+            consultaId={consulta.id}
+            teleconsulta={consulta.tipoAtendimento === 'TELECONSULTA'}
+          />
         </CardContent>
       </Card>
 

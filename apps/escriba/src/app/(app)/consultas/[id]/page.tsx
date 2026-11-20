@@ -39,7 +39,7 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
             dadosEstruturados: true,
           },
         },
-        transcricao: { select: { id: true } },
+        transcricao: { select: { id: true, texto: true } },
       },
     }),
     prismaClinico.anexo.findMany({
@@ -130,6 +130,24 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
           <ConsultaAnexos consultaId={consulta.id} anexosIniciais={anexosIniciais} />
         </CardContent>
       </Card>
+
+      {consulta.transcricao?.texto ? (
+        <Card>
+          <CardContent className="pt-6">
+            {/* Conferência do que foi captado — essencial p/ diagnosticar
+                gravações mudas (ex.: teleconsulta sem áudio da chamada). */}
+            <details>
+              <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
+                Ver transcrição da consulta (
+                {consulta.transcricao.texto.length.toLocaleString('pt-BR')} caracteres)
+              </summary>
+              <pre className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                {consulta.transcricao.texto}
+              </pre>
+            </details>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

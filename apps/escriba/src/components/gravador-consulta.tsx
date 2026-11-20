@@ -2,7 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Circle, Flag, Loader2, Mic, Pause, Play, RotateCcw, Square } from 'lucide-react'
+import {
+  Check,
+  Circle,
+  Flag,
+  Loader2,
+  Mic,
+  MonitorSpeaker,
+  Pause,
+  Play,
+  RotateCcw,
+  Square,
+} from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 import { audioParaChunksWav, SEGUNDOS_POR_CHUNK } from '@/lib/audio-chunks'
 
@@ -27,7 +38,13 @@ function formatarTempo(segundos: number): string {
   return `${m}:${s}`
 }
 
-export function GravadorConsulta({ consultaId }: { consultaId: string }) {
+interface GravadorConsultaProps {
+  consultaId: string
+  /** Pré-marca o modo de captura do áudio da chamada (teleconsulta). */
+  teleconsulta?: boolean
+}
+
+export function GravadorConsulta({ consultaId, teleconsulta = false }: GravadorConsultaProps) {
   const router = useRouter()
   const [estado, setEstado] = useState<Estado>('ocioso')
   const [segundos, setSegundos] = useState(0)
@@ -39,9 +56,23 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   // Momentos importantes marcados pelo médico (segundos desde o início).
   const [marcas, setMarcas] = useState<number[]>([])
   const [marcaFeedback, setMarcaFeedback] = useState(false)
+  // Teleconsulta: além do microfone, captura o áudio da ABA da chamada
+  // (WhatsApp Web/Meet) — sem isso a voz do paciente não entra na gravação.
+  const [modoChamada, setModoChamada] = useState(teleconsulta)
+  const [chamadaAtiva, setChamadaAtiva] = useState(false)
+  // Medidor de som + alerta de silêncio: avisa no 1º minuto, não depois de 20.
+  const [nivelAudio, setNivelAudio] = useState(0)
+  const [avisoSilencio, setAvisoSilencio] = useState(false)
+  const [avisoChamada, setAvisoChamada] = useState<string | null>(null)
 
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const chamadaStreamRef = useRef<MediaStream | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const medidorRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const silencioDesdeRef = useRef<number | null>(null)
+  // O medidor roda num setInterval (closure antiga): ref p/ saber se está gravando.
+  const gravandoRef = useRef(false)
   const chunksRef = useRef<Blob[]>([])
   const intervaloRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // Marcas em ref: o onstop do recorder captura closures antigas — a ref
@@ -67,6 +98,48 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   const liberarStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
     streamRef.current = null
+    chamadaStreamRef.current?.getTracks().forEach((t) => t.stop())
+    chamadaStreamRef.current = null
+    void audioCtxRef.current?.close().catch(() => undefined)
+    audioCtxRef.current = null
+    if (medidorRef.current) {
+      clearInterval(medidorRef.current)
+      medidorRef.current = null
+    }
+    silencioDesdeRef.current = null
+    setChamadaAtiva(false)
+    setNivelAudio(0)
+    setAvisoSilencio(false)
+  }, [])
+
+  /** Mede o nível do áudio gravado e alerta se ficar mudo por >10 s. */
+  const iniciarMedidor = useCallback((ctx: AudioContext, fontes: MediaStream[]) => {
+    const analyser = ctx.createAnalyser()
+    analyser.fftSize = 2048
+    for (const s of fontes) {
+      if (s.getAudioTracks().length > 0) ctx.createMediaStreamSource(s).connect(analyser)
+    }
+    const dados = new Uint8Array(analyser.fftSize)
+    medidorRef.current = setInterval(() => {
+      analyser.getByteTimeDomainData(dados)
+      let pico = 0
+      for (let i = 0; i < dados.length; i++) {
+        const desvio = Math.abs((dados[i] ?? 128) - 128)
+        if (desvio > pico) pico = desvio
+      }
+      const nivel = Math.min(100, Math.round((pico / 128) * 300))
+      setNivelAudio(nivel)
+      if (!gravandoRef.current) {
+        silencioDesdeRef.current = null
+        setAvisoSilencio(false)
+      } else if (nivel < 3) {
+        silencioDesdeRef.current ??= Date.now()
+        setAvisoSilencio(Date.now() - (silencioDesdeRef.current ?? 0) > 10_000)
+      } else {
+        silencioDesdeRef.current = null
+        setAvisoSilencio(false)
+      }
+    }, 250)
   }, [])
 
   useEffect(() => {
@@ -97,8 +170,59 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
       chunksRef.current = []
+      setAvisoChamada(null)
 
-      const recorder = new MediaRecorder(stream)
+      // Teleconsulta: captura também o áudio da ABA da chamada e mistura com
+      // o microfone — senão a voz do paciente (que sai pelo alto-falante/fone)
+      // ficaria fora da gravação.
+      let streamChamada: MediaStream | null = null
+      if (modoChamada) {
+        try {
+          streamChamada = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true,
+          })
+        } catch {
+          liberarStream()
+          setErro(
+            'Captura da chamada cancelada. Clique em Iniciar de novo e, na janela do Chrome, escolha a ABA da chamada (WhatsApp/Meet) e marque "Compartilhar áudio da guia".',
+          )
+          return
+        }
+        if (streamChamada.getAudioTracks().length === 0) {
+          streamChamada.getTracks().forEach((t) => t.stop())
+          liberarStream()
+          setErro(
+            'A aba escolhida veio SEM áudio. Tente de novo: selecione a aba "Guia do Chrome" da chamada e marque a caixa "Compartilhar áudio da guia" no canto da janela.',
+          )
+          return
+        }
+        chamadaStreamRef.current = streamChamada
+        setChamadaAtiva(true)
+        // Se o médico clicar em "Parar compartilhamento" no meio, seguimos
+        // gravando só o microfone — com aviso visível.
+        streamChamada.getAudioTracks()[0]?.addEventListener('ended', () => {
+          setChamadaAtiva(false)
+          setAvisoChamada(
+            'O compartilhamento da chamada foi interrompido — gravando apenas o microfone.',
+          )
+        })
+      }
+
+      // Mixagem (mic + chamada) num único stream para o MediaRecorder; o
+      // mesmo contexto alimenta o medidor de nível.
+      const ctx = new AudioContext()
+      audioCtxRef.current = ctx
+      const destino = ctx.createMediaStreamDestination()
+      ctx.createMediaStreamSource(stream).connect(destino)
+      if (streamChamada) {
+        ctx
+          .createMediaStreamSource(new MediaStream(streamChamada.getAudioTracks()))
+          .connect(destino)
+      }
+      iniciarMedidor(ctx, [stream, ...(streamChamada ? [streamChamada] : [])])
+
+      const recorder = new MediaRecorder(destino.stream)
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data)
       }
@@ -115,6 +239,7 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
       recorderRef.current = recorder
       setSegundos(0)
       iniciarTimer()
+      gravandoRef.current = true
       setEstado('gravando')
     } catch (e: unknown) {
       const nome = e instanceof DOMException ? e.name : ''
@@ -135,6 +260,7 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   function pausar() {
     recorderRef.current?.pause()
     pararTimer()
+    gravandoRef.current = false
     setEstado('pausado')
   }
 
@@ -148,11 +274,13 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
   function retomar() {
     recorderRef.current?.resume()
     iniciarTimer()
+    gravandoRef.current = true
     setEstado('gravando')
   }
 
   function finalizar() {
     pararTimer()
+    gravandoRef.current = false
     recorderRef.current?.stop()
   }
 
@@ -167,6 +295,7 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
     setSegundos(0)
     setMarcas([])
     marcasRef.current = []
+    setAvisoChamada(null)
     // Invalida a pré-transcrição em andamento (workers checam a geração).
     geracaoRef.current++
     preTransRef.current = null
@@ -422,12 +551,67 @@ export function GravadorConsulta({ consultaId }: { consultaId: string }) {
               ? 'Pausado'
               : 'Pronto para gravar'}
         </p>
+
+        {estado === 'gravando' || estado === 'pausado' ? (
+          <div className="w-full max-w-xs space-y-1.5">
+            {/* Medidor de som: confirma que ESTÁ captando (mic + chamada). */}
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-success transition-[width] duration-200"
+                style={{ width: `${nivelAudio}%` }}
+              />
+            </div>
+            {chamadaAtiva ? (
+              <p className="text-xs text-primary">
+                <MonitorSpeaker className="mr-1 inline h-3 w-3" />
+                Capturando também o áudio da chamada
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
+      {avisoSilencio && estado === 'gravando' ? (
+        <p
+          role="alert"
+          className="mx-auto max-w-sm rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+        >
+          ⚠️ Nenhum som captado há mais de 10 segundos. Verifique o microfone
+          {modoChamada ? ' e o compartilhamento de áudio da chamada' : ''} antes de continuar.
+        </p>
+      ) : null}
+
+      {avisoChamada ? (
+        <p role="alert" className="mx-auto max-w-sm text-sm text-destructive">
+          {avisoChamada}
+        </p>
+      ) : null}
+
       {erro ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="mx-auto max-w-sm text-sm text-destructive">
           {erro}
         </p>
+      ) : null}
+
+      {estado === 'ocioso' ? (
+        <label className="mx-auto flex max-w-sm cursor-pointer items-start gap-3 rounded-lg border border-input bg-muted/40 p-3.5 text-left">
+          <input
+            type="checkbox"
+            checked={modoChamada}
+            onChange={(e) => setModoChamada(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary"
+          />
+          <span className="text-sm">
+            <span className="font-medium">
+              <MonitorSpeaker className="mr-1 inline h-4 w-4 text-primary" />
+              Teleconsulta — capturar o áudio da chamada
+            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Ao iniciar, escolha a <strong>aba</strong> da chamada (WhatsApp Web, Meet…) e marque
+              “Compartilhar áudio da guia”. Sem isso, a voz do paciente não entra na gravação.
+            </span>
+          </span>
+        </label>
       ) : null}
 
       {marcas.length > 0 ? (
