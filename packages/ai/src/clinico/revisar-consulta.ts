@@ -3,7 +3,7 @@ import { anthropic } from '../clients'
 import { chaveCacheLLM, getCache, setCache } from '../cache'
 import type { EstruturaClinica } from './tipos'
 
-const MAX_TOKENS = 2048
+const MAX_TOKENS = 2560
 // Mesmo racional da estruturacao: Haiku e rapido/barato e a saida e apoio, nao decisao.
 const MODELO_REVISAR = process.env.REVISAR_MODEL ?? 'claude-haiku-4-5-20251001'
 const TIMEOUT_MS = Number(process.env.ESTRUTURAR_TIMEOUT_MS ?? 50_000)
@@ -124,6 +124,10 @@ export async function revisarConsulta(entrada: {
     .join('')
     .trim()
 
+  if (resposta.stop_reason === 'max_tokens') {
+    throw new RevisaoInvalidaError('resposta excedeu o limite de tamanho — tente novamente')
+  }
+
   let bruto: unknown
   try {
     bruto = JSON.parse(extrairJson(texto))
@@ -132,7 +136,51 @@ export async function revisarConsulta(entrada: {
     throw new RevisaoInvalidaError('JSON malformado na resposta')
   }
 
-  const parse = revisaoConsultaSchema.safeParse(bruto)
+  // Validação TOLERANTE: em consultas longas o modelo às vezes emite uma
+  // categoria/gravidade fora do enum — normalizamos o item em vez de
+  // rejeitar a revisão inteira.
+  const CATEGORIAS = new Set([
+    'MEDICAMENTO_SEM_DOSE',
+    'SINTOMA_SEM_DURACAO',
+    'CONTRADICAO',
+    'ALERGIA_NAO_REGISTRADA',
+    'EXAME_SEM_RESULTADO',
+    'DIAGNOSTICO_SEM_SUPORTE',
+    'INFORMACAO_AUSENTE',
+    'OUTRO',
+  ])
+  const GRAVIDADES: Record<string, 'ALTA' | 'MEDIA' | 'BAIXA'> = {
+    ALTA: 'ALTA',
+    CRITICA: 'ALTA',
+    MEDIA: 'MEDIA',
+    MODERADA: 'MEDIA',
+    BAIXA: 'BAIXA',
+    LEVE: 'BAIXA',
+  }
+  const cru = bruto as { apontamentos?: unknown }
+  const itens = Array.isArray(cru?.apontamentos) ? cru.apontamentos : null
+  if (!itens) {
+    throw new RevisaoInvalidaError('estrutura de resposta inesperada (sem apontamentos)')
+  }
+  const normalizados = itens
+    .map((item) => {
+      const i = item as { categoria?: unknown; descricao?: unknown; gravidade?: unknown }
+      const descricao = typeof i.descricao === 'string' ? i.descricao.trim() : ''
+      if (!descricao) return null
+      const categoriaCrua = typeof i.categoria === 'string' ? i.categoria.toUpperCase() : ''
+      const gravidadeCrua = typeof i.gravidade === 'string' ? i.gravidade.toUpperCase() : ''
+      return {
+        categoria: (CATEGORIAS.has(categoriaCrua)
+          ? categoriaCrua
+          : 'OUTRO') as ApontamentoRevisao['categoria'],
+        descricao,
+        gravidade: GRAVIDADES[gravidadeCrua] ?? 'MEDIA',
+      }
+    })
+    .filter((x): x is ApontamentoRevisao => x !== null)
+    .slice(0, 8)
+
+  const parse = revisaoConsultaSchema.safeParse({ apontamentos: normalizados })
   if (!parse.success) {
     throw new RevisaoInvalidaError('estrutura de resposta inesperada')
   }

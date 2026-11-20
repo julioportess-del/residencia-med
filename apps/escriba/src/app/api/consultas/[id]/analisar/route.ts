@@ -100,9 +100,13 @@ export async function POST(req: Request, { params }: Contexto) {
     termosBusca?: string
   }
 
+  const t0 = Date.now()
   try {
     if (corpo.etapa === 'preparar') {
       const prep = await prepararEvidenciasAnalise(transcricao, contextoClinico)
+      console.info(
+        `[analisar] etapa=preparar ms=${Date.now() - t0} fontes=${prep.fontes.length} chars=${transcricao.length}`,
+      )
       return Response.json({ ok: true, ...prep, alertasSeguranca })
     }
 
@@ -117,6 +121,9 @@ export async function POST(req: Request, { params }: Contexto) {
         : {}),
     })
 
+    console.info(
+      `[analisar] etapa=${corpo.etapa ?? 'unica'} ms=${Date.now() - t0} chars=${transcricao.length}`,
+    )
     await prismaClinico.logAcesso.create({
       data: { usuarioAuthId: user.id, acao: 'ANALISAR_CONSULTA_IA', consultaId: consulta.id },
     })
@@ -124,7 +131,7 @@ export async function POST(req: Request, { params }: Contexto) {
     return Response.json({ ok: true, ...resultado, alertasSeguranca })
   } catch (erro: unknown) {
     console.error(
-      '[analisar] falha:',
+      `[analisar] falha etapa=${corpo.etapa ?? 'unica'} ms=${Date.now() - t0}:`,
       erro instanceof Error ? `${erro.name}: ${erro.message}` : String(erro),
     )
     if (erro instanceof AnaliseInvalidaError) return erroJson(erro.message, 422)
