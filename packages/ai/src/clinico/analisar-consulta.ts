@@ -18,7 +18,7 @@ export const VERSAO_PROMPT_ANALISE = '2026-11-20.2'
 const MODELO_ANALISE =
   process.env.ANALISE_MODEL ?? process.env.MODELO_ANTHROPIC ?? 'claude-sonnet-4-6'
 const MODELO_TERMOS = process.env.ESTRUTURAR_MODEL ?? 'claude-haiku-4-5-20251001'
-const TIMEOUT_MS = Number(process.env.ESTRUTURAR_TIMEOUT_MS ?? 45_000)
+const TIMEOUT_MS = Number(process.env.ANALISE_TIMEOUT_MS ?? 40_000)
 
 export const analiseClinicaSchema = z.object({
   resumoCaso: z.string().default(''),
@@ -109,7 +109,7 @@ export async function extrairTermosBuscaClinica(resumoClinico: string): Promise<
         'Voce extrai termos de busca bibliografica. Responda APENAS com uma linha curta de termos em INGLES (estilo PubMed/MeSH) que capture a principal questao clinica do caso (condicao + intervencao/diagnostico). NUNCA inclua nomes proprios ou dados identificaveis. Exemplo de saida: community acquired pneumonia adults treatment guideline',
       messages: [{ role: 'user', content: `Caso clinico (resumo):\n${resumoClinico}` }],
     },
-    { timeout: 15_000, maxRetries: 0 },
+    { timeout: 10_000, maxRetries: 0 },
   )
   return textoDaResposta(resposta).trim().replace(/\n+/g, ' ').slice(0, 200)
 }
