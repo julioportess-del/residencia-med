@@ -54,7 +54,10 @@ async function enviarAoOffscreen<T>(msg: MensagemParaOffscreen): Promise<Respost
   }
 }
 
-async function tratar(msg: MensagemParaBg): Promise<Resposta<unknown>> {
+async function tratar(
+  msg: MensagemParaBg,
+  sender: chrome.runtime.MessageSender,
+): Promise<Resposta<unknown>> {
   switch (msg.tipo) {
     case 'ESTADO': {
       // Offscreen vivo é a fonte de verdade; senão, o último estado salvo.
@@ -75,6 +78,29 @@ async function tratar(msg: MensagemParaBg): Promise<Resposta<unknown>> {
         if (!creds) {
           return { ok: false, erro: 'Extensão não conectada. Abra o popup e cole o token.' }
         }
+
+        // Teleconsulta: captura o áudio da ABA da chamada via tabCapture —
+        // sem o seletor de compartilhamento do Chrome.
+        let streamIdChamada: string | undefined
+        if (msg.modoChamada) {
+          const tabId = sender.tab?.id
+          if (!tabId) return { ok: false, erro: 'Não identifiquei a aba da chamada.' }
+          try {
+            streamIdChamada = await new Promise<string>((resolve, reject) => {
+              chrome.tabCapture.getMediaStreamId({ targetTabId: tabId }, (id) => {
+                const falha = chrome.runtime.lastError
+                if (falha || !id) reject(new Error(falha?.message ?? 'sem streamId'))
+                else resolve(id)
+              })
+            })
+          } catch {
+            return {
+              ok: false,
+              erro: 'Para capturar a chamada, clique UMA vez no ícone da extensão Escriba na barra do Chrome (nesta aba) e toque em Iniciar de novo.',
+            }
+          }
+        }
+
         const { id } = await criarConsulta(msg.paciente, msg.tipoAtendimento)
         await garantirOffscreen()
         return await enviarAoOffscreen({
@@ -84,6 +110,7 @@ async function tratar(msg: MensagemParaBg): Promise<Resposta<unknown>> {
           paciente: msg.paciente,
           token: creds.token,
           apiBase: creds.base,
+          streamIdChamada,
         })
       } catch (e) {
         return { ok: false, erro: e instanceof Error ? e.message : 'Falha ao criar a consulta.' }
@@ -114,7 +141,7 @@ async function tratar(msg: MensagemParaBg): Promise<Resposta<unknown>> {
   }
 }
 
-chrome.runtime.onMessage.addListener((msg: MensagemParaBg | AvisoEstado, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg: MensagemParaBg | AvisoEstado, sender, sendResponse) => {
   if (!msg || typeof msg !== 'object' || msg.alvo !== 'bg') return undefined
 
   if (msg.tipo === 'ATUALIZAR_ESTADO') {
@@ -123,6 +150,6 @@ chrome.runtime.onMessage.addListener((msg: MensagemParaBg | AvisoEstado, _sender
     return undefined
   }
 
-  void tratar(msg).then(sendResponse)
+  void tratar(msg, sender).then(sendResponse)
   return true // resposta assíncrona
 })

@@ -10,6 +10,8 @@ import type { EstadoExtensao, MensagemParaOffscreen, Resposta } from './tipos'
 
 let recorder: MediaRecorder | null = null
 let stream: MediaStream | null = null
+let streamChamada: MediaStream | null = null
+let audioCtx: AudioContext | null = null
 let pedacos: Blob[] = []
 // Credenciais da API (chegam via OFF_INICIAR — offscreen não lê storage).
 let credenciais: Credenciais | null = null
@@ -26,6 +28,7 @@ async function iniciar(
   consultaId: string,
   paciente: string,
   creds: Credenciais,
+  streamIdChamada?: string,
 ): Promise<Resposta<EstadoExtensao>> {
   if (recorder) return { ok: false, erro: 'Já existe uma gravação em andamento.' }
   credenciais = creds
@@ -38,8 +41,40 @@ async function iniciar(
     }
   }
 
+  // Teleconsulta: captura a aba da chamada via tabCapture (sem seletor).
+  if (streamIdChamada) {
+    try {
+      streamChamada = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          mandatory: {
+            chromeMediaSource: 'tab',
+            chromeMediaSourceId: streamIdChamada,
+          },
+        },
+      } as MediaStreamConstraints)
+    } catch {
+      stream.getTracks().forEach((t) => t.stop())
+      stream = null
+      return {
+        ok: false,
+        erro: 'Não consegui capturar o áudio da chamada. Recarregue a aba da chamada e tente de novo.',
+      }
+    }
+  }
+
   pedacos = []
-  recorder = new MediaRecorder(stream)
+  // Mixagem (mic + chamada). IMPORTANTE: o tabCapture silencia a aba — o
+  // passthrough (chamada → alto-falante) mantém o médico ouvindo o paciente.
+  audioCtx = new AudioContext()
+  const destino = audioCtx.createMediaStreamDestination()
+  audioCtx.createMediaStreamSource(stream).connect(destino)
+  if (streamChamada) {
+    const fonteChamada = audioCtx.createMediaStreamSource(streamChamada)
+    fonteChamada.connect(destino)
+    fonteChamada.connect(audioCtx.destination)
+  }
+
+  recorder = new MediaRecorder(destino.stream)
   recorder.ondataavailable = (e) => {
     if (e.data.size > 0) pedacos.push(e.data)
   }
@@ -47,6 +82,10 @@ async function iniciar(
     void processar(new Blob(pedacos, { type: recorder?.mimeType || 'audio/webm' }))
     stream?.getTracks().forEach((t) => t.stop())
     stream = null
+    streamChamada?.getTracks().forEach((t) => t.stop())
+    streamChamada = null
+    void audioCtx?.close().catch(() => undefined)
+    audioCtx = null
     recorder = null
   }
   recorder.start()
@@ -55,6 +94,7 @@ async function iniciar(
     estado: 'gravando',
     consultaId,
     paciente,
+    chamada: Boolean(streamChamada),
     inicioEm: Date.now(),
     msAcumulados: 0,
     erro: undefined,
@@ -107,6 +147,10 @@ function descartar(): Resposta<EstadoExtensao> {
   }
   stream?.getTracks().forEach((t) => t.stop())
   stream = null
+  streamChamada?.getTracks().forEach((t) => t.stop())
+  streamChamada = null
+  void audioCtx?.close().catch(() => undefined)
+  audioCtx = null
   pedacos = []
   definirEstado({ estado: 'ocioso', consultaId: undefined, paciente: undefined, msAcumulados: 0 })
   return { ok: true, dados: estado }
@@ -163,10 +207,12 @@ chrome.runtime.onMessage.addListener((msg: MensagemParaOffscreen, _sender, sendR
       sendResponse({ ok: true, dados: estado })
       return undefined
     case 'OFF_INICIAR':
-      void iniciar(msg.consultaId, msg.paciente, {
-        token: msg.token,
-        base: msg.apiBase,
-      }).then(sendResponse)
+      void iniciar(
+        msg.consultaId,
+        msg.paciente,
+        { token: msg.token, base: msg.apiBase },
+        msg.streamIdChamada,
+      ).then(sendResponse)
       return true
     case 'OFF_PAUSAR':
       sendResponse(pausar())

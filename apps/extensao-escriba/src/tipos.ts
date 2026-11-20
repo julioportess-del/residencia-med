@@ -16,6 +16,8 @@ export interface EstadoExtensao {
   inicioEm?: number
   /** ms acumulados antes da última pausa. */
   msAcumulados: number
+  /** Gravação está capturando também o áudio da aba da chamada. */
+  chamada?: boolean
   fase?: 'cortando' | 'transcrevendo' | 'estruturando'
   progresso?: { atual: number; total: number }
   erro?: string
@@ -28,6 +30,8 @@ export type MensagemParaBg =
       tipo: 'INICIAR'
       paciente: string
       tipoAtendimento: string
+      /** Teleconsulta: capturar também o áudio DESTA aba (sem seletor). */
+      modoChamada?: boolean
     }
   | { alvo: 'bg'; tipo: 'PAUSAR' }
   | { alvo: 'bg'; tipo: 'RETOMAR' }
@@ -45,6 +49,8 @@ export type MensagemParaOffscreen =
       // acesso a chrome.storage.
       token: string
       apiBase: string
+      /** ID de stream da aba da chamada (tabCapture) — opcional. */
+      streamIdChamada?: string
     }
   | { alvo: 'off'; tipo: 'OFF_PAUSAR' }
   | { alvo: 'off'; tipo: 'OFF_RETOMAR' }

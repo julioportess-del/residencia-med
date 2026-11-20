@@ -104,6 +104,9 @@ async function inserirNoProntuario(texto: string): Promise<boolean> {
   return true
 }
 
+/** Site de chamada (teleconsulta): WhatsApp Web / Google Meet. */
+const EH_SITE_CHAMADA = /web\.whatsapp\.com|meet\.google\.com/.test(location.host)
+
 function detectarNomePaciente(): string {
   for (const seletor of FEEGOW.seletoresNomePaciente) {
     const el = document.querySelector(seletor)
@@ -223,6 +226,7 @@ function renderFormulario(card: HTMLElement): void {
   for (const [valor, rotulo] of TIPOS_ATENDIMENTO) {
     selectTipo.append(h('option', { value: valor, texto: rotulo }))
   }
+  if (EH_SITE_CHAMADA) selectTipo.value = 'TELECONSULTA'
   const checkConsent = h('input', { type: 'checkbox' })
   const botao = h('button', { className: 'botao', texto: 'Iniciar consulta' })
 
@@ -245,6 +249,7 @@ function renderFormulario(card: HTMLElement): void {
       tipo: 'INICIAR',
       paciente: nome,
       tipoAtendimento: selectTipo.value,
+      modoChamada: EH_SITE_CHAMADA,
     })
     if (!r.ok) {
       erroLocal = r.erro
@@ -256,6 +261,13 @@ function renderFormulario(card: HTMLElement): void {
   }
 
   card.append(
+    EH_SITE_CHAMADA
+      ? h('div', {
+          className: 'status',
+          texto:
+            '🖥️ Teleconsulta: o áudio desta chamada será gravado junto com o seu microfone — sem precisar escolher aba.',
+        })
+      : h('div', {}),
     h('div', {}, [h('label', { texto: 'Paciente' }), inputNome]),
     nomeDetectado
       ? h('div', { className: 'status', texto: 'Detectado na tela — confira antes de iniciar.' })
@@ -288,6 +300,9 @@ function renderGravacao(card: HTMLElement): void {
     pausado
       ? h('div', { className: 'status', texto: 'Pausado' })
       : h('div', { className: 'gravando-txt' }, [h('span', { className: 'rec' }), 'Gravando']),
+    estadoAtual.chamada
+      ? h('div', { className: 'status', texto: '🖥️ Capturando também o áudio da chamada' })
+      : h('div', {}),
     h('div', { className: 'linha' }, [
       h('button', {
         className: 'botao sec',

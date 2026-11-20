@@ -1,14 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Escriba Health — Scribe no seu prontuário",
-  "version": "0.1.0",
-  "description": "Grave a consulta direto de dentro do Feegow. Transcrição e prontuário estruturado por IA, com revisão médica antes de qualquer inserção.",
-  "permissions": ["storage", "offscreen"],
+  "version": "0.2.0",
+  "description": "Grave a consulta de dentro do Feegow — e teleconsultas direto do WhatsApp Web/Meet, capturando os dois lados da chamada sem configurar nada. Prontuário por IA com revisão médica.",
+  "permissions": ["offscreen", "storage", "tabCapture"],
   "host_permissions": ["https://escriba-escriba.vercel.app/*"],
-  "background": { "service_worker": "background.js", "type": "module" },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "content_scripts": [
     {
-      "matches": ["https://app.feegow.com/*"],
+      "matches": [
+        "https://app.feegow.com/*",
+        "https://web.whatsapp.com/*",
+        "https://meet.google.com/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
