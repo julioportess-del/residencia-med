@@ -1,8 +1,5 @@
 import { prismaClinico } from '@residencia-med/db-clinico'
-import {
-  analisarConsultaClinica,
-  AnaliseInvalidaError,
-} from '@residencia-med/ai/clinico'
+import { analisarConsultaClinica, AnaliseInvalidaError } from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 import { mensagemFalhaIA } from '@/lib/erros-ia'
 
@@ -64,9 +61,7 @@ export async function POST(req: Request, { params }: Contexto) {
         idade != null ? `Idade: ${idade} anos` : null,
         p.alergias.length ? `Alergias conhecidas: ${p.alergias.join('; ')}` : null,
         p.medicamentos.length ? `Medicamentos em uso: ${p.medicamentos.join('; ')}` : null,
-        p.condicoesCronicas.length
-          ? `Condições crônicas: ${p.condicoesCronicas.join('; ')}`
-          : null,
+        p.condicoesCronicas.length ? `Condições crônicas: ${p.condicoesCronicas.join('; ')}` : null,
         p.antecedentes?.trim() ? `Antecedentes: ${p.antecedentes.trim()}` : null,
       ]
         .filter(Boolean)
