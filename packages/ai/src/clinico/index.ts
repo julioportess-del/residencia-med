@@ -62,3 +62,4 @@ export {
   type ResultadoAnalise,
   type EntradaAnalise,
 } from './analisar-consulta'
+export { extrairTermosBuscaClinica } from './analisar-consulta'

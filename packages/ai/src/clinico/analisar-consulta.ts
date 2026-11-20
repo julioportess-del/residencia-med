@@ -13,7 +13,7 @@ import { buscarEvidencias, formatarEvidenciasParaPrompt, type Evidencia } from '
  * Tudo é SUGESTÃO de apoio à decisão: a conduta final é do médico.
  */
 
-export const VERSAO_PROMPT_ANALISE = '2026-11-20.1'
+export const VERSAO_PROMPT_ANALISE = '2026-11-20.2'
 
 const MODELO_ANALISE =
   process.env.ANALISE_MODEL ?? process.env.MODELO_ANTHROPIC ?? 'claude-sonnet-4-6'
@@ -54,6 +54,9 @@ export type AnaliseClinica = z.infer<typeof analiseClinicaSchema>
 export interface ResultadoAnalise {
   analise: AnaliseClinica
   fontes: Evidencia[]
+  /** Termos de busca desidentificados usados — alimentam atalhos como
+   *  UpToDate/OpenEvidence (consulta manual na conta do médico). */
+  termosBusca: string
 }
 
 export class AnaliseInvalidaError extends Error {
@@ -94,10 +97,10 @@ function textoDaResposta(resposta: { content: Array<{ type: string }> }): string
 }
 
 /**
- * Passo 1 — extrai a questão clínica e termos de busca DESIDENTIFICADOS
- * (inglês/MeSH) para o Evidence Engine. Nunca inclui dados do paciente.
+ * Extrai a questão clínica e termos de busca DESIDENTIFICADOS (inglês/MeSH)
+ * para o Evidence Engine e atalhos externos. Nunca inclui dados do paciente.
  */
-async function extrairTermosBusca(resumoClinico: string): Promise<string> {
+export async function extrairTermosBuscaClinica(resumoClinico: string): Promise<string> {
   const resposta = await anthropic.messages.create(
     {
       model: MODELO_TERMOS,
@@ -120,6 +123,7 @@ REGRAS CRITICAS:
 - Distinga hipotese sugerida por voce de diagnostico afirmado pelo medico na consulta.
 - Em tratamento, aponte contraindicacoes/interacoes RELEVANTES ao caso; se a lista de medicamentos do paciente for desconhecida, registre isso como pendencia (nunca afirme que nao ha interacoes).
 - Exames: cada um com justificativa vinculada ao caso; nada indiscriminado.
+- Contexto nacional: quando relevante, aponte diferencas entre diretrizes internacionais e os protocolos vigentes no Brasil (SUS/PCDT/ANVISA) dentro dos campos de tratamento/limitacoes.
 - Responda APENAS com JSON valido, sem markdown, neste formato:
 {
   "resumoCaso": string,
@@ -152,11 +156,12 @@ export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<
 
   // 1) Questão de busca desidentificada → 2) Evidence Engine (falha ≠ bloqueio).
   let fontes: Evidencia[] = []
+  let termosBusca = ''
   try {
-    const termos = await extrairTermosBusca(
+    termosBusca = await extrairTermosBuscaClinica(
       `${transcricao.slice(0, 1500)}\n${entrada.contextoClinico ?? ''}`,
     )
-    if (termos) fontes = await buscarEvidencias(termos, 4)
+    if (termosBusca) fontes = await buscarEvidencias(termosBusca, 4)
   } catch {
     fontes = []
   }
@@ -199,7 +204,7 @@ export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<
     throw new AnaliseInvalidaError(validado.error.issues[0]?.message ?? 'schema inválido')
   }
 
-  const resultado: ResultadoAnalise = { analise: validado.data, fontes }
+  const resultado: ResultadoAnalise = { analise: validado.data, fontes, termosBusca }
   await setCache(chave, resultado)
   return resultado
 }

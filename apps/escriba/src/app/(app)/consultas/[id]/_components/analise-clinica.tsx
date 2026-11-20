@@ -71,6 +71,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
   const [erro, setErro] = useState<string | null>(null)
   const [analise, setAnalise] = useState<Analise | null>(null)
   const [fontes, setFontes] = useState<Fonte[]>([])
+  const [termosBusca, setTermosBusca] = useState('')
   const [copiado, setCopiado] = useState(false)
 
   async function analisar() {
@@ -79,7 +80,10 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
     try {
       const resp = await fetch(`/api/consultas/${consultaId}/analisar`, { method: 'POST' })
       const dados = (await resp.json().catch(() => null)) as
-        | ({ ok: true; analise: Analise; fontes: Fonte[] } | { ok: false; erro: string })
+        | (
+            | { ok: true; analise: Analise; fontes: Fonte[]; termosBusca?: string }
+            | { ok: false; erro: string }
+          )
         | null
       if (!resp.ok || !dados || dados.ok === false) {
         setErro((dados && 'erro' in dados && dados.erro) || 'Falha ao analisar. Tente novamente.')
@@ -87,6 +91,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
       }
       setAnalise(dados.analise)
       setFontes(dados.fontes)
+      setTermosBusca(dados.termosBusca ?? '')
     } catch {
       setErro('Falha de rede. Tente novamente.')
     } finally {
@@ -312,6 +317,30 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                   ))}
                 </ol>
               )}
+              {termosBusca ? (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-xs text-muted-foreground">Consultar também:</span>
+                  <a
+                    href={`https://www.uptodate.com/contents/search?search=${encodeURIComponent(termosBusca)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:border-primary/50"
+                  >
+                    UpToDate ↗
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(termosBusca)
+                      window.open('https://www.openevidence.com/', '_blank', 'noopener')
+                    }}
+                    className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:border-primary/50"
+                    title="Abre o OpenEvidence com os termos copiados para colar"
+                  >
+                    OpenEvidence ↗ (termos copiados)
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             <div className="flex gap-2">

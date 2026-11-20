@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prismaClinico } from '@residencia-med/db-clinico'
 import {
   assistenteClinico,
+  buscarEvidencias,
+  extrairTermosBuscaClinica,
   analisarAnexosClinicos,
   AssistenteEntradaInvalidaError,
   AnaliseAnexosInvalidaError,
@@ -101,14 +103,25 @@ export async function POST(req: Request) {
     }
   }
 
-  // Sem anexos: chat de texto puro (comportamento original).
+  // Sem anexos: chat de texto com Evidence Engine (MBE): busca fontes reais
+  // para a pergunta e o modelo cita apenas a lista — falha de fonte não
+  // bloqueia a resposta (segue sem evidências, declarando a limitação).
   if (anexoIds.length === 0) {
+    let termosBusca = ''
+    let evidencias: Awaited<ReturnType<typeof buscarEvidencias>> = []
     try {
-      const resposta = await assistenteClinico(mensagens, contexto)
+      const ultimaPergunta = mensagens[mensagens.length - 1]?.conteudo ?? ''
+      termosBusca = await extrairTermosBuscaClinica(ultimaPergunta.slice(0, 1500))
+      if (termosBusca) evidencias = await buscarEvidencias(termosBusca, 3)
+    } catch {
+      evidencias = []
+    }
+    try {
+      const resposta = await assistenteClinico(mensagens, contexto, evidencias)
       await prismaClinico.logAcesso.create({
         data: { usuarioAuthId: user.id, acao: 'CONSULTAR_ASSISTENTE' },
       })
-      return NextResponse.json({ ok: true, resposta })
+      return NextResponse.json({ ok: true, resposta, termosBusca })
     } catch (erro: unknown) {
       if (erro instanceof AssistenteEntradaInvalidaError) return erroJson(erro.message, 422)
       const msg =
