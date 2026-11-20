@@ -347,3 +347,24 @@ model TokenExtensao {
   @@index([usuarioAuthId])
   @@schema("clinico")
 }
+
+/// Análise clínica gerada pelo Clinical Copilot (hipóteses, tratamento,
+/// evidências, alertas). Persistida para: não perder resultado ao
+/// recarregar, idempotência (mesma transcrição não regenera à toa) e
+/// auditoria de versões (CFM 2.454/2026). Sempre APOIO à decisão.
+model AnaliseConsulta {
+  id              String   @id @default(cuid())
+  usuarioAuthId   String
+  consultaId      String
+  /// sha256 da transcrição na hora da análise — idempotência/versão.
+  hashTranscricao String
+  /// { analise, fontes, termosBusca, alertasSeguranca }
+  dados           Json
+  modelo          String
+  versaoPrompt    String
+  criadoEm        DateTime @default(now())
+
+  @@index([consultaId])
+  @@index([usuarioAuthId])
+  @@schema("clinico")
+}
