@@ -7,8 +7,11 @@ import {
   verificarSegurancaClinica,
   type Evidencia,
 } from '@residencia-med/ai/clinico'
+import { VERSAO_PROMPT_ANALISE } from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 import { mensagemFalhaIA } from '@/lib/erros-ia'
+import { hashSha256 } from '@/lib/crypto-integracoes'
+import { diretrizesParaFoco } from '@/lib/diretrizes-especialidade'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -36,6 +39,7 @@ export async function POST(req: Request, { params }: Contexto) {
     where: { id, usuarioAuthId: user.id, excluidoEm: null },
     select: {
       id: true,
+      tipoConsulta: true,
       transcricao: { select: { texto: true } },
       evolucoes: { select: { dadosEstruturados: true }, take: 1 },
       paciente: {
@@ -98,16 +102,49 @@ export async function POST(req: Request, { params }: Contexto) {
     etapa?: 'preparar' | 'gerar'
     fontes?: Evidencia[]
     termosBusca?: string
+    /** true = regenerar mesmo havendo análise salva da mesma transcrição. */
+    forcar?: boolean
   }
+  const hashTranscricao = hashSha256(transcricao)
 
   const t0 = Date.now()
   try {
+    // Idempotência/persistência: mesma transcrição + mesmo prompt já
+    // analisada → devolve a análise salva (sem custo, sem espera).
+    if (corpo.etapa === 'preparar' && !corpo.forcar) {
+      const salva = await prismaClinico.analiseConsulta.findFirst({
+        where: {
+          consultaId: consulta.id,
+          usuarioAuthId: user.id,
+          hashTranscricao,
+          versaoPrompt: VERSAO_PROMPT_ANALISE,
+        },
+        orderBy: { criadoEm: 'desc' },
+      })
+      if (salva) {
+        const dados = salva.dados as Record<string, unknown>
+        return Response.json({
+          ok: true,
+          salvaEm: salva.criadoEm,
+          ...dados,
+          alertasSeguranca,
+          diretrizesSugeridas: diretrizesParaFoco(consulta.tipoConsulta),
+          analisePronta: true,
+        })
+      }
+    }
+
     if (corpo.etapa === 'preparar') {
       const prep = await prepararEvidenciasAnalise(transcricao, contextoClinico)
       console.info(
         `[analisar] etapa=preparar ms=${Date.now() - t0} fontes=${prep.fontes.length} chars=${transcricao.length}`,
       )
-      return Response.json({ ok: true, ...prep, alertasSeguranca })
+      return Response.json({
+        ok: true,
+        ...prep,
+        alertasSeguranca,
+        diretrizesSugeridas: diretrizesParaFoco(consulta.tipoConsulta),
+      })
     }
 
     const resultado = await analisarConsultaClinica({
@@ -124,11 +161,39 @@ export async function POST(req: Request, { params }: Contexto) {
     console.info(
       `[analisar] etapa=${corpo.etapa ?? 'unica'} ms=${Date.now() - t0} chars=${transcricao.length}`,
     )
+    // Persiste: análise sobrevive a refresh e fica auditável (versões).
+    await prismaClinico.analiseConsulta
+      .create({
+        data: {
+          usuarioAuthId: user.id,
+          consultaId: consulta.id,
+          hashTranscricao,
+          dados: JSON.parse(
+            JSON.stringify({
+              analise: resultado.analise,
+              fontes: resultado.fontes,
+              termosBusca: resultado.termosBusca,
+            }),
+          ),
+          modelo: process.env.ANALISE_MODEL ?? 'claude-haiku-4-5-20251001',
+          versaoPrompt: VERSAO_PROMPT_ANALISE,
+        },
+      })
+      .catch((e: unknown) => {
+        // Tabela ainda não migrada não pode derrubar a análise.
+        console.error('[analisar] persistência falhou:', e instanceof Error ? e.message : e)
+      })
+
     await prismaClinico.logAcesso.create({
       data: { usuarioAuthId: user.id, acao: 'ANALISAR_CONSULTA_IA', consultaId: consulta.id },
     })
 
-    return Response.json({ ok: true, ...resultado, alertasSeguranca })
+    return Response.json({
+      ok: true,
+      ...resultado,
+      alertasSeguranca,
+      diretrizesSugeridas: diretrizesParaFoco(consulta.tipoConsulta),
+    })
   } catch (erro: unknown) {
     console.error(
       `[analisar] falha etapa=${corpo.etapa ?? 'unica'} ms=${Date.now() - t0}:`,
