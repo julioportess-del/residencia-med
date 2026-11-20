@@ -17,6 +17,7 @@ import { ProcessandoPoll } from './_components/processando-poll'
 import { ReestruturarBotao } from './_components/reestruturar-botao'
 import { ConsultaAnexos, type AnexoHistorico } from './_components/consulta-anexos'
 import { AnaliseClinica } from './_components/analise-clinica'
+import { TranscricaoViewer } from './_components/transcricao-viewer'
 
 export const dynamic = 'force-dynamic'
 
@@ -135,17 +136,8 @@ export default async function ConsultaDetalhePage({ params }: { params: Promise<
       {consulta.transcricao?.texto ? (
         <Card>
           <CardContent className="pt-6">
-            {/* Conferência do que foi captado — essencial p/ diagnosticar
-                gravações mudas (ex.: teleconsulta sem áudio da chamada). */}
-            <details>
-              <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
-                Ver transcrição da consulta (
-                {consulta.transcricao.texto.length.toLocaleString('pt-BR')} caracteres)
-              </summary>
-              <pre className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
-                {consulta.transcricao.texto}
-              </pre>
-            </details>
+            {/* Conferência do que foi captado + rastreabilidade achado→trecho */}
+            <TranscricaoViewer texto={consulta.transcricao.texto} />
           </CardContent>
         </Card>
       ) : null}

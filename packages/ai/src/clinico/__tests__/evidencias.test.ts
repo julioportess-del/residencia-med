@@ -42,6 +42,7 @@ describe('Evidence Engine', () => {
     expect(r[0]).toMatchObject({
       fonte: 'PUBMED',
       titulo: 'Hypertension treatment guideline',
+      nivel: 'DIRETRIZ',
       ano: '2024',
       pmid: '12345',
       doi: '10.1000/abc',
@@ -90,6 +91,7 @@ describe('Evidence Engine', () => {
         titulo: 'T1',
         autores: 'A',
         tipoEstudo: 'RCT',
+        nivel: 'ENSAIO_CLINICO',
         ano: '2024',
         pmid: '1',
         url: 'u',
@@ -98,7 +100,7 @@ describe('Evidence Engine', () => {
       },
     ]
     const txt = formatarEvidenciasParaPrompt(e)
-    expect(txt).toContain('[1] T1')
+    expect(txt).toContain('[1] [Ensaio clínico] T1')
     expect(txt).toContain('PMID 1')
     expect(formatarEvidenciasParaPrompt([])).toBe('')
   })

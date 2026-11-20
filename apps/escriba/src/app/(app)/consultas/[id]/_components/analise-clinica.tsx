@@ -44,7 +44,15 @@ interface Analise {
   limitacoes: string[]
 }
 
+interface AlertaSeguranca {
+  tipo: string
+  gravidade: 'CRITICO' | 'ATENCAO'
+  mensagem: string
+  origem: string
+}
+
 interface Fonte {
+  nivel?: string
   titulo: string
   autores: string
   tipoEstudo: string
@@ -72,6 +80,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
   const [analise, setAnalise] = useState<Analise | null>(null)
   const [fontes, setFontes] = useState<Fonte[]>([])
   const [termosBusca, setTermosBusca] = useState('')
+  const [alertasSeguranca, setAlertasSeguranca] = useState<AlertaSeguranca[]>([])
   const [copiado, setCopiado] = useState(false)
 
   async function analisar() {
@@ -81,7 +90,13 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
       const resp = await fetch(`/api/consultas/${consultaId}/analisar`, { method: 'POST' })
       const dados = (await resp.json().catch(() => null)) as
         | (
-            | { ok: true; analise: Analise; fontes: Fonte[]; termosBusca?: string }
+            | {
+                ok: true
+                analise: Analise
+                fontes: Fonte[]
+                termosBusca?: string
+                alertasSeguranca?: AlertaSeguranca[]
+              }
             | { ok: false; erro: string }
           )
         | null
@@ -92,6 +107,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
       setAnalise(dados.analise)
       setFontes(dados.fontes)
       setTermosBusca(dados.termosBusca ?? '')
+      setAlertasSeguranca(dados.alertasSeguranca ?? [])
     } catch {
       setErro('Falha de rede. Tente novamente.')
     } finally {
@@ -179,6 +195,34 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
           <>
             {analise.resumoCaso ? (
               <p className="text-sm text-foreground/90">{analise.resumoCaso}</p>
+            ) : null}
+
+            {alertasSeguranca.length > 0 ? (
+              <div className="space-y-1.5">
+                {alertasSeguranca.map((a, i) => (
+                  <div
+                    key={i}
+                    className={
+                      a.gravidade === 'CRITICO'
+                        ? 'rounded-lg border border-destructive bg-destructive/10 p-3'
+                        : 'rounded-lg border border-amber-500/40 bg-amber-500/10 p-3'
+                    }
+                  >
+                    <p
+                      className={
+                        a.gravidade === 'CRITICO'
+                          ? 'flex items-center gap-1.5 text-sm font-semibold text-destructive'
+                          : 'flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-400'
+                      }
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                      Segurança: {a.gravidade === 'CRITICO' ? 'crítico' : 'atenção'}
+                    </p>
+                    <p className="mt-0.5 text-sm text-foreground/90">{a.mensagem}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Origem: {a.origem}</p>
+                  </div>
+                ))}
+              </div>
             ) : null}
 
             {analise.sinaisAlerta.length > 0 ? (
@@ -313,6 +357,11 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                       </a>{' '}
                       — {f.autores} ({f.ano}; {f.tipoEstudo}
                       {f.pmid ? `; PMID ${f.pmid}` : ''})
+                      {f.nivel ? (
+                        <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                          {f.nivel.replace('_', ' ').toLowerCase()}
+                        </span>
+                      ) : null}
                     </li>
                   ))}
                 </ol>

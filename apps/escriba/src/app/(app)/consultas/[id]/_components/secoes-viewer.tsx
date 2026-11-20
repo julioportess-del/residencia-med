@@ -7,6 +7,7 @@ import {
   ClipboardList,
   FlaskConical,
   MessageSquareText,
+  Search,
   Pill,
   AlarmClock,
   Stethoscope,
@@ -70,21 +71,37 @@ export function SecoesViewer({ estrutura }: { estrutura: EstruturaClinica }) {
               <span className="text-muted-foreground">{s.icone}</span>
               {s.titulo}
             </h3>
-            <button
-              type="button"
-              onClick={() => copiar(s)}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              {copiada === s.chave ? (
-                <>
-                  <Check className="h-3.5 w-3.5" /> Copiado
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="h-3.5 w-3.5" /> Copiar
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                title="Destacar na transcrição o trecho que melhor corresponde a esta seção (aproximado)"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent('escriba:localizar-trecho', {
+                      detail: { texto: s.texto.slice(0, 400) },
+                    }),
+                  )
+                }
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <Search className="h-3.5 w-3.5" /> Ver origem
+              </button>
+              <button
+                type="button"
+                onClick={() => copiar(s)}
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                {copiada === s.chave ? (
+                  <>
+                    <Check className="h-3.5 w-3.5" /> Copiado
+                  </>
+                ) : (
+                  <>
+                    <ClipboardCopy className="h-3.5 w-3.5" /> Copiar
+                  </>
+                )}
+              </button>
+            </div>
           </header>
           <pre className="whitespace-pre-wrap px-4 py-3 font-sans text-sm leading-relaxed text-foreground">
             {s.texto}

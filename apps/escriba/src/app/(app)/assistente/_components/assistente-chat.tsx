@@ -1,7 +1,16 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Loader2, SendHorizonal, Stethoscope, Trash2, Paperclip, FileText } from 'lucide-react'
+import {
+  Check,
+  ClipboardCopy,
+  Loader2,
+  SendHorizonal,
+  Stethoscope,
+  Trash2,
+  Paperclip,
+  FileText,
+} from 'lucide-react'
 import { Button } from '@residencia-med/ui'
 import { useAnexosUpload } from '@/components/anexos/use-anexos-upload'
 import { AnexosChips } from '@/components/anexos/anexos-chips'
@@ -34,6 +43,7 @@ export function AssistenteChat() {
   const [analisando, setAnalisando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [arrastando, setArrastando] = useState(false)
+  const [copiadaIdx, setCopiadaIdx] = useState<number | null>(null)
   const fimRef = useRef<HTMLDivElement>(null)
   const inputArquivoRef = useRef<HTMLInputElement>(null)
   const anexos = useAnexosUpload()
@@ -170,7 +180,32 @@ export function AssistenteChat() {
                     ))}
                   </div>
                 ) : null}
-                {m.papel === 'assistant' ? <MarkdownClinico texto={m.conteudo} /> : m.conteudo}
+                {m.papel === 'assistant' ? (
+                  <>
+                    <MarkdownClinico texto={m.conteudo} />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(m.conteudo)
+                        setCopiadaIdx(i)
+                        setTimeout(() => setCopiadaIdx(null), 1500)
+                      }}
+                      className="mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {copiadaIdx === i ? (
+                        <>
+                          <Check className="h-3 w-3" /> Copiado
+                        </>
+                      ) : (
+                        <>
+                          <ClipboardCopy className="h-3 w-3" /> Copiar resposta
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  m.conteudo
+                )}
               </div>
             </div>
           ))

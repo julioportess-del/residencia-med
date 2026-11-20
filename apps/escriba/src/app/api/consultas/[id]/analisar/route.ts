@@ -1,5 +1,10 @@
 import { prismaClinico } from '@residencia-med/db-clinico'
-import { analisarConsultaClinica, AnaliseInvalidaError } from '@residencia-med/ai/clinico'
+import {
+  analisarConsultaClinica,
+  AnaliseInvalidaError,
+  estruturaClinicaSchema,
+  verificarSegurancaClinica,
+} from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 import { mensagemFalhaIA } from '@/lib/erros-ia'
 
@@ -30,6 +35,7 @@ export async function POST(req: Request, { params }: Contexto) {
     select: {
       id: true,
       transcricao: { select: { texto: true } },
+      evolucoes: { select: { dadosEstruturados: true }, take: 1 },
       paciente: {
         select: {
           alergias: true,
@@ -68,6 +74,21 @@ export async function POST(req: Request, { params }: Contexto) {
         .join('\n')
     : undefined
 
+  // Clinical Safety Engine: cruzamento determinístico alergias/medicamentos
+  // em uso × prescrições sugeridas na evolução (cadastro + relato da consulta).
+  const estruturaParse = estruturaClinicaSchema.safeParse(consulta.evolucoes[0]?.dadosEstruturados)
+  const estrutura = estruturaParse.success ? estruturaParse.data : null
+  const alergiasConhecidas = [...(p?.alergias ?? []), ...(estrutura?.subjetivo.alergias ?? [])]
+  const medicamentosConhecidos = [
+    ...(p?.medicamentos ?? []),
+    ...(estrutura?.subjetivo.medicacoesEmUso ?? []),
+  ]
+  const alertasSeguranca = verificarSegurancaClinica({
+    alergias: alergiasConhecidas,
+    medicamentosEmUso: medicamentosConhecidos.length > 0 ? medicamentosConhecidos : null,
+    prescricoes: estrutura?.plano.prescricoes ?? [],
+  })
+
   try {
     const resultado = await analisarConsultaClinica({ transcricao, contextoClinico })
 
@@ -75,7 +96,7 @@ export async function POST(req: Request, { params }: Contexto) {
       data: { usuarioAuthId: user.id, acao: 'ANALISAR_CONSULTA_IA', consultaId: consulta.id },
     })
 
-    return Response.json({ ok: true, ...resultado })
+    return Response.json({ ok: true, ...resultado, alertasSeguranca })
   } catch (erro: unknown) {
     console.error(
       '[analisar] falha:',

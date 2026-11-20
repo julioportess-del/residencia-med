@@ -63,3 +63,15 @@ export {
   type EntradaAnalise,
 } from './analisar-consulta'
 export { extrairTermosBuscaClinica } from './analisar-consulta'
+export {
+  conectorClinicalTrials,
+  classificarNivelEvidencia,
+  NIVEL_EVIDENCIA_LABEL,
+  type NivelEvidencia,
+} from './evidencias'
+export {
+  verificarSegurancaClinica,
+  type AlertaSeguranca,
+  type EntradaSeguranca,
+  type TipoAlertaSeguranca,
+} from './seguranca'

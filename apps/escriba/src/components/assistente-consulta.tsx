@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ChevronDown, Loader2, Paperclip, Send, Sparkles } from 'lucide-react'
+import { Check, ChevronDown, ClipboardCopy, Loader2, Paperclip, Send, Sparkles } from 'lucide-react'
 import { useAnexosUpload } from '@/components/anexos/use-anexos-upload'
 import { MarkdownClinico } from '@/components/markdown-clinico'
 import { AnexosChips } from '@/components/anexos/anexos-chips'
@@ -41,6 +41,7 @@ export function AssistenteChatCaso({ consultaId }: { consultaId: string }) {
   const [carregando, setCarregando] = useState(false)
   const [analisando, setAnalisando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [copiadaIdx, setCopiadaIdx] = useState<number | null>(null)
   const listaRef = useRef<HTMLDivElement>(null)
   const inputArquivoRef = useRef<HTMLInputElement>(null)
   // Anexos vinculados a esta consulta (upload direto ao storage privado).
@@ -120,7 +121,32 @@ export function AssistenteChatCaso({ consultaId }: { consultaId: string }) {
                   : 'mr-4 rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed'
               }
             >
-              {m.papel === 'assistant' ? <MarkdownClinico texto={m.conteudo} /> : m.conteudo}
+              {m.papel === 'assistant' ? (
+                <>
+                  <MarkdownClinico texto={m.conteudo} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(m.conteudo)
+                      setCopiadaIdx(i)
+                      setTimeout(() => setCopiadaIdx(null), 1500)
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {copiadaIdx === i ? (
+                      <>
+                        <Check className="h-3 w-3" /> Copiado
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCopy className="h-3 w-3" /> Copiar resposta
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                m.conteudo
+              )}
               {m.anexos && m.anexos.length > 0 ? (
                 <span className="mt-1 flex flex-wrap gap-1.5">
                   {m.anexos.map((a) => (

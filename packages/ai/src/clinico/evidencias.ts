@@ -17,11 +17,56 @@ import { chaveCacheLLM, getCache, setCache } from '../cache'
  *   informa a limitação explicitamente.
  */
 
+/**
+ * Nível na hierarquia de evidências (MBE). Classificação DETERMINÍSTICA a
+ * partir do tipo de publicação — nunca convertida automaticamente em força
+ * de recomendação (regra do spec): é organização, o médico pondera.
+ */
+export type NivelEvidencia =
+  | 'DIRETRIZ'
+  | 'REVISAO_SISTEMATICA'
+  | 'ENSAIO_CLINICO'
+  | 'OBSERVACIONAL'
+  | 'OUTRO'
+
+export const NIVEL_EVIDENCIA_LABEL: Record<NivelEvidencia, string> = {
+  DIRETRIZ: 'Diretriz',
+  REVISAO_SISTEMATICA: 'Revisão sistemática',
+  ENSAIO_CLINICO: 'Ensaio clínico',
+  OBSERVACIONAL: 'Observacional',
+  OUTRO: 'Outro',
+}
+
+const ORDEM_NIVEL: Record<NivelEvidencia, number> = {
+  DIRETRIZ: 0,
+  REVISAO_SISTEMATICA: 1,
+  ENSAIO_CLINICO: 2,
+  OBSERVACIONAL: 3,
+  OUTRO: 4,
+}
+
+/** Classifica o tipo de publicação declarado pela fonte em um nível MBE. */
+export function classificarNivelEvidencia(tipoEstudo: string): NivelEvidencia {
+  const t = tipoEstudo.toLowerCase()
+  if (/guideline|practice guideline|consensus|diretriz/.test(t)) return 'DIRETRIZ'
+  if (/systematic review|meta-analysis|meta analysis|cochrane/.test(t)) {
+    return 'REVISAO_SISTEMATICA'
+  }
+  if (/randomized|randomised|controlled trial|clinical trial|ensaio/.test(t)) {
+    return 'ENSAIO_CLINICO'
+  }
+  if (/cohort|case-control|observational|cross-sectional|caso-controle/.test(t)) {
+    return 'OBSERVACIONAL'
+  }
+  return 'OUTRO'
+}
+
 export interface Evidencia {
-  fonte: 'PUBMED' | 'EUROPE_PMC'
+  fonte: 'PUBMED' | 'EUROPE_PMC' | 'CLINICALTRIALS'
   titulo: string
   autores: string
   tipoEstudo: string
+  nivel: NivelEvidencia
   ano: string
   doi?: string
   pmid?: string
@@ -36,7 +81,7 @@ export interface ConectorEvidencia {
 }
 
 const TIMEOUT_FONTE_MS = 8_000
-const CACHE_VERSAO = 'evidencias-v1'
+const CACHE_VERSAO = 'evidencias-v2'
 
 async function fetchJson<T>(url: string): Promise<T> {
   const controlador = new AbortController()
@@ -86,6 +131,7 @@ export const conectorPubmed: ConectorEvidencia = {
       .filter((r): r is PubmedSummary => Boolean(r?.title))
       .map((r) => {
         const doi = r.articleids?.find((a) => a.idtype === 'doi')?.value
+        const tipoEstudo = (r.pubtype ?? []).join(', ') || 'Artigo'
         return {
           fonte: 'PUBMED' as const,
           titulo: r.title ?? '',
@@ -94,7 +140,8 @@ export const conectorPubmed: ConectorEvidencia = {
             .map((a) => a.name ?? '')
             .filter(Boolean)
             .join(', '),
-          tipoEstudo: (r.pubtype ?? []).join(', ') || 'Artigo',
+          tipoEstudo,
+          nivel: classificarNivelEvidencia(tipoEstudo),
           ano: (r.pubdate ?? '').slice(0, 4),
           doi: doi || undefined,
           pmid: r.uid,
@@ -134,6 +181,7 @@ export const conectorEuropePmc: ConectorEvidencia = {
         titulo: r.title ?? '',
         autores: r.authorString ?? '',
         tipoEstudo: r.pubType ?? 'Artigo',
+        nivel: classificarNivelEvidencia(r.pubType ?? ''),
         ano: r.pubYear ?? '',
         doi: r.doi || undefined,
         pmid: r.pmid || undefined,
@@ -146,7 +194,51 @@ export const conectorEuropePmc: ConectorEvidencia = {
   },
 }
 
-const CONECTORES: ConectorEvidencia[] = [conectorPubmed, conectorEuropePmc]
+// ─── ClinicalTrials.gov (API v2 pública) ───
+
+interface CtStudy {
+  protocolSection?: {
+    identificationModule?: { nctId?: string; briefTitle?: string }
+    statusModule?: { startDateStruct?: { date?: string }; overallStatus?: string }
+    designModule?: { studyType?: string }
+    descriptionModule?: { briefSummary?: string }
+  }
+}
+
+export const conectorClinicalTrials: ConectorEvidencia = {
+  nome: 'CLINICALTRIALS',
+  async buscar(termos, limite) {
+    const q = encodeURIComponent(termos)
+    const dados = await fetchJson<{ studies?: CtStudy[] }>(
+      `https://clinicaltrials.gov/api/v2/studies?query.term=${q}&pageSize=${limite}&sort=%40relevance`,
+    )
+    const agora = new Date().toISOString()
+    return (dados.studies ?? [])
+      .map((e) => e.protocolSection)
+      .filter((ps): ps is NonNullable<CtStudy['protocolSection']> =>
+        Boolean(ps?.identificationModule?.briefTitle),
+      )
+      .map((ps) => {
+        const tipo =
+          ps.designModule?.studyType === 'INTERVENTIONAL'
+            ? 'Clinical Trial (registro)'
+            : 'Estudo registrado'
+        return {
+          fonte: 'CLINICALTRIALS' as const,
+          titulo: ps.identificationModule?.briefTitle ?? '',
+          autores: '',
+          tipoEstudo: `${tipo}${ps.statusModule?.overallStatus ? ` — ${ps.statusModule.overallStatus}` : ''}`,
+          nivel: classificarNivelEvidencia(tipo),
+          ano: (ps.statusModule?.startDateStruct?.date ?? '').slice(0, 4),
+          url: `https://clinicaltrials.gov/study/${ps.identificationModule?.nctId ?? ''}`,
+          trecho: (ps.descriptionModule?.briefSummary ?? '').slice(0, 400),
+          consultadoEm: agora,
+        }
+      })
+  },
+}
+
+const CONECTORES: ConectorEvidencia[] = [conectorPubmed, conectorEuropePmc, conectorClinicalTrials]
 
 /**
  * Busca evidências nas fontes disponíveis. `termos` DEVE conter apenas
@@ -181,6 +273,10 @@ export async function buscarEvidencias(termos: string, limitePorFonte = 4): Prom
     return true
   })
 
+  // Ordena pela hierarquia MBE (diretriz > revisão > ECR > observacional),
+  // desempate por ano mais recente — recência NUNCA vence qualidade sozinha.
+  unicas.sort((a, b) => ORDEM_NIVEL[a.nivel] - ORDEM_NIVEL[b.nivel] || b.ano.localeCompare(a.ano))
+
   if (unicas.length > 0) await setCache(chave, unicas)
   return unicas
 }
@@ -191,7 +287,7 @@ export function formatarEvidenciasParaPrompt(evidencias: Evidencia[]): string {
   return evidencias
     .map(
       (e, i) =>
-        `[${i + 1}] ${e.titulo} — ${e.autores} (${e.ano}; ${e.tipoEstudo}; ${
+        `[${i + 1}] [${NIVEL_EVIDENCIA_LABEL[e.nivel]}] ${e.titulo} — ${e.autores} (${e.ano}; ${e.tipoEstudo}; ${
           e.pmid ? `PMID ${e.pmid}` : (e.doi ?? e.fonte)
         })${e.trecho ? `\nResumo: ${e.trecho}` : ''}`,
     )
