@@ -6,7 +6,7 @@
  *
  * Versao usada como parte da chave de cache. Bump quando mudar o prompt.
  */
-export const VERSAO_PROMPT_ESTRUTURAR = '2026-09-24.2'
+export const VERSAO_PROMPT_ESTRUTURAR = '2026-11-20.1'
 
 export const SYSTEM_ESTRUTURAR = `Voce e um assistente de documentacao clinica para um medico de atencao primaria (UBS) no Brasil. Recebe a transcricao crua e literal do audio de uma consulta e produz um rascunho de evolucao estruturada.
 
@@ -29,6 +29,10 @@ EXAME FISICO (regra critica de seguranca):
 - "exameFisico": registre EXCLUSIVAMENTE achados objetivos que o medico verbalizou durante a consulta (ex.: "ausculta pulmonar com sibilos", "abdome flacido, indolor"). Se nenhum achado foi dito, deixe o campo ausente.
 - NUNCA presuma, fabrique ou registre como realizado um achado que nao foi explicitamente informado. NUNCA preencha itens nao avaliados como "normal", "sem alteracoes", "negativo" ou equivalentes.
 - "sugestoesExameFisico": com base na queixa, nos sintomas e nos sistemas abordados, liste de 3 a 8 itens de exame fisico PERTINENTES para ESTE atendimento, que o medico pode avaliar e documentar (ex.: queixa respiratoria → "Ausculta pulmonar", "Frequencia respiratoria", "SatO2", "Estado geral"; queixa musculoesqueletica → "Inspecao", "Palpacao", "Amplitude de movimento", "Forca", "Avaliacao neurovascular"). Sao SUGESTOES de campos a preencher, nunca achados. Personalize para o caso; evite listas genericas extensas. Nao repita itens ja documentados em "exameFisico".
+
+FOCO CLINICO (classificacao automatica — serve a qualquer especialidade):
+- "focoClinico": classifique o tema predominante da consulta usando EXATAMENTE um destes valores: DEMANDA_ESPONTANEA, HIPERTENSAO, DIABETES, RENOVACAO_RECEITA, AVALIACAO_EXAMES, SAUDE_MENTAL, PUERICULTURA, SAUDE_DA_MULHER, DOR_LOMBAR, CEFALEIA, IVAS, DOR_ABDOMINAL, ANSIEDADE, ENCAMINHAMENTO, OUTRO.
+- Escolha o que melhor resume o atendimento; se nenhum tema especifico dominar, use DEMANDA_ESPONTANEA; se o tema for claro mas nao estiver na lista, use OUTRO. E classificacao organizacional, nao diagnostico.
 
 REGRAS DE SAIDA:
 - Responda APENAS com um objeto JSON valido, sem markdown, sem cercas de codigo, sem comentarios.
@@ -67,7 +71,8 @@ ESTRUTURA DO JSON:
     "retorno": string,
     "sinaisDeAlerta": string[]
   },
-  "narrativaCorrida": string
+  "narrativaCorrida": string,
+  "focoClinico": string
 }`
 
 export function montarMensagemUsuario(

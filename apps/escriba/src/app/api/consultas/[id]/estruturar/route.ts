@@ -124,7 +124,11 @@ export async function POST(req: Request, { params }: Contexto) {
 
     await prismaClinico.consulta.update({
       where: { id: consulta.id },
-      data: { status: 'RASCUNHO' },
+      // Foco clínico classificado pela IA — o médico não escolhe mais no form.
+      data: {
+        status: 'RASCUNHO',
+        ...(estrutura.focoClinico ? { tipoConsulta: estrutura.focoClinico } : {}),
+      },
     })
     await prismaClinico.logAcesso.create({
       data: { usuarioAuthId: user.id, acao: 'PROCESSAR_CONSULTA', consultaId: consulta.id },

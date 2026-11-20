@@ -54,6 +54,29 @@ export const planoSchema = z.object({
   sinaisDeAlerta: z.array(z.string()).optional(),
 })
 
+/**
+ * Foco clinico da consulta, CLASSIFICADO pela IA a partir do conteudo —
+ * o medico nao precisa escolher nada. Espelha o enum Prisma `TipoConsulta`
+ * (manter em sincronia com packages/db-clinico/prisma/schema.prisma).
+ */
+export const FOCO_CLINICO_VALORES = [
+  'DEMANDA_ESPONTANEA',
+  'HIPERTENSAO',
+  'DIABETES',
+  'RENOVACAO_RECEITA',
+  'AVALIACAO_EXAMES',
+  'SAUDE_MENTAL',
+  'PUERICULTURA',
+  'SAUDE_DA_MULHER',
+  'DOR_LOMBAR',
+  'CEFALEIA',
+  'IVAS',
+  'DOR_ABDOMINAL',
+  'ANSIEDADE',
+  'ENCAMINHAMENTO',
+  'OUTRO',
+] as const
+
 export const estruturaClinicaSchema = z.object({
   subjetivo: subjetivoSchema.default({}),
   objetivo: objetivoSchema.default({}),
@@ -61,6 +84,8 @@ export const estruturaClinicaSchema = z.object({
   plano: planoSchema.default({}),
   /** Narrativa em prosa para o modelo "evolucao corrida". */
   narrativaCorrida: z.string().optional(),
+  /** Classificacao automatica do foco clinico (qualquer especialidade). */
+  focoClinico: z.enum(FOCO_CLINICO_VALORES).optional(),
 })
 
 export type CidSugerido = z.infer<typeof cidSugeridoSchema>

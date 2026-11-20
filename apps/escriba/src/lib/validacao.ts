@@ -41,7 +41,8 @@ export const novaConsultaSchema = z.object({
       /^[\p{L}.\s'-]+$/u,
       'Use apenas letras, espaços, pontos, hífen e apóstrofo (sem números).',
     ),
-  tipoConsulta: z.enum(TIPO_CONSULTA_VALORES),
+  // Opcional: a IA classifica o foco clínico automaticamente na estruturação.
+  tipoConsulta: z.enum(TIPO_CONSULTA_VALORES).optional().default('DEMANDA_ESPONTANEA'),
   tipoAtendimento: z.enum(TIPO_ATENDIMENTO_VALORES).optional().default('OUTRO'),
   consentimentoConfirmado: z.literal(true, {
     errorMap: () => ({ message: 'O consentimento do paciente é obrigatório.' }),

@@ -103,7 +103,10 @@ export async function POST(_req: Request, { params }: Contexto) {
 
     await prismaClinico.consulta.update({
       where: { id: consulta.id },
-      data: { status: 'RASCUNHO' },
+      data: {
+        status: 'RASCUNHO',
+        ...(estrutura.focoClinico ? { tipoConsulta: estrutura.focoClinico } : {}),
+      },
     })
     await prismaClinico.logAcesso.create({
       data: { usuarioAuthId: user.id, acao: 'PROCESSAR_CONSULTA', consultaId: consulta.id },

@@ -9,9 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Alert } from '@/components/ui/alert'
-import { TIPO_CONSULTA_LABEL, TIPO_ATENDIMENTO_LABEL } from '@/lib/rotulos'
+import { TIPO_ATENDIMENTO_LABEL } from '@/lib/rotulos'
 import {
-  TIPO_CONSULTA_VALORES,
   TIPO_ATENDIMENTO_VALORES,
   novaConsultaSchema,
   type TipoAtendimentoValor,
@@ -51,7 +50,8 @@ export function NovaConsultaForm({
   const [pacienteId, setPacienteId] = useState(preSelecionadoId ?? '')
   const [modeloId, setModeloId] = useState(preModeloId ?? '')
   const [iniciais, setIniciais] = useState('')
-  const [tipo, setTipo] = useState<(typeof TIPO_CONSULTA_VALORES)[number]>('DEMANDA_ESPONTANEA')
+  // Foco clínico não é mais escolhido aqui: a IA classifica automaticamente
+  // a partir do conteúdo da consulta (serve a qualquer especialidade).
   const [atendimento, setAtendimento] = useState<TipoAtendimentoValor>('OUTRO')
   const [consentimento, setConsentimento] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -96,7 +96,6 @@ export function NovaConsultaForm({
 
     const analise = novaConsultaSchema.safeParse({
       pacienteIniciais: nomePaciente,
-      tipoConsulta: tipo,
       tipoAtendimento: atendimento,
       consentimentoConfirmado: consentimento,
       ...(usandoPaciente ? { pacienteId } : {}),
@@ -234,17 +233,6 @@ export function NovaConsultaForm({
           </p>
         )
       ) : null}
-
-      <div className="space-y-1.5">
-        <Label htmlFor="tipo">Foco clínico</Label>
-        <Select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as typeof tipo)}>
-          {TIPO_CONSULTA_VALORES.map((valor) => (
-            <option key={valor} value={valor}>
-              {TIPO_CONSULTA_LABEL[valor]}
-            </option>
-          ))}
-        </Select>
-      </div>
 
       {modelos.length > 0 ? (
         <div className="space-y-1.5">
