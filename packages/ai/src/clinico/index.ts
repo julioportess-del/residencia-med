@@ -76,3 +76,12 @@ export {
   type TipoAlertaSeguranca,
 } from './seguranca'
 export { prepararEvidenciasAnalise } from './analisar-consulta'
+export {
+  gerarParteAnalise,
+  parteRaciocinioSchema,
+  parteCondutaSchema,
+  type ParteAnalise,
+  type ParteRaciocinio,
+  type ParteConduta,
+  type EntradaParteAnalise,
+} from './analisar-consulta'

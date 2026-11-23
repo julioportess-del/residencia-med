@@ -1,11 +1,14 @@
 import { prismaClinico } from '@residencia-med/db-clinico'
 import {
   analisarConsultaClinica,
+  analiseClinicaSchema,
   AnaliseInvalidaError,
   estruturaClinicaSchema,
+  gerarParteAnalise,
   prepararEvidenciasAnalise,
   verificarSegurancaClinica,
   type Evidencia,
+  type ParteAnalise,
 } from '@residencia-med/ai/clinico'
 import { VERSAO_PROMPT_ANALISE } from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
@@ -99,7 +102,8 @@ export async function POST(req: Request, { params }: Contexto) {
   // etapa "preparar" (termos + fontes + segurança, ~10s) e etapa "gerar"
   // (só a chamada do modelo, com o orçamento de tempo inteiro).
   const corpo = (await req.json().catch(() => ({}))) as {
-    etapa?: 'preparar' | 'gerar'
+    etapa?: 'preparar' | 'gerar' | 'gerar-raciocinio' | 'gerar-conduta' | 'salvar'
+    analise?: unknown
     fontes?: Evidencia[]
     termosBusca?: string
     /** true = regenerar mesmo havendo análise salva da mesma transcrição. */
@@ -145,6 +149,55 @@ export async function POST(req: Request, { params }: Contexto) {
         alertasSeguranca,
         diretrizesSugeridas: diretrizesParaFoco(consulta.tipoConsulta),
       })
+    }
+
+    // Geração por PARTES: cada requisição faz UMA chamada curta ao modelo
+    // (raciocínio ou conduta) — o cliente roda as duas em paralelo.
+    // Persistência da análise mesclada pelo cliente (partes paralelas):
+    // valida pelo schema antes de gravar — sobrevive a refresh, auditável.
+    if (corpo.etapa === 'salvar') {
+      const analiseParse = analiseClinicaSchema.safeParse(corpo.analise)
+      if (!analiseParse.success) return erroJson('Análise inválida para salvar.', 400)
+      await prismaClinico.analiseConsulta
+        .create({
+          data: {
+            usuarioAuthId: user.id,
+            consultaId: consulta.id,
+            hashTranscricao,
+            dados: JSON.parse(
+              JSON.stringify({
+                analise: analiseParse.data,
+                fontes: Array.isArray(corpo.fontes) ? corpo.fontes : [],
+                termosBusca: typeof corpo.termosBusca === 'string' ? corpo.termosBusca : '',
+              }),
+            ),
+            modelo: process.env.ANALISE_MODEL ?? 'claude-haiku-4-5-20251001',
+            versaoPrompt: VERSAO_PROMPT_ANALISE,
+          },
+        })
+        .catch((e: unknown) => {
+          console.error('[analisar] persistência falhou:', e instanceof Error ? e.message : e)
+        })
+      return Response.json({ ok: true })
+    }
+
+    if (corpo.etapa === 'gerar-raciocinio' || corpo.etapa === 'gerar-conduta') {
+      const parteNome: ParteAnalise = corpo.etapa === 'gerar-raciocinio' ? 'raciocinio' : 'conduta'
+      const parte = await gerarParteAnalise(parteNome, {
+        transcricao,
+        contextoClinico,
+        fontes: Array.isArray(corpo.fontes) ? corpo.fontes : [],
+        termosBusca: typeof corpo.termosBusca === 'string' ? corpo.termosBusca : '',
+      })
+      console.info(
+        `[analisar] etapa=${corpo.etapa} ms=${Date.now() - t0} chars=${transcricao.length}`,
+      )
+      if (parteNome === 'conduta') {
+        await prismaClinico.logAcesso.create({
+          data: { usuarioAuthId: user.id, acao: 'ANALISAR_CONSULTA_IA', consultaId: consulta.id },
+        })
+      }
+      return Response.json({ ok: true, parte })
     }
 
     const resultado = await analisarConsultaClinica({

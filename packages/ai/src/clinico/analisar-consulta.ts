@@ -240,3 +240,108 @@ export async function analisarConsultaClinica(entrada: EntradaAnalise): Promise<
   await setCache(chave, resultado)
   return resultado
 }
+
+// ─── Geração por PARTES (requisições separadas, cada uma bem abaixo do
+// limite serverless; o cliente roda as duas em paralelo e mescla) ───
+
+export type ParteAnalise = 'raciocinio' | 'conduta'
+
+export const parteRaciocinioSchema = analiseClinicaSchema.pick({
+  resumoCaso: true,
+  hipoteses: true,
+  sinaisAlerta: true,
+  pendencias: true,
+})
+export const parteCondutaSchema = analiseClinicaSchema.pick({
+  tratamento: true,
+  examesSugeridos: true,
+  limitacoes: true,
+})
+
+export type ParteRaciocinio = z.infer<typeof parteRaciocinioSchema>
+export type ParteConduta = z.infer<typeof parteCondutaSchema>
+
+const JSON_RACIOCINIO = `{
+  "resumoCaso": string,
+  "hipoteses": [{"hipotese": string, "aFavor": string[], "contra": string[], "dadosFaltantes": string[]}],
+  "sinaisAlerta": string[],
+  "pendencias": string[]
+}`
+
+const JSON_CONDUTA = `{
+  "tratamento": {"objetivo": string, "preferenciais": string[], "alternativas": string[], "contraindicacoesInteracoes": string[], "monitorizacao": string[]},
+  "examesSugeridos": [{"exame": string, "justificativa": string}],
+  "limitacoes": string[]
+}`
+
+const FOCO_PARTE: Record<ParteAnalise, string> = {
+  raciocinio:
+    'FOCO DESTA RESPOSTA: resumo do caso, hipoteses com raciocinio (a favor/contra/dados faltantes), sinais de alerta e pendencias. NAO inclua tratamento nem exames.',
+  conduta:
+    'FOCO DESTA RESPOSTA: sugestao de tratamento (objetivo, preferenciais, alternativas, contraindicacoes/interacoes relevantes, monitorizacao), exames com justificativa e limitacoes. Seja conciso.',
+}
+
+export interface EntradaParteAnalise {
+  transcricao: string
+  contextoClinico?: string
+  fontes: Evidencia[]
+  termosBusca?: string
+}
+
+export async function gerarParteAnalise(
+  parte: ParteAnalise,
+  entrada: EntradaParteAnalise,
+): Promise<ParteRaciocinio | ParteConduta> {
+  const transcricao = entrada.transcricao.trim()
+  if (!transcricao) throw new AnaliseInvalidaError('transcricao vazia')
+
+  const chave = chaveCacheLLM({
+    funcao: `gerarParteAnalise:${parte}`,
+    args: { transcricao, contexto: entrada.contextoClinico ?? null },
+    modelo: MODELO_ANALISE,
+    versaoPrompt: VERSAO_PROMPT_ANALISE,
+  })
+  const cacheado = await getCache<ParteRaciocinio | ParteConduta>(chave)
+  if (cacheado) return cacheado
+
+  const blocoEvidencias = formatarEvidenciasParaPrompt(entrada.fontes)
+  const usuario = [
+    entrada.contextoClinico ? `CONTEXTO CLINICO DISPONIVEL:\n${entrada.contextoClinico}` : null,
+    blocoEvidencias
+      ? `EVIDENCIAS DISPONIVEIS (cite apenas estas, como [n]):\n${blocoEvidencias}`
+      : 'EVIDENCIAS DISPONIVEIS: nenhuma fonte foi recuperada — declare essa limitacao.',
+    `TRANSCRICAO DA CONSULTA:\n<<<\n${limitarTranscricao(transcricao)}\n>>>`,
+    `${FOCO_PARTE[parte]}\nResponda APENAS com JSON valido neste formato:\n${parte === 'raciocinio' ? JSON_RACIOCINIO : JSON_CONDUTA}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+
+  const resposta = await anthropic.messages.create(
+    {
+      model: MODELO_ANALISE,
+      max_tokens: 1600,
+      system: SYSTEM_ANALISE,
+      messages: [{ role: 'user', content: usuario }],
+    },
+    { timeout: 35_000, maxRetries: 0 },
+  )
+  if (resposta.stop_reason === 'max_tokens') {
+    throw new AnaliseInvalidaError('Resposta excedeu o limite de tamanho. Tente novamente.')
+  }
+
+  let parseado: unknown
+  try {
+    parseado = JSON.parse(extrairJson(textoDaResposta(resposta)))
+  } catch (e) {
+    if (e instanceof AnaliseInvalidaError) throw e
+    throw new AnaliseInvalidaError('JSON malformado')
+  }
+  const schema = parte === 'raciocinio' ? parteRaciocinioSchema : parteCondutaSchema
+  const validado = schema.safeParse(parseado)
+  if (!validado.success) {
+    throw new AnaliseInvalidaError(validado.error.issues[0]?.message ?? 'schema inválido')
+  }
+
+  await setCache(chave, validado.data)
+  return validado.data
+}
