@@ -289,7 +289,7 @@ export function formatarEvidenciasParaPrompt(evidencias: Evidencia[]): string {
       (e, i) =>
         `[${i + 1}] [${NIVEL_EVIDENCIA_LABEL[e.nivel]}] ${e.titulo} — ${e.autores} (${e.ano}; ${e.tipoEstudo}; ${
           e.pmid ? `PMID ${e.pmid}` : (e.doi ?? e.fonte)
-        })${e.trecho ? `\nResumo: ${e.trecho}` : ''}`,
+        })${e.trecho ? `\nResumo: ${e.trecho.slice(0, 300)}` : ''}`,
     )
     .join('\n\n')
 }

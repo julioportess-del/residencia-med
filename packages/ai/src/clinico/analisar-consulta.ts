@@ -13,7 +13,7 @@ import { buscarEvidencias, formatarEvidenciasParaPrompt, type Evidencia } from '
  * Tudo é SUGESTÃO de apoio à decisão: a conduta final é do médico.
  */
 
-export const VERSAO_PROMPT_ANALISE = '2026-11-20.2'
+export const VERSAO_PROMPT_ANALISE = '2026-11-23.1'
 
 const MODELO_ANALISE =
   process.env.ANALISE_MODEL ?? process.env.MODELO_ANTHROPIC ?? 'claude-sonnet-4-6'
@@ -276,9 +276,9 @@ const JSON_CONDUTA = `{
 
 const FOCO_PARTE: Record<ParteAnalise, string> = {
   raciocinio:
-    'FOCO DESTA RESPOSTA: resumo do caso, hipoteses com raciocinio (a favor/contra/dados faltantes), sinais de alerta e pendencias. NAO inclua tratamento nem exames.',
+    'FOCO DESTA RESPOSTA: resumo do caso (max 2 frases), hipoteses com raciocinio, sinais de alerta e pendencias. NAO inclua tratamento nem exames. LIMITES OBRIGATORIOS (velocidade e objetividade): no maximo 3 hipoteses (as mais provaveis); aFavor/contra/dadosFaltantes com ate 3 itens TELEGRAFICOS cada; sinaisAlerta ate 4; pendencias ate 4. Priorize os 20% mais relevantes do caso.',
   conduta:
-    'FOCO DESTA RESPOSTA: sugestao de tratamento (objetivo, preferenciais, alternativas, contraindicacoes/interacoes relevantes, monitorizacao), exames com justificativa e limitacoes. Seja conciso.',
+    'FOCO DESTA RESPOSTA: sugestao de tratamento (objetivo em 1 frase; preferenciais/alternativas/contraindicacoesInteracoes/monitorizacao com ate 4 itens TELEGRAFICOS cada), ate 5 exames com justificativa de 1 frase, e ate 2 limitacoes. Priorize o essencial do caso.',
 }
 
 export interface EntradaParteAnalise {
@@ -304,7 +304,7 @@ export async function gerarParteAnalise(
   const cacheado = await getCache<ParteRaciocinio | ParteConduta>(chave)
   if (cacheado) return cacheado
 
-  const blocoEvidencias = formatarEvidenciasParaPrompt(entrada.fontes)
+  const blocoEvidencias = formatarEvidenciasParaPrompt(entrada.fontes.slice(0, 5))
   const usuario = [
     entrada.contextoClinico ? `CONTEXTO CLINICO DISPONIVEL:\n${entrada.contextoClinico}` : null,
     blocoEvidencias
@@ -319,11 +319,13 @@ export async function gerarParteAnalise(
   const resposta = await anthropic.messages.create(
     {
       model: MODELO_ANALISE,
-      max_tokens: 1600,
+      max_tokens: 2800,
       system: SYSTEM_ANALISE,
       messages: [{ role: 'user', content: usuario }],
     },
-    { timeout: 35_000, maxRetries: 0 },
+    // Cada parte roda numa requisição própria (60s só para ela): 45s de
+    // timeout dá folga para 2800 tokens mesmo com a API lenta.
+    { timeout: 45_000, maxRetries: 0 },
   )
   if (resposta.stop_reason === 'max_tokens') {
     throw new AnaliseInvalidaError('Resposta excedeu o limite de tamanho. Tente novamente.')
