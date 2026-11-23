@@ -51,6 +51,12 @@ interface AlertaSeguranca {
   origem: string
 }
 
+interface DiretrizSugerida {
+  instituicao: string
+  nome: string
+  url: string
+}
+
 interface Fonte {
   nivel?: string
   titulo: string
@@ -82,9 +88,12 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
   const [fontes, setFontes] = useState<Fonte[]>([])
   const [termosBusca, setTermosBusca] = useState('')
   const [alertasSeguranca, setAlertasSeguranca] = useState<AlertaSeguranca[]>([])
+  const [diretrizes, setDiretrizes] = useState<DiretrizSugerida[]>([])
+  const [salvaEm, setSalvaEm] = useState<string | null>(null)
+  const [filtroNivel, setFiltroNivel] = useState<string>('TODOS')
   const [copiado, setCopiado] = useState(false)
 
-  async function analisar() {
+  async function analisar(forcar = false) {
     setCarregando(true)
     setErro(null)
     try {
@@ -94,7 +103,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
       const prepResp = await fetch(`/api/consultas/${consultaId}/analisar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ etapa: 'preparar' }),
+        body: JSON.stringify({ etapa: 'preparar', forcar }),
       })
       const prep = (await prepResp.json().catch(() => null)) as
         | (
@@ -103,6 +112,10 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                 fontes: Fonte[]
                 termosBusca: string
                 alertasSeguranca?: AlertaSeguranca[]
+                diretrizesSugeridas?: DiretrizSugerida[]
+                analisePronta?: boolean
+                analise?: Analise
+                salvaEm?: string
               }
             | { ok: false; erro: string }
           )
@@ -111,6 +124,18 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
         setErro((prep && 'erro' in prep && prep.erro) || 'Falha ao buscar evidências.')
         return
       }
+      setDiretrizes(prep.diretrizesSugeridas ?? [])
+
+      // Análise já salva desta mesma transcrição → mostra na hora, sem custo.
+      if (prep.analisePronta && prep.analise) {
+        setAnalise(prep.analise)
+        setFontes(prep.fontes ?? [])
+        setTermosBusca(prep.termosBusca ?? '')
+        setAlertasSeguranca(prep.alertasSeguranca ?? [])
+        setSalvaEm(prep.salvaEm ?? null)
+        return
+      }
+
       const fontesPrep = prep.fontes
       const termosPrep = prep.termosBusca
       const alertasPrep = prep.alertasSeguranca ?? []
@@ -128,6 +153,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
               etapa: etapaNome,
               fontes: fontesPrep,
               termosBusca: termosPrep,
+              forcar,
             }),
           })
           const d = (await r.json().catch(() => null)) as
@@ -156,10 +182,24 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
         gerarParte<ParteConduta>('gerar-conduta'),
       ])
 
-      setAnalise({ ...raciocinio, ...conduta })
+      const analiseMesclada = { ...raciocinio, ...conduta }
+      setAnalise(analiseMesclada)
       setFontes(fontesPrep)
       setTermosBusca(termosPrep ?? '')
       setAlertasSeguranca(alertasPrep)
+      setSalvaEm(null)
+
+      // Persiste a análise mesclada (sobrevive a refresh) — sem bloquear a UI.
+      void fetch(`/api/consultas/${consultaId}/analisar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          etapa: 'salvar',
+          analise: analiseMesclada,
+          fontes: fontesPrep,
+          termosBusca: termosPrep,
+        }),
+      }).catch(() => undefined)
     } catch (e) {
       setErro(e instanceof Error && e.message ? e.message : 'Falha de rede. Tente novamente.')
     } finally {
@@ -226,7 +266,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
               fundamentados em evidências reais (PubMed/Europe PMC), com as fontes listadas. Apoio à
               decisão: a conduta final é sua.
             </p>
-            <Button onClick={analisar} loading={carregando} disabled={carregando}>
+            <Button onClick={() => analisar(false)} loading={carregando} disabled={carregando}>
               <Sparkles className="h-4 w-4" />
               {carregando
                 ? 'Analisando (busca de evidências + análise)…'
@@ -393,6 +433,30 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                   (PubMed/Europe PMC — reais e verificáveis)
                 </span>
               </p>
+              {fontes.length > 1 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {['TODOS', 'DIRETRIZ', 'REVISAO_SISTEMATICA', 'ENSAIO_CLINICO'].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setFiltroNivel(n)}
+                      className={
+                        filtroNivel === n
+                          ? 'rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-primary-foreground'
+                          : 'rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:border-primary/40'
+                      }
+                    >
+                      {n === 'TODOS'
+                        ? 'Todas'
+                        : n === 'REVISAO_SISTEMATICA'
+                          ? 'Revisões'
+                          : n === 'ENSAIO_CLINICO'
+                            ? 'Ensaios'
+                            : 'Diretrizes'}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               {fontes.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   Nenhuma fonte recuperada nesta análise — fundamentada apenas em raciocínio
@@ -400,25 +464,28 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                 </p>
               ) : (
                 <ol className="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
-                  {fontes.map((f, i) => (
-                    <li key={i}>
-                      <a
-                        href={f.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-primary hover:underline"
-                      >
-                        {f.titulo}
-                      </a>{' '}
-                      — {f.autores} ({f.ano}; {f.tipoEstudo}
-                      {f.pmid ? `; PMID ${f.pmid}` : ''})
-                      {f.nivel ? (
-                        <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                          {f.nivel.replace('_', ' ').toLowerCase()}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
+                  {fontes
+                    .map((f, i) => ({ f, i }))
+                    .filter(({ f }) => filtroNivel === 'TODOS' || f.nivel === filtroNivel)
+                    .map(({ f, i }) => (
+                      <li key={i}>
+                        <a
+                          href={f.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {f.titulo}
+                        </a>{' '}
+                        — {f.autores} ({f.ano}; {f.tipoEstudo}
+                        {f.pmid ? `; PMID ${f.pmid}` : ''})
+                        {f.nivel ? (
+                          <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                            {f.nivel.replace('_', ' ').toLowerCase()}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
                 </ol>
               )}
               {termosBusca ? (
@@ -445,12 +512,43 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                   </button>
                 </div>
               ) : null}
+              {diretrizes.length > 0 ? (
+                <div className="space-y-1 pt-2">
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Diretrizes oficiais para este tema (consulta manual):
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {diretrizes.map((d) => (
+                      <a
+                        key={d.url}
+                        href={d.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={d.nome}
+                        className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:border-primary/50"
+                      >
+                        {d.instituicao} ↗
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={analisar} loading={carregando}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => analisar(true)}
+                loading={carregando}
+              >
                 Regenerar
               </Button>
+              {salvaEm ? (
+                <p className="self-center text-xs text-muted-foreground">
+                  Análise salva em {new Date(salvaEm).toLocaleString('pt-BR')}
+                </p>
+              ) : null}
             </div>
             <p className="text-xs text-muted-foreground">
               Conteúdo gerado por IA como apoio à decisão (CFM 2.454/2026): revise antes de usar — a

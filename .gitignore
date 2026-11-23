@@ -65,3 +65,7 @@ apps/mobile/android/
 *.pem
 .vercel/
 .vercel
+
+# Arquivos soltos de outras sessões (não versionar)
+packages/db/_count-reset.mjs
+.env.production.reset
