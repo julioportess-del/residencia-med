@@ -111,39 +111,57 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
         setErro((prep && 'erro' in prep && prep.erro) || 'Falha ao buscar evidências.')
         return
       }
+      const fontesPrep = prep.fontes
+      const termosPrep = prep.termosBusca
+      const alertasPrep = prep.alertasSeguranca ?? []
 
       setEtapa('analise')
-      const resp = await fetch(`/api/consultas/${consultaId}/analisar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          etapa: 'gerar',
-          fontes: prep.fontes,
-          termosBusca: prep.termosBusca,
-        }),
-      })
-      const dados = (await resp.json().catch(() => null)) as
-        | (
-            | {
-                ok: true
-                analise: Analise
-                fontes: Fonte[]
-                termosBusca?: string
-                alertasSeguranca?: AlertaSeguranca[]
-              }
-            | { ok: false; erro: string }
-          )
-        | null
-      if (!resp.ok || !dados || dados.ok === false) {
-        setErro((dados && 'erro' in dados && dados.erro) || 'Falha ao analisar. Tente novamente.')
-        return
+      // Duas gerações CURTAS em paralelo (raciocínio ‖ conduta), cada uma em
+      // requisição própria — nenhuma chega perto do limite do servidor.
+      async function gerarParte<T>(etapaNome: string): Promise<T> {
+        let ultimoErro = 'Falha ao analisar.'
+        for (let tentativa = 1; tentativa <= 2; tentativa++) {
+          const r = await fetch(`/api/consultas/${consultaId}/analisar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              etapa: etapaNome,
+              fontes: fontesPrep,
+              termosBusca: termosPrep,
+            }),
+          })
+          const d = (await r.json().catch(() => null)) as
+            | ({ ok: true; parte: T } | { ok: false; erro: string })
+            | null
+          if (r.ok && d && d.ok !== false) return (d as { ok: true; parte: T }).parte
+          ultimoErro = (d && 'erro' in d && d.erro) || `Falha ao analisar (HTTP ${r.status}).`
+        }
+        throw new Error(ultimoErro)
       }
-      setAnalise(dados.analise)
-      setFontes(dados.fontes)
-      setTermosBusca(dados.termosBusca ?? '')
-      setAlertasSeguranca(dados.alertasSeguranca ?? [])
-    } catch {
-      setErro('Falha de rede. Tente novamente.')
+
+      interface ParteRaciocinio {
+        resumoCaso: string
+        hipoteses: Analise['hipoteses']
+        sinaisAlerta: string[]
+        pendencias: string[]
+      }
+      interface ParteConduta {
+        tratamento: Analise['tratamento']
+        examesSugeridos: Analise['examesSugeridos']
+        limitacoes: string[]
+      }
+
+      const [raciocinio, conduta] = await Promise.all([
+        gerarParte<ParteRaciocinio>('gerar-raciocinio'),
+        gerarParte<ParteConduta>('gerar-conduta'),
+      ])
+
+      setAnalise({ ...raciocinio, ...conduta })
+      setFontes(fontesPrep)
+      setTermosBusca(termosPrep ?? '')
+      setAlertasSeguranca(alertasPrep)
+    } catch (e) {
+      setErro(e instanceof Error && e.message ? e.message : 'Falha de rede. Tente novamente.')
     } finally {
       setCarregando(false)
       setEtapa(null)
@@ -219,7 +237,7 @@ export function AnaliseClinica({ consultaId }: { consultaId: string }) {
                 <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
                 {etapa === 'fontes'
                   ? 'Etapa 1/2: buscando evidências reais e verificando segurança…'
-                  : 'Etapa 2/2: gerando hipóteses, tratamento e exames — até ~50s.'}
+                  : 'Etapa 2/2: gerando raciocínio e conduta em paralelo — ~20-30s.'}
               </p>
             ) : null}
             {erro ? (

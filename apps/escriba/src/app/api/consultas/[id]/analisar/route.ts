@@ -3,9 +3,11 @@ import {
   analisarConsultaClinica,
   AnaliseInvalidaError,
   estruturaClinicaSchema,
+  gerarParteAnalise,
   prepararEvidenciasAnalise,
   verificarSegurancaClinica,
   type Evidencia,
+  type ParteAnalise,
 } from '@residencia-med/ai/clinico'
 import { usuarioDaRequisicao } from '@/lib/auth-extensao'
 import { mensagemFalhaIA } from '@/lib/erros-ia'
@@ -95,7 +97,7 @@ export async function POST(req: Request, { params }: Contexto) {
   // etapa "preparar" (termos + fontes + segurança, ~10s) e etapa "gerar"
   // (só a chamada do modelo, com o orçamento de tempo inteiro).
   const corpo = (await req.json().catch(() => ({}))) as {
-    etapa?: 'preparar' | 'gerar'
+    etapa?: 'preparar' | 'gerar' | 'gerar-raciocinio' | 'gerar-conduta'
     fontes?: Evidencia[]
     termosBusca?: string
   }
@@ -108,6 +110,27 @@ export async function POST(req: Request, { params }: Contexto) {
         `[analisar] etapa=preparar ms=${Date.now() - t0} fontes=${prep.fontes.length} chars=${transcricao.length}`,
       )
       return Response.json({ ok: true, ...prep, alertasSeguranca })
+    }
+
+    // Geração por PARTES: cada requisição faz UMA chamada curta ao modelo
+    // (raciocínio ou conduta) — o cliente roda as duas em paralelo.
+    if (corpo.etapa === 'gerar-raciocinio' || corpo.etapa === 'gerar-conduta') {
+      const parteNome: ParteAnalise = corpo.etapa === 'gerar-raciocinio' ? 'raciocinio' : 'conduta'
+      const parte = await gerarParteAnalise(parteNome, {
+        transcricao,
+        contextoClinico,
+        fontes: Array.isArray(corpo.fontes) ? corpo.fontes : [],
+        termosBusca: typeof corpo.termosBusca === 'string' ? corpo.termosBusca : '',
+      })
+      console.info(
+        `[analisar] etapa=${corpo.etapa} ms=${Date.now() - t0} chars=${transcricao.length}`,
+      )
+      if (parteNome === 'conduta') {
+        await prismaClinico.logAcesso.create({
+          data: { usuarioAuthId: user.id, acao: 'ANALISAR_CONSULTA_IA', consultaId: consulta.id },
+        })
+      }
+      return Response.json({ ok: true, parte })
     }
 
     const resultado = await analisarConsultaClinica({
